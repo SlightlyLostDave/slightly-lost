@@ -1,1 +1,26 @@
 @import 'tailwindcss';
+
+@layer base {
+  body {
+    @apply bg-neutral-900;
+  }
+
+  .navbar-item {
+    @apply text-white;
+  }
+
+  .blinker {
+    animation: animate 5s infinite linear;
+  }
+
+  @keyframes animate {
+    0% {
+      left: 0;
+      transform: translate(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translate(0%);
+    }
+  }
+}
