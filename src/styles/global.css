@@ -1,26 +1,34 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-display: 'Playfair Display Variable', serif;
+  --font-paragraph: 'Raleway Variable', sans-serif;
+}
+
 @layer base {
-  body {
-    @apply bg-neutral-900;
+  * {
+    @apply m-0 p-0 box-border;
   }
 
+  body {
+    @apply bg-neutral-900 overflow-x-hidden text-white font-paragraph;
+  }
+
+  section {
+    @apply w-screen shrink-0 overflow-hidden;
+  }
+}
+
+@layer utilities {
   .navbar-item {
     @apply text-white;
   }
 
-  .blinker {
-    animation: animate 5s infinite linear;
+  .hero-title {
+    @apply font-display w-[450px] relative h-[110px] overflow-hidden;
   }
 
-  @keyframes animate {
-    0% {
-      left: 0;
-      transform: translate(-100%);
-    }
-    100% {
-      left: 100%;
-      transform: translate(0%);
-    }
+  .hero-title span {
+    @apply absolute;
   }
 }
