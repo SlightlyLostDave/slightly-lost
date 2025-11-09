@@ -1,6 +1,7 @@
 import { gsap } from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { Icon } from '@iconify/react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -115,17 +116,17 @@ const Hero = () => {
             <div className="hero-title left text-[65px] h-[40px] left-[-25%]">
               <span>off</span>
             </div>
-            <div className="hero-title right text-[65px] top-[50px] left-[55%] z-[-1]">
+            <div className="hero-title right text-[65px] top-[70px] left-[55%] z-[-1]">
               <span>the</span>
             </div>
-            <div className="hero-title right text-[100px] top-[0px] left-[55%]">
+            <div className="hero-title !h-[130px] right text-[100px] top-[0px] left-[55%]">
               <span>Map</span>
             </div>
           </div>
 
           <p
             id="txt-bottom"
-            className="px-4 uppercase transform-[translateY(150px)] text-s tracking-[0.5rem] font-light text-center"
+            className="px-4 uppercase transform-[translateY(85px)] text-s tracking-[0.5rem] font-light text-center"
           >
             Exploring forgotten places, untold stories, and the beauty of being
             off the map
@@ -133,7 +134,7 @@ const Hero = () => {
         </div>
 
         <div className="absolute top-0 w-screen h-screen grid grid-cols-[2fr 1fr]">
-          <div id="left-side" className="flex flex-col justify-end p-16 gap-20">
+          {/* <div id="left-side" className="flex flex-col justify-end p-16 gap-20">
             <div className="flex capitalize font-display">
               <div className="text-[100px]">push</div>
               <div className="text-[65px] h-[40px]">the</div>
@@ -151,14 +152,19 @@ const Hero = () => {
                 a real form of art and magic.
               </p>
             </div>
-          </div>
+          </div> */}
           <div
             id="right-side"
-            className="m-auto w-[150px] h-[150px] border-t-2 border-t-solid border-b-2 border-b-solid border-white/60 rounded-full relative"
+            className="m-auto w-[150px] h-[150px] border-t-2 border-t-solid border-b-2 border-b-solid border-white/60 rounded-full relative flex flex-col items-center justify-center"
           >
             <p>
-              explore works{' '}
-              <i className="fa-solid transform-[translateX(20px)]"></i>
+              <a href="mailto:dave@slightlylost.com">
+                say hello{' '}
+                <Icon
+                  className="transform-[translateX(20px)]"
+                  icon="mdi-light:email"
+                />
+              </a>
             </p>
           </div>
         </div>

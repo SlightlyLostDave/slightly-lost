@@ -24,6 +24,7 @@
     "tailwindcss": "^4.1.14"
   },
   "devDependencies": {
+    "@iconify/react": "^6.0.2",
     "cz-conventional-changelog": "^3.3.0"
   },
   "config": {
