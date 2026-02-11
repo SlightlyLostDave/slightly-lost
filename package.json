@@ -10,6 +10,7 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@astrojs/partytown": "^2.1.4",
     "@astrojs/react": "^4.4.2",
     "@fontsource-variable/playfair-display": "^5.2.8",
     "@fontsource-variable/raleway": "^5.2.8",
