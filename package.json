@@ -1,36 +1,17 @@
 {
-  "name": "slightly-lost",
+  "name": "",
   "type": "module",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "commit": "cz"
+    "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/partytown": "^2.1.4",
-    "@astrojs/react": "^4.4.2",
-    "@fontsource-variable/playfair-display": "^5.2.8",
-    "@fontsource-variable/raleway": "^5.2.8",
-    "@gsap/react": "^2.1.2",
-    "@tailwindcss/vite": "^4.1.14",
-    "@types/react": "^19.2.1",
-    "@types/react-dom": "^19.2.0",
-    "astro": "^5.17.1",
-    "gsap": "^3.13.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.14"
-  },
-  "devDependencies": {
-    "@iconify/react": "^6.0.2",
-    "cz-conventional-changelog": "^3.3.0"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
+    "astro": "^7.2.4"
   }
 }
