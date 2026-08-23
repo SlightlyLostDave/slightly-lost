@@ -1,0 +1,3 @@
+/* Reserved for the prose base: the only place in this project @apply is
+   permitted, for future CMS-authored HTML (Strapi rich text) that we don't
+   control at the markup level. Intentionally empty until that work begins. */

@@ -1,0 +1,114 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Core surfaces and text */
+  --color-ink: #101815; /* primary dark surface */
+  --color-graphite: #24352e; /* secondary dark surface, dark-mode cards */
+  --color-slate: #556b5e; /* muted body text on light, borders on dark */
+  --color-mist: #b4c0b4; /* body text on dark, dividers on light */
+  --color-fog: #e8ede7; /* secondary light surface, card fill on paper */
+  --color-paper: #f4f6f2; /* primary light surface */
+
+  /* Structural, each with exactly one job */
+  --color-ink-lift: #1a2722; /* raised panels / inset wells on ink, never text */
+  --color-spruce: #3d5046; /* hairlines on light, disabled interface text on paper */
+  --color-lichen: #859689; /* placeholder text / captions on dark, never on paper */
+  --color-birch: #ced7ce; /* card borders / table rules on paper, input strokes */
+
+  /* Accents, surface-specific, not interchangeable */
+  --color-amber-deep: #8f5a16; /* accent text/rules on light surfaces */
+  --color-amber-glow: #d9a25a; /* accent text/rules on dark surfaces */
+  --color-depth-deep: #42606f; /* secondary accent on light surfaces */
+  --color-depth-glow: #8aaabb; /* secondary accent on dark surfaces */
+
+  /* Type scale, fluid between 375px and 1600px viewports, 16px root */
+  --text-display-xl: clamp(3.5rem, 2.0459rem + 6.2041vw, 8.25rem);
+  --text-display-xl--line-height: 0.98;
+  --text-display-xl--letter-spacing: -0.025em;
+
+  --text-display-l: clamp(2.5rem, 1.8112rem + 2.9388vw, 4.75rem);
+  --text-display-l--line-height: 1.05;
+  --text-display-l--letter-spacing: -0.02em;
+
+  --text-display-m: clamp(1.75rem, 1.5204rem + 0.9796vw, 2.5rem);
+  --text-display-m--line-height: 1.15;
+  --text-display-m--letter-spacing: -0.01em;
+
+  --text-title: clamp(1.375rem, 1.2985rem + 0.3265vw, 1.625rem);
+  --text-title--line-height: 1.3;
+
+  --text-body-l: clamp(1.125rem, 1.0676rem + 0.2449vw, 1.3125rem);
+  --text-body-l--line-height: 1.65;
+
+  --text-body: clamp(1rem, 0.9809rem + 0.0816vw, 1.0625rem);
+  --text-body--line-height: 1.6;
+
+  --text-caption: clamp(0.8125rem, 0.7934rem + 0.0816vw, 0.875rem);
+  --text-caption--line-height: 1.5;
+
+  --text-label: clamp(0.6875rem, 0.6684rem + 0.0816vw, 0.75rem);
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.14em;
+
+  --text-data: clamp(0.8125rem, 0.7742rem + 0.1633vw, 0.9375rem);
+  --text-data--line-height: 1.5;
+
+  /* Font families. Point at the CSS variables the Astro Fonts API will define. 
+     Fallback lives inside var() so the stack degrades gracefully today, before 
+     those variables exist. */
+  --font-display: var(--font-newsreader, Georgia, Cambria, 'Times New Roman', Times, serif);
+  --font-ui: var(
+    --font-inter-tight,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  --font-mono: var(
+    --font-ibm-plex-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    'Liberation Mono',
+    monospace
+  );
+
+  /* Radii */
+  --radius-control: 4px;
+  --radius-card: 8px;
+
+  /* Layout. Container namespace covers both fixed and prose-measure widths;
+     Tailwind v4 has no separate max-w-* namespace. */
+  --container-content: 1376px;
+  --container-measure: 68ch;
+  --spacing-section: 8rem;
+  --spacing-section-lg: 12rem;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-amber-deep);
+    outline-offset: 2px;
+  }
+}
