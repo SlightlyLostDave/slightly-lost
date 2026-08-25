@@ -24,6 +24,7 @@ Node 26 LTS. TypeScript strict. Zod 4.
 
 ## Styling rules
 
+- Docs and design mockups can be found under `docs/`
 - Every colour, size, and spacing value comes from the `@theme` block in `src/styles/app.css`. That file is the only place a hex value may appear.
 - Utilities go in the markup. Do not use `@apply` to build component classes. The one permitted exception is the prose base in `src/styles/prose.css`, which styles CMS-authored HTML we do not control.
 - Arbitrary values in square brackets require a comment explaining why no token fits. If it happens twice, the token is missing; add it to `@theme` instead.
