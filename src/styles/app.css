@@ -1,25 +1,23 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Core surfaces and text */
-  --color-ink: #101815; /* primary dark surface */
-  --color-graphite: #24352e; /* secondary dark surface, dark-mode cards */
-  --color-slate: #556b5e; /* muted body text on light, borders on dark */
-  --color-mist: #b4c0b4; /* body text on dark, dividers on light */
-  --color-fog: #e8ede7; /* secondary light surface, card fill on paper */
-  --color-paper: #f4f6f2; /* primary light surface */
+  /* The ramp, light to dark */
+  --color-paper: #f7f3ea; /* primary light surface, large unbroken fields */
+  --color-fog: #efe8dc; /* secondary light surface, card fill on paper */
+  --color-linen: #d9ccba; /* hairlines and dividers on paper */
+  --color-mist: #c3b199; /* body text on dark, dividers on light */
+  --color-dun: #988873; /* disabled and tertiary metadata */
+  --color-slate: #6e5f4d; /* muted body text on light, borders on dark */
+  --color-loam: #54483b; /* borders and rules on dark surfaces */
+  --color-graphite: #3b3129; /* secondary dark surface, dark-mode cards */
+  --color-peat: #2c241e; /* inset wells and image mattes on ink */
+  --color-ink: #1e1813; /* primary dark surface */
 
-  /* Structural, each with exactly one job */
-  --color-ink-lift: #1a2722; /* raised panels / inset wells on ink, never text */
-  --color-spruce: #3d5046; /* hairlines on light, disabled interface text on paper */
-  --color-lichen: #859689; /* placeholder text / captions on dark, never on paper */
-  --color-birch: #ced7ce; /* card borders / table rules on paper, input strokes */
-
-  /* Accents, surface-specific, not interchangeable */
-  --color-amber-deep: #8f5a16; /* accent text/rules on light surfaces */
-  --color-amber-glow: #d9a25a; /* accent text/rules on dark surfaces */
-  --color-depth-deep: #42606f; /* secondary accent on light surfaces */
-  --color-depth-glow: #8aaabb; /* secondary accent on dark surfaces */
+  /* Accents, surface-specific by design */
+  --color-rust-deep: #9c4520; /* the single saturated note, on light surfaces */
+  --color-rust-glow: #de8a5a; /* the same gesture, on dark surfaces */
+  --color-sage-deep: #5f6653; /* resting accent on light surfaces */
+  --color-sage-glow: #a9b096; /* resting accent on dark surfaces */
 
   /* Type scale, fluid between 375px and 1600px viewports, 16px root */
   --text-display-xl: clamp(3.5rem, 2.0459rem + 6.2041vw, 8.25rem);
@@ -77,6 +75,16 @@
     monospace
   );
 
+  /* Theme roles, light defaults. Overridden under [data-theme='dark'] below. */
+  --color-surface: var(--color-paper);
+  --color-surface-raised: var(--color-fog);
+  --color-text-strong: var(--color-ink);
+  --color-text-body: var(--color-graphite);
+  --color-text-muted: var(--color-slate);
+  --color-hairline: var(--color-linen);
+  --color-accent: var(--color-rust-deep);
+  --weight-display: 400;
+
   /* Radii */
   --radius-control: 4px;
   --radius-card: 8px;
@@ -89,6 +97,33 @@
   --spacing-section-lg: 12rem;
 }
 
+/* Dark theme. Selector is not anchored to :root so it also applies when set
+   on a wrapper element, for side-by-side light/dark comparisons. No toggle UI
+   exists yet; prefers-color-scheme is the default until one is built. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-surface: var(--color-ink);
+    --color-surface-raised: var(--color-graphite);
+    --color-text-strong: var(--color-paper);
+    --color-text-body: var(--color-fog);
+    --color-text-muted: var(--color-mist);
+    --color-hairline: var(--color-slate);
+    --color-accent: var(--color-rust-glow);
+    --weight-display: 300;
+  }
+}
+
+[data-theme='dark'] {
+  --color-surface: var(--color-ink);
+  --color-surface-raised: var(--color-graphite);
+  --color-text-strong: var(--color-paper);
+  --color-text-body: var(--color-fog);
+  --color-text-muted: var(--color-mist);
+  --color-hairline: var(--color-slate);
+  --color-accent: var(--color-rust-glow);
+  --weight-display: 300;
+}
+
 @layer base {
   *,
   *::before,
@@ -97,8 +132,8 @@
   }
 
   body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    background-color: var(--color-surface);
+    color: var(--color-text-body);
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
   }
@@ -108,7 +143,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-amber-deep);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 }

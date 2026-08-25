@@ -30,10 +30,10 @@ Node 26 LTS. TypeScript strict. Zod 4.
 - Repetition is extracted into an Astro component, never into a CSS class.
 - Inline SVG inherits `currentColor` and takes its colour from a text utility. This is the most common place hex values leak back into components.
 - No decorative shadows. Elevation is expressed by surface colour change and a 1px hairline border.
-- Amber appears once per viewport: the active state, the one link that matters, or the rule under a section label. Never for body text, never as a large fill.
-- Depth is reserved for water, wreck, map, and underwater content. It is not a general secondary colour.
-- Accents are surface-specific. `amber-deep` and `depth-deep` on light, `amber-glow` and `depth-glow` on dark. Using the wrong one is an accessibility bug, not a style choice.
-- Hairlines are birch on light and slate on dark, chosen explicitly. There is no generic hairline token.
+- Rust appears once per viewport: the active state, the one link that matters, or the rule under a section label. Never for body text, never as a large fill.
+- Sage is reserved for water, wreck, map, and underwater content. It is not a general secondary colour.
+- Accents are surface-specific. `rust-deep` and `sage-deep` on light, `rust-glow` and `sage-glow` on dark. Using the wrong one is an accessibility bug, not a style choice.
+- Hairlines are linen on light and slate on dark, chosen explicitly. There is no generic hairline token.
 
 ## Motion rules
 
@@ -61,7 +61,9 @@ Node 26 LTS. TypeScript strict. Zod 4.
 | JS, article route                | under 5kb                                             |
 | JS, homepage                     | under 45kb including GSAP and ScrollTrigger           |
 | Page weight, article, first load | under 900kb                                           |
-| Fonts                            | 3 families, variable, subset Latin, under 120kb total |
+| Fonts                            | 3 families, variable, subset Latin, under 360kb total |
+
+Newsreader's variable file carries both a `wght` and an `opsz` axis; Fontsource serves those together (~132-147kb per style) with no way to request `wght` alone, which is most of that budget.
 
 ## Before finishing a task
 
