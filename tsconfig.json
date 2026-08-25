@@ -2,7 +2,11 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "paths": {
-      "~/*": ["src/*"]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@styles/*": ["./src/styles/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
