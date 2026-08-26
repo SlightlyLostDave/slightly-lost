@@ -1,6 +1,8 @@
 # Slightly Lost
 
-An Astro static site for Slightly Lost, a content project about wrecks and lost places.
+The site is an Astro front end, styled with Tailwind against a custom palette, animated with GSAP, and deployed to CloudFlare. This README covers running it locally.
+
+Live at [slightlylost.com](https://slightlylost.com).
 
 ## Running it
 
@@ -9,9 +11,3 @@ npm install
 npm run dev
 npm run build
 ```
-
-## Architecture
-
-The full build specification lives in `docs/slightly-lost-architecture.md` (local only, not checked into the repo).
-
-Conventions for this codebase are in `CLAUDE.md`.
