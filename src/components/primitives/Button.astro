@@ -1,0 +1,67 @@
+---
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'link'
+export type ButtonSize = 'default' | 'compact'
+
+interface Props {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  href?: string
+  type?: 'button' | 'submit' | 'reset'
+  disabled?: boolean
+  showArrow?: boolean
+  class?: string
+}
+
+const {
+  variant = 'primary',
+  size = 'default',
+  href,
+  type = 'button',
+  disabled = false,
+  showArrow = false,
+  class: className,
+} = Astro.props
+
+const Tag = href ? 'a' : 'button'
+
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-full font-ui text-control font-medium uppercase whitespace-nowrap motion-safe:transition-colors disabled:pointer-events-none disabled:opacity-40'
+
+const sizeClasses =
+  size === 'compact' ? 'h-(--tap-target) px-5' : 'h-(--control-height) px-7'
+
+const variantClasses: Record<ButtonVariant, string> = {
+  primary:
+    'bg-inverse-fill border border-inverse-fill text-inverse-text hover:bg-accent hover:border-accent focus-visible:bg-inverse-fill focus-visible:border-inverse-fill focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-(--outline-offset-control)',
+  secondary:
+    'bg-transparent border border-hairline text-text-strong hover:border-accent hover:text-accent focus-visible:border-hairline focus-visible:text-text-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-(--outline-offset-control)',
+  ghost:
+    'bg-transparent border border-transparent text-text-strong hover:text-accent focus-visible:text-text-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-(--outline-offset-control)',
+  link: 'p-0 rounded-none text-accent underline decoration-1 decoration-rule-strong underline-offset-4 hover:decoration-accent focus-visible:decoration-rule-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-(--outline-offset-link)',
+}
+---
+
+<Tag
+  class:list={[base, variant !== 'link' && sizeClasses, variantClasses[variant], className]}
+  href={href}
+  type={!href ? type : undefined}
+  disabled={!href ? disabled : undefined}
+>
+  <slot />
+  {
+    showArrow && (
+      <svg
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="h-3.5 w-3.5"
+        aria-hidden="true"
+      >
+        <path d="M3 8h10M9 4l4 4-4 4" />
+      </svg>
+    )
+  }
+</Tag>

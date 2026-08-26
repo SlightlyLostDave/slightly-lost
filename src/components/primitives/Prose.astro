@@ -1,0 +1,13 @@
+---
+import '@/styles/prose.css'
+
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<div class:list={['prose max-w-(--container-measure)', className]}>
+  <slot />
+</div>

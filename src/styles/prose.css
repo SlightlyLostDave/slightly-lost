@@ -1,3 +1,58 @@
-/* Reserved for the prose base: the only place in this project @apply is
-   permitted, for future CMS-authored HTML (Strapi rich text) that we don't
-   control at the markup level. Intentionally empty until that work begins. */
+/* The only file in this project permitted to use @apply — see CLAUDE.md.
+   Styles HTML we do not author (CMS-authored rich text) rendered inside
+   <Prose>. Everything here targets role tokens only, never ramp tokens or
+   hex values. */
+@reference './app.css';
+
+.prose {
+  @apply font-display text-body-l text-text-muted;
+}
+
+.prose :where(h2, h3, h4) {
+  @apply font-display text-text-strong;
+}
+.prose h2 {
+  @apply text-display-m;
+}
+.prose h3 {
+  @apply text-title;
+}
+.prose h4 {
+  @apply text-body-l font-medium;
+}
+
+.prose p {
+  @apply mt-6 first:mt-0;
+}
+
+.prose a {
+  @apply text-accent underline decoration-1 decoration-rule-strong underline-offset-4 hover:decoration-accent;
+}
+
+.prose :where(ul, ol) {
+  @apply mt-6 flex flex-col gap-2 pl-6;
+}
+.prose ul {
+  @apply list-disc;
+}
+.prose ol {
+  @apply list-decimal;
+}
+.prose li {
+  @apply text-body-l;
+}
+
+.prose blockquote {
+  @apply mt-6 border-l border-rule-strong pl-6 text-text-muted italic;
+}
+
+.prose code {
+  @apply rounded-(--radius-control) bg-surface-raised px-1.5 py-0.5 font-mono text-caption text-text-strong;
+}
+
+.prose strong {
+  @apply font-medium text-text-strong;
+}
+.prose em {
+  @apply italic;
+}

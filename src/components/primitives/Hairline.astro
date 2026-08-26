@@ -1,0 +1,16 @@
+---
+interface Props {
+  variant?: 'default' | 'strong' | 'heavy'
+  class?: string
+}
+
+const { variant = 'default', class: className } = Astro.props
+
+const colorClasses: Record<NonNullable<Props['variant']>, string> = {
+  default: 'border-hairline',
+  strong: 'border-rule-strong',
+  heavy: 'border-text-strong',
+}
+---
+
+<hr class:list={['m-0 border-0 border-t', colorClasses[variant], className]} />

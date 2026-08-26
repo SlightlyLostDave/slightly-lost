@@ -1,0 +1,39 @@
+---
+export type TagTone = 'sage' | 'rust' | 'neutral'
+export type TagVariant = 'filled' | 'outline'
+
+interface Props {
+  label: string
+  tone?: TagTone
+  variant?: TagVariant
+  onImage?: boolean
+  class?: string
+}
+
+const { label, tone = 'sage', variant = 'outline', onImage = false, class: className } = Astro.props
+
+const base = 'inline-flex items-center rounded-full border font-mono text-label uppercase px-2.5 py-1'
+
+const toneVariantClasses: Record<TagTone, Record<TagVariant, string>> = {
+  sage: {
+    filled: 'bg-sage/20 border-sage text-sage',
+    outline: 'bg-transparent border-sage text-sage',
+  },
+  rust: {
+    filled: 'bg-accent/20 border-accent text-accent',
+    outline: 'bg-transparent border-accent text-accent',
+  },
+  neutral: {
+    filled: 'bg-surface-raised border-hairline text-text-muted',
+    outline: 'bg-transparent border-hairline text-text-muted',
+  },
+}
+
+/* A photograph is a photograph in both themes: on-image tags stay ink/paper
+   regardless of tone, variant, or theme toggle, rather than repainting. */
+const onImageClasses = 'bg-ink/70 border-transparent text-paper'
+---
+
+<span class:list={[base, onImage ? onImageClasses : toneVariantClasses[tone][variant], className]}>
+  {label}
+</span>

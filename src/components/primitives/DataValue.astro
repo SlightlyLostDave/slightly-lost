@@ -1,0 +1,24 @@
+---
+interface Props {
+  label: string
+  value: string
+  unit?: string
+  orientation?: 'stacked' | 'inline'
+  class?: string
+}
+
+const { label, value, unit, orientation = 'stacked', class: className } = Astro.props
+---
+
+<div
+  class:list={[
+    'flex font-mono',
+    orientation === 'stacked' ? 'flex-col gap-1' : 'flex-row items-baseline gap-2',
+    className,
+  ]}
+>
+  <span class="text-label uppercase text-text-muted">{label}</span>
+  <span class="text-data tabular-nums text-text-strong">
+    {value}{unit && <span class="ml-1 text-text-muted">{unit}</span>}
+  </span>
+</div>
