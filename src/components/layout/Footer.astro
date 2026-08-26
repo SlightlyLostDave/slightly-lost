@@ -1,0 +1,53 @@
+---
+import { navigation, site } from '@/config'
+---
+
+<footer class="border-t border-hairline px-6 pt-(--spacing-section) pb-12">
+  <div class="grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+    <div class="col-span-2 lg:col-span-1">
+      <p class="font-display text-title text-text-strong">{site.name}</p>
+      <p class="mt-3 max-w-(--container-measure) text-body text-text-muted">{site.description}</p>
+    </div>
+
+    {
+      navigation.footer.map((group) => (
+        <div>
+          <h2 class="font-mono text-label uppercase text-text-muted">{group.heading}</h2>
+          <ul class="mt-4 flex flex-col gap-2">
+            {group.links.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'me noopener' : undefined}
+                  class="text-body text-text-body motion-safe:transition-colors hover:text-accent"
+                >
+                  {link.label}
+                  {link.external && (
+                    <svg
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="ml-1 inline h-3 w-3"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12 12 4M6 4h6v6" />
+                    </svg>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="mt-12 flex flex-col gap-2 border-t border-hairline pt-6 font-mono text-caption text-text-muted sm:flex-row sm:items-center sm:justify-between">
+    <p>{site.copyright}</p>
+    <p>{site.footerClosingLine}</p>
+  </div>
+</footer>

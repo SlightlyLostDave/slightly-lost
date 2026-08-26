@@ -4,6 +4,7 @@ import { Font } from 'astro:assets'
 import { buildSeo, type SeoInput } from '@lib/seo'
 import { site } from '@/config'
 import Header from '@components/layout/Header.astro'
+import Footer from '@components/layout/Footer.astro'
 import '@styles/app.css'
 
 type Props = SeoInput & { surface: 'paper' | 'ink'; headerState?: 'transparent' | 'solid' }
@@ -72,7 +73,7 @@ const currentPath = Astro.url.pathname
     <main id="main-content" class:list={[headerState === 'solid' && 'pt-(--header-height-solid)']}>
       <slot />
     </main>
-    <footer></footer>
+    <Footer />
     <script>
       import '@lib/motion/boot'
     </script>
