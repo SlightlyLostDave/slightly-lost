@@ -75,15 +75,16 @@
     monospace
   );
 
-  /* Theme roles, light defaults. Overridden under [data-theme='dark'] below. */
-  --color-surface: var(--color-paper);
-  --color-surface-raised: var(--color-fog);
-  --color-text-strong: var(--color-ink);
-  --color-text-body: var(--color-graphite);
-  --color-text-muted: var(--color-slate);
-  --color-hairline: var(--color-linen);
-  --color-accent: var(--color-rust-deep);
-  --weight-display: 400;
+  /* Theme roles, dark defaults. Dark is the brand default regardless of the
+     operating system; overridden under [data-theme='light'] below. */
+  --color-surface: var(--color-ink);
+  --color-surface-raised: var(--color-graphite);
+  --color-text-strong: var(--color-paper);
+  --color-text-body: var(--color-fog);
+  --color-text-muted: var(--color-mist);
+  --color-hairline: var(--color-slate);
+  --color-accent: var(--color-rust-glow);
+  --weight-display: 300;
 
   /* Radii */
   --radius-control: 4px;
@@ -97,31 +98,18 @@
   --spacing-section-lg: 12rem;
 }
 
-/* Dark theme. Selector is not anchored to :root so it also applies when set
-   on a wrapper element, for side-by-side light/dark comparisons. No toggle UI
-   exists yet; prefers-color-scheme is the default until one is built. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --color-surface: var(--color-ink);
-    --color-surface-raised: var(--color-graphite);
-    --color-text-strong: var(--color-paper);
-    --color-text-body: var(--color-fog);
-    --color-text-muted: var(--color-mist);
-    --color-hairline: var(--color-slate);
-    --color-accent: var(--color-rust-glow);
-    --weight-display: 300;
-  }
-}
-
-[data-theme='dark'] {
-  --color-surface: var(--color-ink);
-  --color-surface-raised: var(--color-graphite);
-  --color-text-strong: var(--color-paper);
-  --color-text-body: var(--color-fog);
-  --color-text-muted: var(--color-mist);
-  --color-hairline: var(--color-slate);
-  --color-accent: var(--color-rust-glow);
-  --weight-display: 300;
+/* Light theme, opt-in only. The operating system preference is never
+   consulted; this only applies when the theme script or a page's authored
+   surface sets data-theme="light" explicitly. */
+[data-theme='light'] {
+  --color-surface: var(--color-paper);
+  --color-surface-raised: var(--color-fog);
+  --color-text-strong: var(--color-ink);
+  --color-text-body: var(--color-graphite);
+  --color-text-muted: var(--color-slate);
+  --color-hairline: var(--color-linen);
+  --color-accent: var(--color-rust-deep);
+  --weight-display: 400;
 }
 
 @layer base {

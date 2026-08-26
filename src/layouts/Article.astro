@@ -1,0 +1,48 @@
+---
+import Base from './Base.astro'
+
+interface Props {
+  title: string
+  description: string
+  openGraphImage?: string
+  canonicalUrl?: string
+  noindex?: boolean
+  publishedAt: Date
+  updatedAt?: Date
+  authorName?: string
+  surface?: 'paper' | 'ink'
+}
+
+const {
+  title,
+  description,
+  openGraphImage,
+  canonicalUrl,
+  noindex,
+  publishedAt,
+  updatedAt,
+  authorName,
+  surface = 'ink',
+} = Astro.props
+---
+
+<Base
+  type="article"
+  title={title}
+  description={description}
+  openGraphImage={openGraphImage}
+  canonicalUrl={canonicalUrl}
+  noindex={noindex}
+  publishedAt={publishedAt}
+  updatedAt={updatedAt}
+  authorName={authorName}
+  surface={surface}
+>
+  <article>
+    <slot />
+    {
+      /* Prompt 10 fills this in: byline/date/pillar strip, dek, hero figure,
+         body prose, field-data strip, sources/citations list. */
+    }
+  </article>
+</Base>

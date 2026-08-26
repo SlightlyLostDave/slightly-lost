@@ -1,0 +1,26 @@
+---
+import Base from '@layouts/Base.astro'
+import { navigation } from '@/config'
+
+const backLinks = navigation.primary.slice(0, 3)
+---
+
+<Base
+  type="website"
+  title="Page not found"
+  description="This page does not exist, or it moved, or it broke."
+  noindex
+  surface="ink"
+>
+  <h1>You are slightly lost.</h1>
+  <p>This page does not exist, or it moved, or I broke it. Any of those is possible.</p>
+  <ul>
+    {
+      backLinks.map((link) => (
+        <li>
+          <a href={link.href}>{link.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

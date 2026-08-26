@@ -1,7 +1,7 @@
 ---
 // Scratch tool for Phase 1 typeface work. Verifies the full type scale, in
 // both themes, at the correct weights and families. Delete before Phase 2.
-import Layout from '../layouts/Layout.astro'
+import Base from '../layouts/Base.astro'
 
 const pangram = 'The five boxing wizards jump quickly.'
 const sampleData = '58.3019° N, 3.1508° W · -42m · 2026-08-25'
@@ -24,7 +24,7 @@ const plexMonoLevels = [
 ]
 ---
 
-<Layout title="Type scale">
+<Base type="website" title="Type scale" description="Scratch type-scale specimen." noindex surface="ink">
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
     <section data-theme="light" style="background-color: var(--color-surface); padding: 2rem; border-right: 1px solid var(--color-hairline);">
       <p style="font-family: var(--font-mono); font-size: var(--text-label); letter-spacing: var(--text-label--letter-spacing); color: var(--color-accent); text-transform: uppercase;">
@@ -144,4 +144,4 @@ const plexMonoLevels = [
       }
     </section>
   </div>
-</Layout>
+</Base>

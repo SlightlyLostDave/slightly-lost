@@ -1,0 +1,37 @@
+---
+import Base from './Base.astro'
+
+interface Props {
+  title: string
+  description: string
+  openGraphImage?: string
+  canonicalUrl?: string
+  noindex?: boolean
+  surface?: 'paper' | 'ink'
+}
+
+const {
+  title,
+  description,
+  openGraphImage,
+  canonicalUrl,
+  noindex,
+  surface = 'ink',
+} = Astro.props
+---
+
+<Base
+  type="website"
+  title={title}
+  description={description}
+  openGraphImage={openGraphImage}
+  canonicalUrl={canonicalUrl}
+  noindex={noindex}
+  surface={surface}
+>
+  <slot />
+  {
+    /* Future: pagination controls, pillar/tag filter chips, and the card grid
+       (PostCard/AtlasCard/GuideCard/LogbookCard) iterating the passed entries. */
+  }
+</Base>

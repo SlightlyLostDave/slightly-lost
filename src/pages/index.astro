@@ -1,7 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import Base from '@layouts/Base.astro'
+import { site } from '@/config'
 ---
 
-<Layout title="Slightly Lost">
+<Base type="website" title={site.name} description={site.description} surface="ink">
   <h1>Slightly Lost</h1>
-</Layout>
+</Base>

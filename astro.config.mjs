@@ -7,7 +7,6 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   site: 'https://slightlylost.com',
   output: 'static',
-  trailingSlash: 'always',
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],

@@ -1,0 +1,78 @@
+---
+import { Font } from 'astro:assets'
+
+import { buildSeo, type SeoInput } from '@lib/seo'
+import { site } from '@/config'
+import '@styles/app.css'
+
+type Props = SeoInput & { surface: 'paper' | 'ink' }
+
+const { surface, ...seoInput } = Astro.props
+const seo = buildSeo(seoInput, Astro.url)
+const themeColor = surface === 'paper' ? '#f7f3ea' : '#1e1813'
+---
+
+<html lang="en" data-theme={surface === 'paper' ? 'light' : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="theme-color" content={themeColor} />
+
+    <script is:inline>
+      try {
+        if (localStorage.getItem('theme') === 'light') {
+          document.documentElement.dataset.theme = 'light'
+          document.querySelector('meta[name=theme-color]').content = '#f7f3ea'
+        }
+      } catch {
+        // Private browsing can throw on localStorage access; dark stays default.
+      }
+    </script>
+
+    <title>{seo.pageTitle}</title>
+    <meta name="description" content={seo.metaDescription} />
+    <meta name="robots" content={seo.robots} />
+    <link rel="canonical" href={seo.canonicalUrl} />
+
+    <meta property="og:title" content={seo.openGraph.title} />
+    <meta property="og:description" content={seo.openGraph.description} />
+    <meta property="og:image" content={seo.openGraph.image} />
+    <meta property="og:url" content={seo.openGraph.url} />
+    <meta property="og:type" content={seo.openGraph.type} />
+    <meta property="og:site_name" content={seo.openGraph.siteName} />
+
+    <meta name="twitter:card" content={seo.twitter.card} />
+    <meta name="twitter:title" content={seo.twitter.title} />
+    <meta name="twitter:description" content={seo.twitter.description} />
+    <meta name="twitter:image" content={seo.twitter.image} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(seo.jsonLd)} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+
+    <Font cssVariable="--font-newsreader" preload />
+    <Font cssVariable="--font-inter-tight" preload />
+    <Font cssVariable="--font-ibm-plex-mono" />
+
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
+  </head>
+  <body>
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-surface focus:text-text-strong focus:px-4 focus:py-2 focus:outline-2 focus:outline-accent focus:outline-offset-2"
+    >
+      Skip to content
+    </a>
+    <header></header>
+    <main id="main-content">
+      <slot />
+    </main>
+    <footer></footer>
+    <script>
+      import '@lib/motion/boot'
+    </script>
+  </body>
+</html>
