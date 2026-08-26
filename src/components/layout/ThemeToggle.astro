@@ -1,0 +1,40 @@
+---
+---
+
+<button
+  type="button"
+  id="theme-toggle"
+  class="theme-toggle group inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center rounded-full hover:bg-surface-raised hover:text-text-strong motion-safe:transition-colors"
+  aria-pressed="false"
+>
+  <svg
+    class="h-5 w-5 group-aria-pressed:hidden"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M17.5 10.66A7.5 7.5 0 1 1 9.34 2.5 5.83 5.83 0 0 0 17.5 10.66z" />
+  </svg>
+  <svg
+    class="hidden h-5 w-5 group-aria-pressed:block"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="10" cy="10" r="3.5" />
+    <path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.1 4.9l-1.4 1.4M6.3 13.7l-1.4 1.4M15.1 15.1l-1.4-1.4M6.3 6.3 4.9 4.9" />
+  </svg>
+  <span class="theme-toggle__label sr-only">Switch to light theme</span>
+</button>
+
+<script>
+  import './ThemeToggle.script'
+</script>

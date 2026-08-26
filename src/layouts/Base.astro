@@ -3,13 +3,15 @@ import { Font } from 'astro:assets'
 
 import { buildSeo, type SeoInput } from '@lib/seo'
 import { site } from '@/config'
+import Header from '@components/layout/Header.astro'
 import '@styles/app.css'
 
-type Props = SeoInput & { surface: 'paper' | 'ink' }
+type Props = SeoInput & { surface: 'paper' | 'ink'; headerState?: 'transparent' | 'solid' }
 
-const { surface, ...seoInput } = Astro.props
+const { surface, headerState = 'solid', ...seoInput } = Astro.props
 const seo = buildSeo(seoInput, Astro.url)
 const themeColor = surface === 'paper' ? '#f7f3ea' : '#1e1813'
+const currentPath = Astro.url.pathname
 ---
 
 <html lang="en" data-theme={surface === 'paper' ? 'light' : undefined}>
@@ -66,8 +68,8 @@ const themeColor = surface === 'paper' ? '#f7f3ea' : '#1e1813'
     >
       Skip to content
     </a>
-    <header></header>
-    <main id="main-content">
+    <Header state={headerState} currentPath={currentPath} />
+    <main id="main-content" class:list={[headerState === 'solid' && 'pt-(--header-height-solid)']}>
       <slot />
     </main>
     <footer></footer>

@@ -11,6 +11,7 @@ interface Props {
   updatedAt?: Date
   authorName?: string
   surface?: 'paper' | 'ink'
+  headerState?: 'transparent' | 'solid'
 }
 
 const {
@@ -23,6 +24,7 @@ const {
   updatedAt,
   authorName,
   surface = 'ink',
+  headerState = 'solid',
 } = Astro.props
 ---
 
@@ -37,6 +39,7 @@ const {
   updatedAt={updatedAt}
   authorName={authorName}
   surface={surface}
+  headerState={headerState}
 >
   <article>
     <slot />

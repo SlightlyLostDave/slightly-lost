@@ -96,6 +96,14 @@
   --container-measure: 68ch;
   --spacing-section: 8rem;
   --spacing-section-lg: 12rem;
+
+  /* Header, used by Header.astro, Header.motion.ts, and Base.astro's <main>
+     offset. Header.motion.ts hardcodes the same two numbers, since a GSAP
+     scroll callback needs a plain JS number rather than a computed-style read
+     on every trigger evaluation; keep them in sync by hand. */
+  --header-height-tall: 74px;
+  --header-height-solid: 58px;
+  --tap-target: 44px;
 }
 
 /* Light theme, opt-in only. The operating system preference is never
@@ -133,5 +141,23 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+
+  /* Applied to <html> for one animation frame around a theme swap, so the
+     browser's automatic color transition on every element does not flash
+     through intermediate colors. */
+  .theme-swap-instant,
+  .theme-swap-instant * {
+    transition: none !important;
+    animation-duration: 0s !important;
+  }
+
+  /* Applied to <body> while MobileMenu is open. Combined with an inline
+     top offset (see MobileMenu.motion.ts) rather than plain overflow:hidden,
+     which is known to leak touch-scroll on iOS Safari. */
+  .scroll-locked {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
   }
 }

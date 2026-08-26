@@ -1,0 +1,139 @@
+---
+import { navigation, site } from '@/config'
+import MobileMenu from './MobileMenu.astro'
+import ThemeToggle from './ThemeToggle.astro'
+
+interface Props {
+  state?: 'transparent' | 'solid'
+  currentPath: string
+}
+
+const { state = 'solid', currentPath } = Astro.props
+const isSolid = state === 'solid'
+
+function isCurrentLink(href: string, path: string): boolean {
+  return path === href || path.startsWith(`${href}/`)
+}
+
+// .header__fill and .header__bar are the two elements Header.motion.ts
+// animates via plain inline `transform`/`opacity` writes once GSAP boots.
+// Their resting style is computed here, in the same units GSAP uses, so a
+// page with JS disabled (or before GSAP loads) renders the correct final
+// state with no animation involved. Tailwind's transform utilities are
+// deliberately not used on these two elements: Tailwind v4 utilities like
+// scale-*/translate-* set the standalone CSS `scale`/`translate`
+// properties, which compose independently of the `transform` property GSAP
+// writes to, so mixing the two would double up the same displacement.
+const fillStyle = isSolid
+  ? 'opacity: 1; transform: scaleY(calc(var(--header-height-solid) / var(--header-height-tall)));'
+  : 'opacity: 0; transform: scaleY(1);'
+const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translateY(0);'
+
+// Text and chrome on the transparent state take a fixed literal token
+// (paper) rather than the theme's role tokens, because a photograph's
+// tonality does not change with the reader's light/dark preference.
+const chromeColor =
+  'group-data-[header-state=transparent]:text-paper group-data-[header-state=solid]:text-text-muted motion-safe:transition-colors'
+---
+
+<header
+  id="site-header"
+  data-anim={isSolid ? undefined : 'header'}
+  data-header-state={state}
+  class="group fixed inset-x-0 top-0 z-50 h-(--header-height-tall)"
+>
+  <div
+    class="header__fill border-hairline bg-surface absolute inset-0 border-b"
+    style={`transform-origin: top; ${fillStyle}`}
+    aria-hidden="true"
+  >
+  </div>
+
+  <div
+    class="header__bar max-w-content relative mx-auto flex h-full items-center justify-between gap-6 px-6"
+    style={barStyle}
+  >
+    <a href="/" class:list={['font-display text-title', chromeColor]}>
+      {site.name}
+    </a>
+
+    <div class="flex items-center gap-6">
+      <nav aria-label="Primary" class="hidden lg:flex lg:items-center lg:gap-6">
+        {
+          navigation.primary.map((link) => {
+            const current = isCurrentLink(link.href, currentPath)
+            return (
+              <a
+                href={link.href}
+                aria-current={current ? 'page' : undefined}
+                class:list={[
+                  'text-label inline-flex min-h-(--tap-target) items-center font-mono uppercase',
+                  chromeColor,
+                  current && 'group-data-[header-state=solid]:text-accent',
+                ]}
+              >
+                {link.label}
+              </a>
+            )
+          })
+        }
+      </nav>
+
+      <div
+        aria-hidden="true"
+        class:list={['hidden h-6 w-px bg-current opacity-40 lg:block', chromeColor]}
+      >
+      </div>
+
+      <a
+        href="/search"
+        aria-label="Search"
+        class:list={[
+          'inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center',
+          chromeColor,
+        ]}
+      >
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          class="h-5 w-5"
+          aria-hidden="true"
+        >
+          <circle cx="9" cy="9" r="5.5"></circle>
+          <path d="M13.4 13.4 17.5 17.5" stroke-linecap="round"></path>
+        </svg>
+      </a>
+
+      <div class:list={[chromeColor]}>
+        <ThemeToggle />
+      </div>
+
+      <button
+        type="button"
+        data-mobile-menu-trigger
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label="Open menu"
+        class:list={[
+          'inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center lg:hidden',
+          chromeColor,
+        ]}
+      >
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          class="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path d="M3 6.5h14M3 13.5h14" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<MobileMenu currentPath={currentPath} />

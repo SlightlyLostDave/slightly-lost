@@ -8,6 +8,7 @@ interface Props {
   canonicalUrl?: string
   noindex?: boolean
   surface?: 'paper' | 'ink'
+  headerState?: 'transparent' | 'solid'
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   canonicalUrl,
   noindex,
   surface = 'ink',
+  headerState = 'solid',
 } = Astro.props
 ---
 
@@ -28,6 +30,7 @@ const {
   canonicalUrl={canonicalUrl}
   noindex={noindex}
   surface={surface}
+  headerState={headerState}
 >
   <slot />
   {

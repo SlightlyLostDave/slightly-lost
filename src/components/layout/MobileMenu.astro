@@ -1,0 +1,75 @@
+---
+import { navigation, site, type NavLink } from '@/config'
+
+interface Props {
+  currentPath: string
+}
+
+const { currentPath } = Astro.props
+
+function isCurrentLink(href: string, path: string): boolean {
+  return path === href || path.startsWith(`${href}/`)
+}
+
+const elsewhereLinks: readonly NavLink[] =
+  navigation.footer.find((group) => group.heading === 'Elsewhere')?.links ?? []
+const socialLinks = elsewhereLinks.filter((link) => link.external)
+---
+
+<div
+  id="mobile-menu"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="mobile-menu-heading"
+  inert
+  class="mobile-menu group fixed inset-x-0 top-0 z-50 flex h-dvh flex-col bg-surface-raised opacity-0 motion-safe:transition-opacity motion-safe:duration-200 data-[state=open]:opacity-100"
+>
+  <div class="flex h-(--header-height-solid) shrink-0 items-center justify-between border-b border-hairline px-6">
+    <span id="mobile-menu-heading" class="font-display text-title text-text-strong">{site.name}</span>
+    <button
+      type="button"
+      data-mobile-menu-close
+      aria-label="Close menu"
+      class="inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center text-text-body"
+    >
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5" aria-hidden="true">
+        <path d="M5 5l10 10M15 5 5 15" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+
+  <nav aria-label="Primary" class="flex flex-1 flex-col overflow-y-auto px-6">
+    {
+      navigation.primary.map((link, index) => {
+        const current = isCurrentLink(link.href, currentPath)
+        return (
+          <a
+            href={link.href}
+            aria-current={current ? 'page' : undefined}
+            style={`transition-delay: ${index * 40}ms`}
+            class:list={[
+              'translate-y-4 border-b border-hairline py-4.5 font-display text-display-l text-text-strong opacity-0',
+              'motion-safe:transition-[opacity,translate] motion-safe:duration-300',
+              'group-data-[state=open]:translate-y-0 group-data-[state=open]:opacity-100',
+              current && 'text-accent',
+            ]}
+          >
+            {link.label}
+          </a>
+        )
+      })
+    }
+  </nav>
+
+  <div class="flex flex-wrap gap-x-6 gap-y-3 border-t border-hairline px-6 py-6 font-mono text-label uppercase text-text-muted">
+    <a href="/search">Search</a>
+    <a href="/rss.xml">RSS</a>
+    {socialLinks.map((link) => <a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>)}
+  </div>
+
+  <p class="px-6 pb-8 font-mono text-caption text-text-muted">{site.footerClosingLine}</p>
+</div>
+
+<script>
+  import './MobileMenu.script'
+</script>
