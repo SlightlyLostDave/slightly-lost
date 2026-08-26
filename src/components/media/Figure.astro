@@ -1,11 +1,11 @@
 ---
 interface Props {
-  src: string
+  src?: string
   alt: string
   caption?: string
   width?: 'measure' | 'container'
-  imgWidth: number
-  imgHeight: number
+  imgWidth?: number
+  imgHeight?: number
   class?: string
 }
 
@@ -30,6 +30,17 @@ const { src, alt, caption, width = 'measure', imgWidth, imgHeight, class: classN
     className,
   ]}
 >
-  <img src={src} alt={alt} width={imgWidth} height={imgHeight} loading="lazy" decoding="async" class="h-auto w-full" />
+  {
+    src ? (
+      <img src={src} alt={alt} width={imgWidth} height={imgHeight} loading="lazy" decoding="async" class="h-auto w-full" />
+    ) : (
+      // No real photograph yet. aspect-[3/2] is a one-off box for a temporary
+      // placeholder with no <img> to size it from; no aspect-ratio token
+      // exists for this and none should until a second caller needs one.
+      <div role="img" aria-label={alt} class="aspect-3/2 w-full overflow-hidden">
+        <slot name="media" />
+      </div>
+    )
+  }
   {caption && <figcaption class="mt-2 font-mono text-caption text-text-muted wrap-break-word">{caption}</figcaption>}
 </figure>

@@ -1,0 +1,34 @@
+---
+// Flat vector stand-in for a photograph that does not exist yet. Five
+// stacked bands (sky / far ridge / mid ground / near ground / foreground)
+// drawn from four consecutive windows of the ink-to-paper ramp already
+// declared in @theme (src/styles/app.css) — fill="currentColor" resolves
+// each rect's own text-* utility, so this introduces no new hex values and
+// needs no manual sync with app.css. Delete this file and pass a real `src`
+// at each Figure/FullBleed call site once photography exists; no other
+// component changes needed.
+interface Props {
+  variant?: 'a' | 'b' | 'c' | 'd'
+  class?: string
+}
+
+const { variant = 'a', class: className } = Astro.props
+
+const bandsByVariant: Record<NonNullable<Props['variant']>, string[]> = {
+  a: ['text-fog', 'text-linen', 'text-mist', 'text-dun', 'text-slate'],
+  b: ['text-linen', 'text-mist', 'text-dun', 'text-slate', 'text-loam'],
+  c: ['text-mist', 'text-dun', 'text-slate', 'text-loam', 'text-graphite'],
+  d: ['text-dun', 'text-slate', 'text-loam', 'text-graphite', 'text-peat'],
+}
+const bands = bandsByVariant[variant]
+---
+
+<svg
+  viewBox="0 0 100 75"
+  preserveAspectRatio="none"
+  role="presentation"
+  aria-hidden="true"
+  class:list={['block h-full w-full', className]}
+>
+  {bands.map((tone, i) => <rect x="0" y={i * 15} width="100" height="15" class={tone} fill="currentColor" />)}
+</svg>

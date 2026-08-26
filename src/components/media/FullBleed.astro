@@ -1,9 +1,9 @@
 ---
 interface Props {
-  src: string
+  src?: string
   alt: string
-  width: number
-  height: number
+  width?: number
+  height?: number
   displayHeight?: string
   caption?: string
   class?: string
@@ -26,7 +26,15 @@ const { src, alt, width, height, displayHeight = '70vh', caption, class: classNa
     className,
   ]}
 >
-  <img src={src} alt={alt} width={width} height={height} class="h-full w-full object-cover" loading="eager" decoding="async" />
+  {
+    src ? (
+      <img src={src} alt={alt} width={width} height={height} class="h-full w-full object-cover" loading="eager" decoding="async" />
+    ) : (
+      <div role="img" aria-label={alt} class="h-full w-full">
+        <slot name="media" />
+      </div>
+    )
+  }
   {
     caption && (
       <figcaption class="absolute bottom-4 left-6 max-w-[80%] bg-ink/70 px-2 py-1 font-mono text-caption text-paper wrap-break-word">

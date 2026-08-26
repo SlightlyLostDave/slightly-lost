@@ -15,8 +15,8 @@ const { sources, class: className } = Astro.props
     <ol class="mt-6 list-none divide-y divide-hairline border-t border-hairline">
       {
         sources.map((source, i) => (
-          <li class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 py-4">
-            <span aria-hidden="true" class="font-mono text-data text-text-muted">
+          <li class="grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-4 py-4">
+            <span aria-hidden="true" class="font-mono text-data leading-none text-text-muted">
               {String(i + 1).padStart(2, '0')}
             </span>
             <div>

@@ -1,0 +1,144 @@
+---
+import Article from '@/layouts/Article.astro'
+import FieldDataStrip from '@/components/sections/FieldDataStrip.astro'
+import SourceList from '@/components/sections/SourceList.astro'
+import FullBleed from '@/components/media/FullBleed.astro'
+import Figure from '@/components/media/Figure.astro'
+import FigureGrid from '@/components/media/FigureGrid.astro'
+import PullQuote from '@/components/sections/PullQuote.astro'
+import Placeholder from '@/components/media/Placeholder.astro'
+import { centreHillHeadframe as post } from '@/content/sample/centre-hill-headframe'
+---
+
+<Article
+  title={post.title}
+  description={post.dek}
+  publishedAt={post.publishedAt}
+  authorName={post.authorName}
+  pillar={post.pillar}
+  region={post.region}
+  readingTime={post.readingTime}
+  photoCount={post.photoCount}
+>
+  <Fragment slot="hero">
+    <FullBleed
+      alt="Centre Hill headframe across the clearing, placeholder pending photography"
+      caption="Centre Hill headframe, north face — placeholder, photography pending"
+    >
+      <Placeholder slot="media" variant="a" />
+    </FullBleed>
+  </Fragment>
+
+  <Fragment slot="field-data">
+    <FieldDataStrip items={post.fieldData} />
+  </Fragment>
+
+  <p>
+    The headframe at Centre Hill is a four-legged riveted steel frame, nineteen metres to the sheave deck, raised in
+    1938 by a contractor out of Copper Cliff who built three others like it in the basin and left no drawings behind
+    for any of them. The mine closed in 1962, and the surface plant came down in stages through the following decade:
+    hoist house first, then the dry, then the ore bin. The headframe stayed upright because taking it down would have
+    cost more than leaving it, which is the reason most of these things are still standing anywhere in this district.
+    Sixty-odd years of freeze and thaw have not been kind to the footings, and nothing about the structure suggests it
+    was built with sixty years in mind.
+  </p>
+
+  <p>
+    The approach is 2.4 kilometres from a pull-off on a haul road the county stopped maintaining sometime after the
+    mine closed, through second-growth birch and a stretch of low ground that only holds a boot in a hard frost.
+    There is no sign at the road and nothing at the collar to say that a shaft goes down several hundred metres
+    directly under the leaf litter. I first walked in on 2025.09.28, with no plan beyond looking at the thing standing
+    there. It leans, visibly, if you already know to look for it, and it photographs badly from any single position,
+    because the lean only reads against something else to compare it to. That absence of a fixed reference is the
+    entire reason this site earned a second visit instead of staying a single afternoon in a folder.
+  </p>
+
+  <p>
+    The second session followed eleven months later, deliberately in comparable light and with the same lens, and
+    this time with a plan: 1,840 frames across two loops, one at ground level circling the footings and one from the
+    till shelf above, shot with enough overlap to build a photogrammetric model that could be measured against the
+    first. A single model of a ruin is a portrait, useful for exactly what a portrait is useful for. Two models of
+    the same ruin, captured months apart and aligned on a fixed point, are a measurement, which is a different kind
+    of object entirely, and the only kind that answers the question this place actually raises: not whether it looks
+    derelict, but whether it is still doing the same thing it was doing a year ago.
+  </p>
+
+  <FigureGrid columns={2}>
+    <Figure alt="First capture session, September 2025, placeholder pending photography">
+      <Placeholder slot="media" variant="b" />
+    </Figure>
+    <Figure alt="Second capture session, August 2026, placeholder pending photography">
+      <Placeholder slot="media" variant="c" />
+    </Figure>
+  </FigureGrid>
+
+  <p>
+    Aligned on the concrete collar, which has not moved and is not going to, the two clouds agree almost everywhere.
+    The south and east legs sit within four millimetres of each other, which is close to the noise floor of this
+    method at this range with this camera. The sheave deck is unchanged, structurally and photographically. The
+    north leg is a different result: thirty-one millimetres out at the second bracing tier and fifty-eight at the
+    deck, all of it in the same direction, downslope and slightly east, and all of it consistent with the visible
+    crack that runs out of frame in both sessions at the base of that footing.
+  </p>
+
+  <p>
+    None of that is a dramatic number on its own. A millimetre and a half a week, distributed across a structure that
+    has already stood through sixty-odd freeze cycles, is not an emergency by any ordinary reading. It is, however, a
+    number, and a repeatable one, in a place where the only account of movement before this had been a general sense
+    that the thing looked a bit more tilted than people remembered. A point cloud will not tell you whether that
+    matters. It will tell you, precisely and without opinion, what changed and by how much, which turns out to be a
+    smaller service than it sounds and a considerably more useful one than a photograph.
+  </p>
+
+  <PullQuote>
+    The model is very good at telling you what a thing looks like and completely silent on whether it is about to
+    fall on you.
+  </PullQuote>
+
+  <p>
+    What a retired hoistman from Copper Cliff told me on the second visit, standing at the collar and looking up at
+    the same leg, was that the frame was sound when he left it and that steel does not fail quietly. Both of those
+    things can be true and still not settle anything, because sound in 1962 and sound now are different claims
+    separated by sixty-four winters, and quietly is doing a lot of work in a sentence about a structure nobody is
+    monitoring. The wet corner of the pad under that footing has visibly slumped since the first session. That much
+    needed no instrument to see; the instrument only said how much.
+  </p>
+
+  <Figure
+    alt="North leg base, near-ground detail showing the crack at the footing, placeholder pending photography"
+    width="measure"
+  >
+    <Placeholder slot="media" variant="d" />
+  </Figure>
+
+  <p>
+    The method has limits worth stating plainly. Photogrammetric comparison assumes a fixed reference, and the
+    collar is the only feature at this site stable enough to serve as one; if the collar itself has settled,
+    everything measured against it is wrong by the same amount, in a direction nothing here would reveal. It also
+    assumes consistent capture conditions, which is why both sessions used the same lens, the same time of day, and
+    as close to the same standing positions as the ground allowed. None of that is exotic; it is the same discipline
+    any <a href="https://en.wikipedia.org/wiki/Structure_from_motion" target="_blank" rel="noopener">structure-from-motion</a> survey
+    depends on, described in more careful terms than a field note usually bothers with.
+  </p>
+
+  <ul>
+    <li>South leg, second bracing tier: 4 mm apparent shift, within the method's noise floor</li>
+    <li>East leg, second bracing tier: 3 mm apparent shift, within the method's noise floor</li>
+    <li>Sheave deck: no measurable change</li>
+    <li>North leg, second bracing tier: 31 mm, downslope and east, repeatable across both loops</li>
+    <li>North leg, sheave deck: 58 mm, same direction, the largest measured delta at the site</li>
+  </ul>
+
+  <p>
+    A third session is set for the same week next year, at which point the interval itself becomes the more
+    interesting variable than any single displacement, since one comparison establishes that something moved and
+    only a third establishes whether it is accelerating. The coordinates published here are fuzzed, which is the
+    standing policy for any site with an open collar regardless of how well documented the structure above it
+    already is. The headframe will likely still be standing next spring. Whether it will still be standing the
+    spring after that is exactly the question this method was built to answer, slowly, one session at a time.
+  </p>
+
+  <Fragment slot="sources">
+    <SourceList sources={post.sources} />
+  </Fragment>
+</Article>

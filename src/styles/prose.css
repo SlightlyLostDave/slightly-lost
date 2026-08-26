@@ -12,17 +12,24 @@
   @apply font-display text-text-strong;
 }
 .prose h2 {
-  @apply text-display-m;
+  @apply text-display-m mt-16 mb-4 first:mt-0;
 }
 .prose h3 {
-  @apply text-title;
+  @apply text-title mt-12 mb-3 first:mt-0;
 }
 .prose h4 {
-  @apply text-body-l font-medium;
+  @apply text-body-l font-medium mt-10 mb-2 first:mt-0;
 }
 
 .prose p {
   @apply mt-6 first:mt-0;
+}
+
+/* The lede: the first paragraph reads brighter than the rest of the body,
+   so the standfirst -> lede -> body sequence doesn't collapse into one
+   uniform tone. */
+.prose > p:first-of-type {
+  @apply text-text-strong;
 }
 
 .prose a {
