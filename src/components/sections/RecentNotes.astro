@@ -1,0 +1,33 @@
+---
+import PostCard from '@/components/cards/PostCard.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import { homepage } from '@/config'
+import { recentNotes } from '@/content/sample/recent-notes'
+
+const { recent: heading } = homepage.sectionHeadings
+---
+
+<section class="bg-surface px-6 py-16 md:py-(--spacing-section)">
+  <div class="max-w-content mx-auto flex flex-col gap-16">
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+        <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+          {heading}
+        </h2>
+        <a
+          href="/field-notes"
+          class="font-mono text-label uppercase text-text-muted motion-safe:transition-colors hover:text-text-strong"
+        >
+          All notes
+        </a>
+      </div>
+      <Hairline variant="heavy" />
+    </div>
+
+    <div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {recentNotes.map((post) => (
+        <PostCard post={post} aspect="3:2" />
+      ))}
+    </div>
+  </div>
+</section>

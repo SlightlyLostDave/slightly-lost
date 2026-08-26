@@ -55,6 +55,10 @@
   --text-control--line-height: 1;
   --text-control--letter-spacing: 0.06em;
 
+  /* Aspect ratios, PostCard's image well */
+  --aspect-card-wide: 3 / 2;
+  --aspect-card-portrait: 4 / 5;
+
   /* Font families. Point at the CSS variables the Astro Fonts API will define. 
      Fallback lives inside var() so the stack degrades gracefully today, before 
      those variables exist. */
@@ -86,6 +90,7 @@
   --color-text-strong: var(--color-paper);
   --color-text-body: var(--color-fog);
   --color-text-muted: var(--color-mist);
+  --color-text-subtle: var(--color-loam); /* quieter than muted, PostCard metadata and fine print */
   --color-hairline: var(--color-slate);
   --color-accent: var(--color-rust-glow);
   --weight-display: 300;
@@ -132,6 +137,7 @@
   --color-text-strong: var(--color-ink);
   --color-text-body: var(--color-graphite);
   --color-text-muted: var(--color-slate);
+  --color-text-subtle: var(--color-dun);
   --color-hairline: var(--color-linen);
   --color-accent: var(--color-rust-deep);
   --weight-display: 400;

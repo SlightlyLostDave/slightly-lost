@@ -24,6 +24,19 @@ export interface AtlasStat {
   value: number
 }
 
+export interface HomepageGuideLogbookCard {
+  label: string
+  title: string
+  description: string
+  ctaLabel: string
+  href: string
+  imageAlt: string
+}
+
+export interface HomepageNewsletter {
+  finePrint: string
+}
+
 export interface FeaturedDispatchStat {
   label: string
   value: string
@@ -47,6 +60,8 @@ export interface HomepageConfig {
   featuredDispatch: HomepageFeaturedDispatch
   sectionHeadings: HomepageSectionHeadings
   atlasStats: readonly AtlasStat[]
+  guidesLogbooks: readonly HomepageGuideLogbookCard[]
+  newsletter: HomepageNewsletter
 }
 
 export const homepage = {
@@ -98,4 +113,26 @@ export const homepage = {
     { label: 'Visited', value: 96 },
     { label: 'Withheld', value: 31 },
   ],
+  guidesLogbooks: [
+    {
+      label: 'Guides',
+      title: 'Reading a mine plan before you go anywhere near one',
+      description:
+        'Shafts, adits, stopes, and the difference between a plan that is accurate and a plan that is merely old.',
+      ctaLabel: 'Start with the basics',
+      href: '/guides/reading-a-mine-plan',
+      imageAlt: 'A mine plan laid out on a table, placeholder pending photography',
+    },
+    {
+      label: 'Logbooks',
+      title: 'The 2026 logbook, county by county',
+      description: 'Every trip in order, including the ones that came to nothing. Distances, dates, and what the weather did.',
+      ctaLabel: 'Open the logbook',
+      href: '/logbooks/2026',
+      imageAlt: 'A page from the 2026 logbook, placeholder pending photography',
+    },
+  ],
+  newsletter: {
+    finePrint: 'One email a month at most. Unsubscribe link in every one. Sent via [ESP placeholder].',
+  },
 } as const satisfies HomepageConfig

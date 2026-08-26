@@ -1,0 +1,102 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Button from '@/components/primitives/Button.astro'
+import { homepage } from '@/config'
+
+const { atlas: heading } = homepage.sectionHeadings
+const { atlasStats } = homepage
+---
+
+<section class="bg-surface-raised px-6 py-16 md:py-(--spacing-section)">
+  <div class="max-w-content mx-auto grid grid-cols-1 items-center gap-16 md:grid-cols-[1fr_1.05fr] md:gap-20">
+    <div data-anim="reveal" data-anim-stagger class="flex flex-col gap-8">
+      <Label accentRule>The Atlas</Label>
+      <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+        {heading}
+      </h2>
+      <p class="max-w-measure font-display text-body-l text-text-muted">
+        Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately
+        fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong
+        to somebody.
+      </p>
+      <Hairline />
+      <div data-anim="atlasStats" class="grid grid-cols-3 gap-6">
+        {atlasStats.map((stat) => (
+          <div class="flex flex-col gap-2">
+            <span
+              class="font-display text-display-l tabular-nums text-text-strong"
+              style="font-weight: var(--weight-display)"
+              data-count-to={stat.value}
+            >
+              {stat.value}
+            </span>
+            <span class="font-mono text-label uppercase text-text-subtle">{stat.label}</span>
+          </div>
+        ))}
+      </div>
+      <Button href="/atlas" variant="secondary" class="self-start">Open the atlas</Button>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="border border-hairline bg-surface p-6">
+        <svg viewBox="0 0 620 440" class="block h-auto w-full" role="presentation" aria-hidden="true">
+          <g stroke="currentColor" stroke-width="1" class="text-hairline">
+            <line x1="0" y1="88" x2="620" y2="88" />
+            <line x1="0" y1="176" x2="620" y2="176" />
+            <line x1="0" y1="264" x2="620" y2="264" />
+            <line x1="0" y1="352" x2="620" y2="352" />
+            <line x1="124" y1="0" x2="124" y2="440" />
+            <line x1="248" y1="0" x2="248" y2="440" />
+            <line x1="372" y1="0" x2="372" y2="440" />
+            <line x1="496" y1="0" x2="496" y2="440" />
+          </g>
+          <polyline
+            points="0,116 62,104 118,132 168,120 214,158 268,150 318,188 372,176 420,214 476,200 532,236 588,222 620,246"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="text-text-muted"
+          />
+          <polyline
+            points="0,300 62,286 118,308 168,296 214,326 268,314 318,342 372,330 420,356 476,346 532,372 588,362 620,380"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="text-rule-strong"
+          />
+          <polyline
+            points="96,392 148,330 186,286 244,268 292,222 348,206 402,166 452,140"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-dasharray="7 7"
+            class="text-sage"
+          />
+          <circle cx="244" cy="268" r="8" fill="currentColor" class="text-accent" />
+          <circle cx="402" cy="166" r="8" fill="currentColor" class="text-accent" />
+          <circle cx="148" cy="330" r="4.5" fill="currentColor" class="text-sage" />
+          <circle cx="292" cy="222" r="4.5" fill="currentColor" class="text-sage" />
+          <circle cx="348" cy="206" r="4.5" fill="currentColor" class="text-sage" />
+          <circle cx="452" cy="140" r="4.5" fill="currentColor" class="text-sage" />
+          <circle cx="96" cy="392" r="4.5" fill="currentColor" class="text-sage" />
+        </svg>
+      </div>
+
+      <div class="flex flex-wrap gap-8 font-mono text-label uppercase text-text-muted">
+        <span class="flex items-center gap-2">
+          <span aria-hidden="true" class="block h-3 w-3 rounded-full bg-accent"></span>
+          Site note published
+        </span>
+        <span class="flex items-center gap-2">
+          <span aria-hidden="true" class="block h-2 w-2 rounded-full bg-sage"></span>
+          Logged, not written up
+        </span>
+        <span class="flex items-center gap-2">
+          <span aria-hidden="true" class="block h-px w-4 bg-sage"></span>
+          Route walked
+        </span>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,38 @@
+---
+import Placeholder from '@/components/media/Placeholder.astro'
+import { homepage } from '@/config'
+
+const { guidesLogbooks } = homepage
+---
+
+<section class="bg-surface px-6 py-16 md:py-(--spacing-section)">
+  <div
+    data-anim="reveal"
+    data-anim-stagger
+    class="max-w-content mx-auto grid grid-cols-1 gap-6 md:grid-cols-2"
+  >
+    {guidesLogbooks.map((card, index) => (
+      <article class="flex flex-col border border-hairline bg-surface-raised">
+        <div class="h-70 overflow-hidden bg-surface">
+          <Placeholder variant={index === 0 ? 'b' : 'c'} />
+        </div>
+        <div class="flex flex-col gap-4 p-10">
+          <span class="font-mono text-label uppercase text-sage">{card.label}</span>
+          <h3 class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+            {card.title}
+          </h3>
+          <p class="text-body text-text-muted">{card.description}</p>
+          <a
+            href={card.href}
+            class="mt-2 inline-flex items-center gap-2 font-mono text-label uppercase text-accent motion-safe:transition-colors hover:text-text-strong"
+          >
+            {card.ctaLabel}
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
+          </a>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

@@ -5,6 +5,7 @@ export const animationRegistry = {
   header: () => import('../../components/layout/Header.motion'),
   article: () => import('../../layouts/Article.motion'),
   hero: () => import('../../components/sections/Hero.motion'),
+  atlasStats: () => import('../../components/sections/AtlasTeaser.motion'),
 } satisfies Record<string, () => Promise<AnimationModule>>
 
 export type AnimationName = keyof typeof animationRegistry

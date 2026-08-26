@@ -31,8 +31,8 @@ Node 26 LTS. TypeScript strict. Zod 4.
 - Repetition is extracted into an Astro component, never into a CSS class.
 - Inline SVG inherits `currentColor` and takes its colour from a text utility. This is the most common place hex values leak back into components.
 - No decorative shadows. Elevation is expressed by surface colour change and a 1px hairline border.
-- Rust appears once per viewport: the active state, the one link that matters, or the rule under a section label. Never for body text, never as a large fill.
-- Sage is reserved for water, wreck, map, and underwater content. It is not a general secondary colour.
+- Rust is the active accent: the one hover state, the one link that matters, or the rule under a section label. Never a resting default, never for body text, never as a large fill.
+- Sage is the resting accent: the quiet default used at rest across surfaces, including pillar labels and the atlas map plate.
 - Accents are surface-specific. `rust-deep` and `sage-deep` on light, `rust-glow` and `sage-glow` on dark. Using the wrong one is an accessibility bug, not a style choice.
 - Hairlines are linen on light and slate on dark, chosen explicitly. There is no generic hairline token.
 

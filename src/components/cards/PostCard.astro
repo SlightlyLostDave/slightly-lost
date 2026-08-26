@@ -1,0 +1,76 @@
+---
+import Tag from '@/components/primitives/Tag.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Placeholder from '@/components/media/Placeholder.astro'
+import { pillarBySlug, type PillarSlug } from '@/config/pillars'
+
+interface PostCardData {
+  pillar: PillarSlug
+  title: string
+  dek: string
+  publishedAt: Date
+  readingTime: number
+  href: string
+  imageAlt: string
+}
+
+interface Props {
+  post: PostCardData
+  aspect?: '3:2' | '4:5' | '1:1'
+  textOnly?: boolean
+  placeholderVariant?: 'a' | 'b' | 'c' | 'd'
+}
+
+const { post, aspect = '3:2', textOnly = false, placeholderVariant = 'a' } = Astro.props
+
+const pillar = pillarBySlug[post.pillar]
+
+const aspectClasses: Record<NonNullable<Props['aspect']>, string> = {
+  '3:2': 'aspect-card-wide',
+  '4:5': 'aspect-card-portrait',
+  '1:1': 'aspect-square',
+}
+
+const formattedDate = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})
+  .format(post.publishedAt)
+  .replaceAll('/', '.')
+---
+
+<a
+  href={post.href}
+  aria-label={post.title}
+  class="group flex flex-col gap-5 border border-hairline bg-surface-raised motion-safe:transition-colors hover:border-rule-strong focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+>
+  {
+    !textOnly && (
+      <div class:list={['relative overflow-hidden bg-surface', aspectClasses[aspect]]}>
+        <Placeholder variant={placeholderVariant} />
+        <Tag label={pillar.name} onImage class="absolute top-3 left-3" />
+      </div>
+    )
+  }
+
+  <div class="flex flex-1 flex-col gap-5 p-6">
+    <span class="font-mono text-label uppercase text-sage">{pillar.name}</span>
+
+    <h3
+      class="font-display text-display-m text-text-strong underline decoration-1 decoration-transparent underline-offset-4 group-hover:decoration-accent group-focus-visible:decoration-accent"
+      style="font-weight: var(--weight-display)"
+    >
+      {post.title}
+    </h3>
+
+    <p class="line-clamp-2 flex-1 text-body text-text-muted">{post.dek}</p>
+
+    <Hairline />
+
+    <div class="flex items-center justify-between font-mono text-data tabular-nums text-text-subtle">
+      <span>{formattedDate}</span>
+      <span>{post.readingTime} min</span>
+    </div>
+  </div>
+</a>
