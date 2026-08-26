@@ -5,7 +5,23 @@ import { homepage } from '@/config'
 const { interstitial } = homepage
 ---
 
-<section class="bg-surface">
+<!--
+  mt-[-100svh] pulls this section's document position up by one full
+  screen, into Hero.astro's runway, so it starts entering the viewport
+  while data-hero-screen is still stuck (sticky) instead of arriving the
+  instant it unsticks -- see the h-[240svh] comment on Hero.astro for the
+  full geometry this is matched to. relative z-0: position: sticky (even at
+  z-index: auto, which data-hero-screen uses) always paints above a
+  position: static sibling regardless of DOM order, so without an explicit
+  position + z-index here this section would render BEHIND the still-stuck
+  screen box during the overlap instead of covering it. z-0 (not z-index:
+  auto) puts this section in the same explicit stacking level as the screen
+  box, where ties are broken by DOM order -- this section comes later, so
+  it wins and visually covers the screen box, while data-hero-foreground's
+  z-10 still outranks both and stays visible in front throughout. No
+  @theme token fits a one-off viewport-relative offset used exactly once.
+-->
+<section class="bg-surface relative z-0 mt-[-100svh]">
   <div
     data-anim="reveal"
     class="flex flex-col items-center gap-8 px-6 py-16 text-center md:pt-42 md:pb-38"

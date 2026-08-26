@@ -1,31 +1,42 @@
 ---
-import Label from '@/components/primitives/Label.astro'
-import HeroPlaceholder from './HeroPlaceholder.astro'
+import Label from '@components/primitives/Label.astro'
+import HeroLayer from '@components/sections/HeroLayer.astro'
 import { homepage } from '@/config'
 
-const { hero } = homepage
+const { hero } = homepage;
 ---
 
 <!--
   Stage height = one pinned "screen" (100svh, matches data-hero-screen's own
-  h-svh below) plus a 40svh scroll runway the pinned curtain plays out
-  across before Interstitial takes over. svh on both terms, not vh, so the
-  runway stays proportionally correct as mobile browser chrome shows/hides
-  -- mixing units would let the two drift apart. No @theme token fits a
-  one-off viewport-relative stage height used exactly once. Keep 140/100/40
-  in sync by hand with Hero.motion.ts's SCREEN_VH/RUNWAY_VH, the same
-  pattern app.css documents for --header-height-tall / Header.motion.ts.
-  motion-reduce:h-svh collapses the stage back to a normal one-screen
-  section -- the pin itself is scroll-linked motion, not just the parallax,
-  so it's gated behind prefers-reduced-motion too.
+  h-svh below) plus a 140svh runway: 40svh of pure dwell (the pinned scene
+  plays out undisturbed, as before) followed by a 100svh cover-transition
+  window during which Interstitial (pulled up by its own -mt-[100svh], see
+  Interstitial.astro) rises from fully below the viewport to fully covering
+  it, entirely while this screen box is still stuck. 100svh is not
+  arbitrary: it's the exact scroll distance a full-viewport-height sibling
+  takes to slide from "just below the viewport" to "fully covering it," so
+  matching the transition window to one screen-height is what makes the
+  cover finish exactly as this screen box unsticks (240 - 100 = 140, this
+  stage's own runway) -- shorter and Interstitial would still be mid-slide
+  after unsticking (a jarring double-render), longer and there'd be dead
+  scroll with Interstitial already fully covering but the screen box still
+  technically stuck underneath it. svh on every term, not vh, so the whole
+  relationship stays proportionally correct as mobile browser chrome
+  shows/hides. No @theme token fits a one-off viewport-relative stage height
+  used exactly once. Keep 240/100/140 in sync by hand with
+  Hero.motion.ts's SCREEN_VH/RUNWAY_VH and Interstitial.astro's -mt-[100svh],
+  the same pattern app.css documents for --header-height-tall /
+  Header.motion.ts. motion-reduce:h-svh collapses the stage back to a normal
+  one-screen section -- the pin itself is scroll-linked motion, not just the
+  parallax, so it's gated behind prefers-reduced-motion too.
 -->
-<section data-hero data-anim="hero" class="relative h-[140svh] w-full motion-reduce:h-svh">
+<section data-hero data-anim="hero" class="relative h-[240svh] w-full motion-reduce:h-svh">
   <div
     data-hero-screen
     class="bg-surface sticky top-0 h-svh w-full overflow-hidden motion-reduce:static"
   >
-    <HeroPlaceholder layer="back" />
-    <HeroPlaceholder layer="mid" />
+    <HeroLayer layer="back" />
+    <HeroLayer layer="mid" />
     <!--
       fetchpriority="high" and explicit width/height were originally specified
       for this (LCP-candidate) layer with a real <img> in mind. fetchpriority
@@ -73,32 +84,40 @@ const { hero } = homepage
         </div>
       </div>
     </div>
-  </div>
 
-  <!--
-    z-10, not z-index:auto: guarantees this box paints above Interstitial
-    (position: static) AND above the screen box above (position: sticky,
-    z-index: auto) regardless of DOM order, since an explicit positive
-    z-index always outranks z-index:auto/static siblings in the same
-    stacking context. This is what keeps the foreground silhouette visible
-    in front of Interstitial during the brief overlap where GSAP's scrub
-    lag means front is still visibly translating right as the screen box's
-    sticky range ends. Keep this the highest explicit z-index below the
-    header's z-50. hidden md:motion-safe:block, not hidden md:block plus a
-    separate motion-reduce:hidden: two independent classes with equal
-    selector specificity (md:block vs motion-reduce:hidden) would leave the
-    md+reduced-motion case decided by Tailwind's internal variant sort
-    order rather than an explicit rule. Stacking the variants on one
-    utility (only show at md+ when motion is NOT reduced) is unambiguous:
-    front is purely decorative (aria-hidden in HeroPlaceholder.astro), so
-    it simply stays hidden under reduced motion at every breakpoint,
-    avoiding an orphaned near-empty h-svh box in flow between the screen
-    box and Interstitial.
-  -->
-  <div
-    data-hero-foreground
-    class="pointer-events-none sticky top-0 z-10 hidden h-svh w-full overflow-hidden md:motion-safe:block"
-  >
-    <HeroPlaceholder layer="front" />
+    <!--
+      absolute inset-0, not a second sticky sibling: a sibling position:sticky
+      box would add its own h-svh of document-flow height on top of this
+      screen box's, leaving no room within the 140svh stage for the intended
+      40svh runway (confirmed by measuring computed positions -- the second
+      sticky box never actually reached top:0). Nesting front here instead
+      means it takes zero flow height (absolute is out-of-flow) and inherits
+      this screen box's own sticky pin for free, since data-hero-screen
+      (position: sticky) is a valid containing block for an absolute child.
+      z-10, not z-index:auto: guarantees this layer paints above Interstitial
+      (position: static) regardless of nesting, since neither this screen box
+      nor the outer stage establishes its own stacking context (z-index:auto,
+      no transform/opacity/filter), so z-10 bubbles up to the root stacking
+      context where an explicit positive z-index always outranks
+      z-index:auto/static elements. This is what keeps the foreground
+      silhouette visible in front of Interstitial during the brief overlap
+      where GSAP's scrub lag means front is still visibly translating right
+      as the screen box's sticky range ends. Keep this the highest explicit
+      z-index below the header's z-50. hidden md:motion-safe:block, not
+      hidden md:block plus a separate motion-reduce:hidden: two independent
+      classes with equal selector specificity (md:block vs
+      motion-reduce:hidden) would leave the md+reduced-motion case decided by
+      Tailwind's internal variant sort order rather than an explicit rule.
+      Stacking the variants on one utility (only show at md+ when motion is
+      NOT reduced) is unambiguous: front is purely decorative (aria-hidden in
+      HeroPlaceholder.astro), so it simply stays hidden under reduced motion
+      at every breakpoint.
+    -->
+    <div
+      data-hero-foreground
+      class="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden md:motion-safe:block"
+    >
+      <HeroLayer layer="front" />
+    </div>
   </div>
 </section>

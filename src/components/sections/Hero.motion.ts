@@ -3,15 +3,16 @@ import type { AnimationInit } from '@lib/motion/types'
 const DESKTOP = { back: 0.15, mid: 0.35, type: 0.55, front: 0.85 }
 const MOBILE = { mid: 0.175, type: 0.275 }
 
-// Must match Hero.astro's h-[140svh] stage: one pinned 100svh screen (also
-// data-hero-screen's own h-svh) plus a 40svh scroll runway. Kept as plain
-// numbers, synced by hand with Hero.astro's comment -- same reason
-// --header-height-tall/Header.motion.ts stay in sync by hand: a GSAP
-// scroll callback needs a plain number, not a computed-style read on every
-// trigger evaluation, and a Tailwind arbitrary value can't be imported into
-// a .ts module.
+// Must match Hero.astro's h-[240svh] stage: one pinned 100svh screen (also
+// data-hero-screen's own h-svh) plus a 140svh runway (40svh dwell + a
+// 100svh cover-transition matched to Interstitial.astro's -mt-[100svh]).
+// Kept as plain numbers, synced by hand with Hero.astro's comment -- same
+// reason --header-height-tall/Header.motion.ts stay in sync by hand: a
+// GSAP scroll callback needs a plain number, not a computed-style read on
+// every trigger evaluation, and a Tailwind arbitrary value can't be
+// imported into a .ts module.
 const SCREEN_VH = 100
-const RUNWAY_VH = 40
+const RUNWAY_VH = 140
 const STAGE_VH = SCREEN_VH + RUNWAY_VH
 
 // GSAP scrub maps ScrollTrigger's 0..1 scroll progress across the trigger's

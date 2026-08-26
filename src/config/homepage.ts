@@ -66,14 +66,12 @@ export interface HomepageConfig {
 
 export const homepage = {
   hero: {
-    kicker: 'Ontario and elsewhere / since 2019',
+    kicker: 'Ontario and elsewhere / since 2005',
     headline: 'Go looking for the wrong things.',
     subhead:
       'Abandoned headframes, drowned villages, and the long way round to dinner. Written on site, not from the archive.',
-    // Placeholder location, not verified GPS. Revise once real hero
-    // photography anchors this to an actual place.
-    coordinates: '46.4917° N, 81.3378° W',
-    place: 'Sudbury basin, Ontario',
+    coordinates: '38.7231° N, 105.1259° W',
+    place: 'Theresa Mine, Colorado, USA',
   },
   interstitial: {
     // No visible kicker exists yet in the design mockup. Placeholder, easy to revise.
@@ -126,13 +124,15 @@ export const homepage = {
     {
       label: 'Logbooks',
       title: 'The 2026 logbook, county by county',
-      description: 'Every trip in order, including the ones that came to nothing. Distances, dates, and what the weather did.',
+      description:
+        'Every trip in order, including the ones that came to nothing. Distances, dates, and what the weather did.',
       ctaLabel: 'Open the logbook',
       href: '/logbooks/2026',
       imageAlt: 'A page from the 2026 logbook, placeholder pending photography',
     },
   ],
   newsletter: {
-    finePrint: 'One email a month at most. Unsubscribe link in every one. Sent via [ESP placeholder].',
+    finePrint:
+      'One email a month at most. Unsubscribe link in every one. Sent via [ESP placeholder].',
   },
 } as const satisfies HomepageConfig
