@@ -1,0 +1,28 @@
+---
+import DataValue from '@/components/primitives/DataValue.astro'
+
+interface Props {
+  items: { label: string; value: string; unit?: string; accent?: boolean }[]
+  class?: string
+}
+
+const { items, class: className } = Astro.props
+---
+
+<div class:list={['bg-surface-raised', className]}>
+  <div class="max-w-content mx-auto grid grid-cols-2 gap-x-6 gap-y-6 px-6 py-6 md:grid-cols-5 md:gap-x-0 md:divide-x md:divide-hairline">
+    {
+      items.map((item) => (
+        <div class="md:px-6 md:first:pl-0 md:last:pr-0">
+          {item.accent ? (
+            <div style="--color-text-strong: var(--color-accent)">
+              <DataValue label={item.label} value={item.value} unit={item.unit} />
+            </div>
+          ) : (
+            <DataValue label={item.label} value={item.value} unit={item.unit} />
+          )}
+        </div>
+      ))
+    }
+  </div>
+</div>

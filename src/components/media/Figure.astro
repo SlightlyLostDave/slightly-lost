@@ -1,0 +1,35 @@
+---
+interface Props {
+  src: string
+  alt: string
+  caption?: string
+  width?: 'measure' | 'container'
+  imgWidth: number
+  imgHeight: number
+  class?: string
+}
+
+const { src, alt, caption, width = 'measure', imgWidth, imgHeight, class: className } = Astro.props
+---
+
+<figure
+  data-anim="reveal"
+  class:list={[
+    width === 'container'
+      ? /* Recenters this figure on the viewport midpoint regardless of the
+           narrower reading-measure ancestor it sits in, capped at the
+           content container width. Works because that ancestor is itself
+           mx-auto (viewport-centered), so both centering methods agree.
+           Deliberately not FullBleed's calc(50%-50vw) technique — that
+           formula can't express a max-width cap. A structural breakout
+           formula, not a design value — no token fits. Not meant for figures
+           nested inside FigureGrid, where this centering math assumes the
+           figure is the row's sole occupant. */
+        'relative left-1/2 w-screen max-w-(--container-content) -translate-x-1/2 px-6'
+      : 'w-full',
+    className,
+  ]}
+>
+  <img src={src} alt={alt} width={imgWidth} height={imgHeight} loading="lazy" decoding="async" class="h-auto w-full" />
+  {caption && <figcaption class="mt-2 font-mono text-caption text-text-muted wrap-break-word">{caption}</figcaption>}
+</figure>

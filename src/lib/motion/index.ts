@@ -29,16 +29,28 @@ export async function register(): Promise<void> {
     }),
   )
 
-  gsap.matchMedia().add({ reduced: '(prefers-reduced-motion: reduce)' }, (context) => {
-    const motionContext: MotionContext = {
-      gsap,
-      ScrollTrigger,
-      reducedMotion: Boolean(context.conditions?.reduced),
-    }
-    for (const { init, elements: groupElements } of modules) {
-      init(groupElements, motionContext)
-    }
-  })
+  // Both conditions are supplied (not just `reduced`) because gsap.matchMedia
+  // only invokes its callback for a condition that currently matches; with a
+  // single 'reduced' key, the callback would never fire at all for the
+  // default (no-preference) case, silently disabling every animation module
+  // for the majority of visitors. `prefers-reduced-motion` only ever
+  // resolves to one of these two values, so exactly one always matches.
+  gsap.matchMedia().add(
+    {
+      reduced: '(prefers-reduced-motion: reduce)',
+      motion: '(prefers-reduced-motion: no-preference)',
+    },
+    (context) => {
+      const motionContext: MotionContext = {
+        gsap,
+        ScrollTrigger,
+        reducedMotion: Boolean(context.conditions?.reduced),
+      }
+      for (const { init, elements: groupElements } of modules) {
+        init(groupElements, motionContext)
+      }
+    },
+  )
 
   window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
 }

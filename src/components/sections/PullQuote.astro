@@ -1,0 +1,33 @@
+---
+import Hairline from '@/components/primitives/Hairline.astro'
+
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+
+const rendered = await Astro.slots.render('default')
+// Below this character count the quote reads as a short, punchy line and
+// gets the larger display-l treatment; at or above it, display-m keeps
+// longer quotes from wrapping awkwardly at that size.
+const textLength = rendered.replace(/<[^>]+>/g, '').trim().length
+const sizeClass = textLength < 90 ? 'text-display-l' : 'text-display-m'
+---
+
+<div data-anim="reveal" class:list={['mx-auto my-24 max-w-[900px] text-center', className]}>
+  {
+    /* 900px is a literal design measurement with no matching token (neither
+       the 68ch reading measure nor the 1376px content container lines up);
+       kept local rather than promoted to a token until reused elsewhere.
+       my-24 (96px) matches the mockup's own padding around this block, using
+       Tailwind's default numeric spacing scale the way the shipped
+       Header/Footer already do (px-6, gap-6, etc.) rather than adding a
+       third named section-rhythm token for one component. */
+  }
+  <Hairline variant="strong" />
+  <p class:list={['py-10 font-display text-text-strong', sizeClass]} style="font-weight: var(--weight-display)">
+    <slot />
+  </p>
+  <Hairline variant="strong" />
+</div>

@@ -1,0 +1,37 @@
+---
+interface Props {
+  src: string
+  alt: string
+  width: number
+  height: number
+  displayHeight?: string
+  caption?: string
+  class?: string
+}
+
+const { src, alt, width, height, displayHeight = '70vh', caption, class: className } = Astro.props
+---
+
+<figure
+  data-hero
+  style={`height: ${displayHeight}`}
+  class:list={[
+    /* calc(50% - 50vw) breaks this element out of any centered ancestor to
+       true viewport edges. Deliberately not width:100vw + left-1/2/
+       -translate-x-1/2: 100vw includes the scrollbar gutter on some
+       browsers/OSes, which can itself introduce the horizontal scrollbar
+       this component must avoid. A structural breakout formula, not a
+       design value — no token fits. */
+    'relative mx-[calc(50%-50vw)] w-auto overflow-hidden',
+    className,
+  ]}
+>
+  <img src={src} alt={alt} width={width} height={height} class="h-full w-full object-cover" loading="eager" decoding="async" />
+  {
+    caption && (
+      <figcaption class="absolute bottom-4 left-6 max-w-[80%] bg-ink/70 px-2 py-1 font-mono text-caption text-paper wrap-break-word">
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>

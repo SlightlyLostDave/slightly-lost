@@ -5,7 +5,7 @@
 @reference './app.css';
 
 .prose {
-  @apply font-display text-body-l text-text-muted;
+  @apply font-display text-body-l text-text-muted wrap-break-word;
 }
 
 .prose :where(h2, h3, h4) {
