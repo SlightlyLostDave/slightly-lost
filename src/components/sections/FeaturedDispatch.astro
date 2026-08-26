@@ -1,0 +1,42 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import DataValue from '@/components/primitives/DataValue.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Button from '@/components/primitives/Button.astro'
+import Placeholder from '@/components/media/Placeholder.astro'
+import { homepage } from '@/config'
+
+const { featuredDispatch } = homepage
+---
+
+<section class="grid grid-cols-1 items-stretch md:grid-cols-2">
+  <figure class="relative aspect-3/2 md:aspect-auto md:h-full">
+    <div role="img" aria-label={featuredDispatch.imageAlt} class="h-full w-full overflow-hidden">
+      <Placeholder variant="a" />
+    </div>
+    <figcaption class="absolute bottom-4 left-6 bg-ink/70 px-2 py-1 font-mono text-caption text-paper wrap-break-word">
+      {featuredDispatch.imageCaption}
+    </figcaption>
+  </figure>
+
+  <div
+    data-anim="reveal"
+    data-anim-stagger
+    class="bg-surface-raised flex flex-col justify-center gap-8 px-6 py-16 md:p-24"
+  >
+    <Label accentRule>{featuredDispatch.label}</Label>
+    <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+      {featuredDispatch.title}
+    </h2>
+    <p class="max-w-measure font-display text-body-l text-text-muted">
+      {featuredDispatch.standfirst}
+    </p>
+    <Hairline />
+    <div class="grid grid-cols-3 gap-6">
+      {featuredDispatch.stats.map((stat) => (
+        <DataValue label={stat.label} value={stat.value} unit={stat.unit} />
+      ))}
+    </div>
+    <Button href={featuredDispatch.href} variant="secondary">{featuredDispatch.ctaLabel}</Button>
+  </div>
+</section>

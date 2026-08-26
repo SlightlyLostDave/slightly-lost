@@ -1,0 +1,40 @@
+---
+import { allPillars } from '@/config/pillars'
+import { homepage } from '@/config'
+
+const { pillars: heading } = homepage.sectionHeadings
+const rangeLabel = `${allPillars[0].number} to ${allPillars[allPillars.length - 1].number}`
+---
+
+<section class="bg-surface px-6 py-16 md:py-(--spacing-section)">
+  <div class="max-w-content mx-auto flex flex-col gap-16">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+      <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+        {heading}
+      </h2>
+      <span class="font-mono text-data tabular-nums whitespace-nowrap text-text-muted">
+        {rangeLabel}
+      </span>
+    </div>
+
+    <div
+      data-anim="reveal"
+      data-anim-stagger
+      class="grid grid-cols-1 border-t border-l border-hairline md:grid-cols-3"
+    >
+      {allPillars.map((pillar) => (
+        <a
+          href={`/field-notes/${pillar.slug}`}
+          aria-label={pillar.name}
+          class="flex flex-col gap-4 border-r border-b border-hairline p-10 motion-safe:transition-colors hover:bg-surface-raised focus-visible:bg-surface-raised"
+        >
+          <span class="font-mono text-data tabular-nums text-text-muted">{pillar.number}</span>
+          <h3 class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+            {pillar.name}
+          </h3>
+          <p class="line-clamp-2 text-body text-text-muted">{pillar.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

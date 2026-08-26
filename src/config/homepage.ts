@@ -24,9 +24,27 @@ export interface AtlasStat {
   value: number
 }
 
+export interface FeaturedDispatchStat {
+  label: string
+  value: string
+  unit?: string
+}
+
+export interface HomepageFeaturedDispatch {
+  label: string
+  title: string
+  standfirst: string
+  stats: readonly FeaturedDispatchStat[]
+  ctaLabel: string
+  href: string
+  imageAlt: string
+  imageCaption: string
+}
+
 export interface HomepageConfig {
   hero: HomepageHero
   interstitial: HomepageInterstitial
+  featuredDispatch: HomepageFeaturedDispatch
   sectionHeadings: HomepageSectionHeadings
   atlasStats: readonly AtlasStat[]
 }
@@ -47,6 +65,26 @@ export const homepage = {
     label: 'Field notes',
     statement:
       'Most of what I find was never hidden. It was just left, and nobody went back to look at it.',
+  },
+  featuredDispatch: {
+    label: 'Latest / Mine notes',
+    title: 'The headframe at Centre Hill is falling down slowly enough to measure',
+    standfirst:
+      'Two capture sessions eleven months apart, 1,840 photographs, and a point cloud that says the north leg has moved.',
+    // Mirrors src/content/sample/centre-hill-headframe.ts by hand, not by
+    // import: this is Phase-1 homepage copy, that file stands in for a
+    // Phase-2 Strapi collection, and the two are not meant to cross. If
+    // publishedAt / readingTime / photoCount change on the article, update
+    // these three values to match.
+    stats: [
+      { label: 'Published', value: '14.08.2026' },
+      { label: 'Reading', value: '18', unit: 'min' },
+      { label: 'Photographs', value: '32' },
+    ],
+    ctaLabel: 'Read the dispatch',
+    href: '/field-notes/mines/centre-hill-headframe',
+    imageAlt: 'Centre Hill headframe across the clearing, placeholder pending photography',
+    imageCaption: 'Fig. 1 / North leg, second capture session',
   },
   sectionHeadings: {
     pillars: 'Six things I keep going back to',

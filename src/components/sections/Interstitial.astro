@@ -1,0 +1,18 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import { homepage } from '@/config'
+
+const { interstitial } = homepage
+---
+
+<section class="bg-surface">
+  <div
+    data-anim="reveal"
+    class="flex flex-col items-center gap-8 px-6 py-16 text-center md:pt-42 md:pb-38"
+  >
+    <Label>{interstitial.label}</Label>
+    <p class="mx-auto max-w-md font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+      {interstitial.statement}
+    </p>
+  </div>
+</section>

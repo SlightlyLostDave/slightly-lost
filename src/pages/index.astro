@@ -1,6 +1,9 @@
 ---
 import Base from '@layouts/Base.astro'
 import Hero from '@components/sections/Hero.astro'
+import Interstitial from '@components/sections/Interstitial.astro'
+import FeaturedDispatch from '@components/sections/FeaturedDispatch.astro'
+import PillarGrid from '@components/sections/PillarGrid.astro'
 import { site } from '@/config'
 ---
 
@@ -12,4 +15,7 @@ import { site } from '@/config'
   headerState="transparent"
 >
   <Hero />
+  <Interstitial />
+  <FeaturedDispatch />
+  <PillarGrid />
 </Base>
