@@ -1,0 +1,85 @@
+---
+// Flat vector stand-ins for the homepage hero's three photographic plates
+// (sky/horizon, primary subject, near-field foreground) until real
+// photography exists. Deliberately not media/Placeholder.astro: that
+// component's five stacked bands are one repeated pattern reused across
+// unrelated card art, whereas this hero needs three genuinely distinct
+// plates. currentColor + text-* @theme utilities only, no new hex values.
+// Delete this file and swap each Hero.astro call site for a real <img> (see
+// the fetchpriority/width/height note in Hero.astro) once photography
+// exists.
+interface Props {
+  layer: 'back' | 'mid' | 'front'
+  class?: string
+}
+
+const { layer, class: className } = Astro.props
+
+// Overscan needed so Hero.motion.ts's translateY parallax never reveals a
+// gap at a layer's leading edge before scroll completes. Sized per layer
+// against its own translateY factor (see Hero.motion.ts), not a flat 110%:
+//  - back: the only fully opaque, full-bleed plate with nothing rendered
+//    behind it, so it's the one layer that actually needs guaranteed
+//    coverage. 20% comfortably covers its 0.15 factor.
+//  - mid: not full-bleed (a silhouette over transparent), so today anything
+//    revealed at its edge is just back's plate showing through, which is
+//    intentional layering, not a bug. 40% is a forward-looking margin for
+//    once this becomes a real full-bleed photo, covering its 0.35 factor.
+//  - front: kept at the literal 110% from the spec, since front is designed
+//    to exit the frame, revealing the intentional layers behind it.
+// Each value is a one-off used exactly once in the codebase, so per
+// CLAUDE.md's "twice, then it's a token" rule none of these graduate to
+// @theme yet.
+const insetByLayer: Record<Props['layer'], string> = {
+  back: 'inset-[-20%]',
+  mid: 'inset-[-40%]',
+  front: 'inset-[-5%]',
+}
+
+// Absent below 768px per the hero's two-layer mobile spec (mid and type
+// only); mid has no such class and stays visible at every breakpoint.
+const mobileVisibility = layer === 'back' || layer === 'front' ? 'hidden md:block' : undefined
+---
+
+<div
+  data-hero-layer={layer}
+  aria-hidden="true"
+  role="presentation"
+  class:list={['absolute', insetByLayer[layer], mobileVisibility, className]}
+>
+  {
+    layer === 'back' && (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="block h-full w-full">
+        <rect x="0" y="0" width="100" height="100" class="text-fog" fill="currentColor" />
+        <polygon
+          points="0,58 28,44 55,57 100,38 100,100 0,100"
+          class="text-linen"
+          fill="currentColor"
+        />
+      </svg>
+    )
+  }
+  {
+    layer === 'mid' && (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="block h-full w-full">
+        <polygon
+          points="36,92 41,34 46,24 50,19 54,24 59,34 64,92"
+          class="text-slate"
+          fill="currentColor"
+        />
+        <rect x="18" y="89" width="64" height="4" class="text-slate" fill="currentColor" />
+      </svg>
+    )
+  }
+  {
+    layer === 'front' && (
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="block h-full w-full">
+        <polygon
+          points="0,100 0,68 22,52 46,66 72,48 100,63 100,100"
+          class="text-peat"
+          fill="currentColor"
+        />
+      </svg>
+    )
+  }
+</div>

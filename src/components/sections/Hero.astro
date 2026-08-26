@@ -1,0 +1,57 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import HeroPlaceholder from './HeroPlaceholder.astro'
+import { homepage } from '@/config'
+
+const { hero } = homepage
+---
+
+<section data-hero data-anim="hero" class="bg-surface relative h-svh w-full overflow-hidden">
+  <HeroPlaceholder layer="back" />
+  <HeroPlaceholder layer="mid" />
+  <!--
+    fetchpriority="high" and explicit width/height were originally specified
+    for this (LCP-candidate) layer with a real <img> in mind. fetchpriority
+    only applies to fetchable elements (img/link/script/iframe) -- this is
+    inline SVG with no network request, so there is no target for it.
+    Re-add both, exactly as originally specified, on whatever <img> replaces
+    HeroPlaceholder's "mid" branch once real photography exists.
+  -->
+  <HeroPlaceholder layer="front" />
+
+  <div
+    data-hero-layer="type"
+    class="relative flex h-full w-full flex-col justify-between px-6 py-10 md:px-10 md:py-14"
+  >
+    <div class="max-w-content mx-auto my-auto flex w-full flex-col gap-6">
+      <Label accentRule>{hero.kicker}</Label>
+      <h1 class="font-display text-display-xl text-text-strong font-(--weight-display)">
+        {hero.headline}
+      </h1>
+      <p class="max-w-measure font-display text-body-l text-text-body">{hero.subhead}</p>
+    </div>
+
+    <div
+      class="max-w-content border-hairline text-label text-text-muted mx-auto flex w-full items-end justify-between gap-4 border-t pt-4 font-mono uppercase"
+    >
+      <div class="flex flex-col gap-1">
+        <span>{hero.coordinates}</span>
+        <span>{hero.place}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span>Scroll</span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          class="h-4 w-4"
+          aria-hidden="true"
+        >
+          <path d="M10 3v13M4.5 11.5 10 17l5.5-5.5" stroke-linecap="round" stroke-linejoin="round"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>

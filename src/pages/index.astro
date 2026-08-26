@@ -1,8 +1,15 @@
 ---
 import Base from '@layouts/Base.astro'
+import Hero from '@components/sections/Hero.astro'
 import { site } from '@/config'
 ---
 
-<Base type="website" title={site.name} description={site.description} surface="ink">
-  <h1>Slightly Lost</h1>
+<Base
+  type="website"
+  title={site.name}
+  description={site.description}
+  surface="ink"
+  headerState="transparent"
+>
+  <Hero />
 </Base>

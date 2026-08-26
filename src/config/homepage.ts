@@ -2,6 +2,8 @@ export interface HomepageHero {
   kicker: string
   headline: string
   subhead: string
+  coordinates: string
+  place: string
 }
 
 export interface HomepageInterstitial {
@@ -35,6 +37,10 @@ export const homepage = {
     headline: 'Go looking for the wrong things.',
     subhead:
       'Abandoned headframes, drowned villages, and the long way round to dinner. Written on site, not from the archive.',
+    // Placeholder location, not verified GPS. Revise once real hero
+    // photography anchors this to an actual place.
+    coordinates: '46.4917° N, 81.3378° W',
+    place: 'Sudbury basin, Ontario',
   },
   interstitial: {
     // No visible kicker exists yet in the design mockup. Placeholder, easy to revise.
