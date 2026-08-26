@@ -9,7 +9,7 @@ import { homepage } from '@/config'
 const { featuredDispatch } = homepage
 ---
 
-<section class="grid grid-cols-1 items-stretch md:grid-cols-2">
+<section class="my-16 grid grid-cols-1 items-stretch md:my-(--spacing-section-lg) md:grid-cols-2">
   <figure class="relative aspect-3/2 md:aspect-auto md:h-full">
     <div role="img" aria-label={featuredDispatch.imageAlt} class="h-full w-full overflow-hidden">
       <Placeholder variant="a" />
@@ -19,11 +19,7 @@ const { featuredDispatch } = homepage
     </figcaption>
   </figure>
 
-  <div
-    data-anim="reveal"
-    data-anim-stagger
-    class="bg-surface-raised flex flex-col justify-center gap-8 px-6 py-16 md:p-24"
-  >
+  <div class="bg-surface-raised flex flex-col justify-center gap-8 px-6 py-16 md:p-24">
     <Label accentRule>{featuredDispatch.label}</Label>
     <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
       {featuredDispatch.title}

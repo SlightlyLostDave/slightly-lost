@@ -24,7 +24,7 @@ const { recent: heading } = homepage.sectionHeadings
       <Hairline variant="heavy" />
     </div>
 
-    <div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
       {recentNotes.map((post) => (
         <PostCard post={post} aspect="3:2" />
       ))}

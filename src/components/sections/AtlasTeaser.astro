@@ -10,7 +10,7 @@ const { atlasStats } = homepage
 
 <section class="bg-surface-raised px-6 py-16 md:py-(--spacing-section)">
   <div class="max-w-content mx-auto grid grid-cols-1 items-center gap-16 md:grid-cols-[1fr_1.05fr] md:gap-20">
-    <div data-anim="reveal" data-anim-stagger class="flex flex-col gap-8">
+    <div class="flex flex-col gap-8">
       <Label accentRule>The Atlas</Label>
       <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
         {heading}
@@ -31,7 +31,7 @@ const { atlasStats } = homepage
             >
               {stat.value}
             </span>
-            <span class="font-mono text-label uppercase text-text-subtle">{stat.label}</span>
+            <span class="font-mono text-label uppercase text-text-muted">{stat.label}</span>
           </div>
         ))}
       </div>

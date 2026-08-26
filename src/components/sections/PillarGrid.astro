@@ -17,11 +17,7 @@ const rangeLabel = `${allPillars[0].number} to ${allPillars[allPillars.length - 
       </span>
     </div>
 
-    <div
-      data-anim="reveal"
-      data-anim-stagger
-      class="grid grid-cols-1 border-t border-l border-hairline md:grid-cols-3"
-    >
+    <div class="grid grid-cols-1 border-t border-l border-hairline md:grid-cols-3">
       {allPillars.map((pillar) => (
         <a
           href={`/field-notes/${pillar.slug}`}
