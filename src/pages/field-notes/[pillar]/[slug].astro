@@ -9,9 +9,14 @@ import SeriesStrip from '@/components/series/SeriesStrip.astro'
 import TagList from '@/components/content/TagList.astro'
 import { pillarBySlug } from '@/config/pillars'
 import { getSeriesPosition, type SeriesPosition } from '@/lib/series'
+import { getPublishedPosts } from '@/lib/posts'
 
 export async function getStaticPaths() {
+  // Unfiltered on purpose: a draft still needs a generated page at its own
+  // URL. Only the sibling lookups below use the published-only set, so a
+  // draft is never linked to from anywhere but its own page.
   const posts = await getCollection('posts')
+  const publishedPosts = await getPublishedPosts()
   const allSeries = await getCollection('series')
   const allTags = await getCollection('tags')
 
@@ -21,12 +26,15 @@ export async function getStaticPaths() {
       throw new Error(`Post "${post.id}" has an unrecognized pillar slug "${post.data.pillar}"`)
     }
 
-    const seriesPosition = getSeriesPosition(post, posts, allSeries)
+    const seriesPosition = getSeriesPosition(post, publishedPosts, allSeries)
     const postTags = post.data.tags
       .map((ref) => allTags.find((tag) => tag.id === ref.id))
       .filter((tag): tag is CollectionEntry<'tags'> => tag !== undefined)
 
-    return { params: { pillar: pillar.slug, slug: post.id }, props: { post, seriesPosition, postTags } }
+    return {
+      params: { pillar: pillar.slug, slug: post.id },
+      props: { post, seriesPosition, postTags },
+    }
   })
 }
 
@@ -37,17 +45,20 @@ interface Props {
 }
 
 const { post, seriesPosition, postTags } = Astro.props
+const isDraft = post.data.status === 'draft'
 ---
 
 <Article
   title={post.data.title}
   description={post.data.dek}
-  publishedAt={post.data.publishedAt}
+  publishedAt={post.data.publishedAt ?? post.data.updatedAt}
   authorName={post.data.authorName}
   pillar={post.data.pillar}
   region={post.data.region}
   readingTime={post.data.readingTime}
   photoCount={post.data.photoCount}
+  noindex={isDraft || post.data.seo?.noindex}
+  isDraft={isDraft}
 >
   <Fragment slot="hero">
     <FullBleed
@@ -64,17 +75,21 @@ const { post, seriesPosition, postTags } = Astro.props
 
   <ArticleBody body={post.data.body} />
 
-  {seriesPosition && (
-    <Fragment slot="series-nav">
-      <SeriesStrip position={seriesPosition} />
-    </Fragment>
-  )}
+  {
+    seriesPosition && (
+      <Fragment slot="series-nav">
+        <SeriesStrip position={seriesPosition} />
+      </Fragment>
+    )
+  }
 
-  {postTags.length > 0 && (
-    <Fragment slot="tags">
-      <TagList tags={postTags} />
-    </Fragment>
-  )}
+  {
+    postTags.length > 0 && (
+      <Fragment slot="tags">
+        <TagList tags={postTags} />
+      </Fragment>
+    )
+  }
 
   <Fragment slot="sources">
     <SourceList sources={post.data.sources} />

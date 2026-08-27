@@ -8,7 +8,7 @@
   "packageManager": "npm@11.11.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/assert-no-draft-leak.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write .",

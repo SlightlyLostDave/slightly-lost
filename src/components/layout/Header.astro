@@ -1,7 +1,11 @@
 ---
+import { Image } from 'astro:assets'
+
 import { navigation, site } from '@/config'
 import MobileMenu from './MobileMenu.astro'
 import ThemeToggle from './ThemeToggle.astro'
+
+import logoImage from '@assets/slightly-lost-logo.svg'
 
 interface Props {
   state?: 'transparent' | 'solid'
@@ -34,7 +38,7 @@ const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translat
   id="site-header"
   data-anim={isSolid ? undefined : 'header'}
   data-header-state={state}
-  class="group fixed inset-x-0 top-0 z-50 h-(--header-height-tall)"
+  class="group fixed inset-x-0 top-(--draft-banner-height) z-50 h-(--header-height-tall)"
 >
   <div
     class="header__fill border-hairline bg-surface absolute inset-0 border-b"
@@ -48,6 +52,7 @@ const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translat
     style={barStyle}
   >
     <a href="/" class:list={['font-display text-title']}>
+      <Image src={logoImage} alt="" class="mr-2 inline h-6 w-auto" width={24} height={24} />
       {site.name}
     </a>
 
@@ -72,18 +77,12 @@ const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translat
         }
       </nav>
 
-      <div
-        aria-hidden="true"
-        class:list={['hidden h-6 w-px bg-current opacity-40 lg:block']}
-      >
-      </div>
+      <div aria-hidden="true" class:list={['hidden h-6 w-px bg-current opacity-40 lg:block']}></div>
 
       <a
         href="/search"
         aria-label="Search"
-        class:list={[
-          'inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center',
-        ]}
+        class:list={['inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center']}
       >
         <svg
           viewBox="0 0 20 20"

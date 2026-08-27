@@ -1,12 +1,14 @@
 ---
-import { getCollection } from 'astro:content'
 import type { GetStaticPathsOptions } from 'astro'
 import Listing from '@/layouts/Listing.astro'
 import { fieldNotes, pillars } from '@/config'
+import { getPublishedPosts } from '@/lib/posts'
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
-  const posts = await getCollection('posts')
-  const sorted = [...posts].sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  const posts = await getPublishedPosts()
+  const sorted = [...posts].sort(
+    (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()
+  )
   return paginate(sorted, { pageSize: 12 })
 }
 
@@ -27,7 +29,7 @@ const { page } = Astro.props
     <a
       href="/field-notes"
       aria-current="page"
-      class="inline-flex items-center rounded-full border border-sage bg-sage/20 px-3 py-1.5 font-mono text-label uppercase text-sage"
+      class="border-sage bg-sage/20 text-label text-sage inline-flex items-center rounded-full border px-3 py-1.5 font-mono uppercase"
     >
       All
     </a>
@@ -35,7 +37,7 @@ const { page } = Astro.props
       pillars.map((pillar) => (
         <a
           href={`/field-notes/${pillar.slug}`}
-          class="inline-flex items-center rounded-full border border-hairline px-3 py-1.5 font-mono text-label uppercase text-text-muted motion-safe:transition-colors hover:border-sage hover:text-sage focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          class="border-hairline text-label text-text-muted hover:border-sage hover:text-sage focus-visible:outline-accent inline-flex items-center rounded-full border px-3 py-1.5 font-mono uppercase focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
         >
           {pillar.name}
         </a>

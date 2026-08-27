@@ -6,18 +6,24 @@ import { site } from '@/config'
 import { pillarBySlug, type PillarSlug } from '@/config/pillars'
 import Header from '@components/layout/Header.astro'
 import Footer from '@components/layout/Footer.astro'
+import DraftBanner from '@components/layout/DraftBanner.astro'
 import '@styles/app.css'
 
 type Props = SeoInput & {
   surface: 'paper' | 'ink'
   headerState?: 'transparent' | 'solid'
   pillar?: PillarSlug
+  isDraft?: boolean
 }
 
-const { surface, headerState = 'solid', pillar, ...seoInput } = Astro.props
+const { surface, headerState = 'solid', pillar, isDraft = false, ...seoInput } = Astro.props
 const seo = buildSeo(seoInput, Astro.url)
 const themeColor = surface === 'paper' ? '#f7f3ea' : '#1e1813'
 const currentPath = Astro.url.pathname
+// Matches DraftBanner.astro's own h-(--draft-banner-height). See the
+// --draft-banner-height comment in app.css for why this can't be measured
+// at runtime instead.
+const draftBannerHeight = '40px'
 ---
 
 <html lang="en" data-theme={surface === 'paper' ? 'light' : undefined}>
@@ -77,10 +83,11 @@ const currentPath = Astro.url.pathname
       )
     }
   </head>
-  <body>
+  <body style={isDraft ? `--draft-banner-height: ${draftBannerHeight}` : undefined}>
+    {isDraft && <DraftBanner />}
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-surface focus:text-text-strong focus:px-4 focus:py-2 focus:outline-2 focus:outline-accent focus:outline-offset-2"
+      class="focus:bg-surface focus:text-text-strong focus:outline-accent sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:outline-2 focus:outline-offset-2"
     >
       Skip to content
     </a>
@@ -88,7 +95,13 @@ const currentPath = Astro.url.pathname
     <main
       id="main-content"
       tabindex="-1"
-      class:list={[headerState === 'solid' && 'pt-(--header-height-solid)']}
+      class:list={[
+        // --draft-banner-height defaults to 0px (see app.css), so this calc
+        // is identical to plain pt-(--header-height-solid) on every page
+        // that isn't a draft.
+        headerState === 'solid' &&
+          'pt-[calc(var(--header-height-solid)+var(--draft-banner-height))]',
+      ]}
     >
       <slot />
     </main>

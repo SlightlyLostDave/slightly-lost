@@ -10,10 +10,10 @@ import SeriesCallout from '@/components/pillar/SeriesCallout.astro'
 import PostGrid from '@/components/sections/PostGrid.astro'
 import { allPillars, type Pillar } from '@/config/pillars'
 import { getFeaturedPost, getPillarSeries, type PillarSeries } from '@/lib/pillars'
-import type { CollectionEntry } from 'astro:content'
+import { getPublishedPosts, type PublishedPost } from '@/lib/posts'
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
-  const posts = await getCollection('posts')
+  const posts = await getPublishedPosts()
   const allSeries = await getCollection('series')
 
   return allPillars.flatMap((pillar) => {
@@ -34,10 +34,10 @@ export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
 
 interface Props {
   pillar: Pillar
-  featuredPost?: CollectionEntry<'posts'>
+  featuredPost?: PublishedPost
   pillarSeries?: PillarSeries
   totalCount: number
-  page: Page<CollectionEntry<'posts'>>
+  page: Page<PublishedPost>
 }
 
 const { pillar, featuredPost, pillarSeries, totalCount, page } = Astro.props
@@ -65,13 +65,17 @@ const seriesName =
       <PillarEmptyState pillar={pillar} />
     ) : (
       <Fragment>
-        {isFirstPage && featuredPost && <FeaturedPost post={featuredPost} seriesName={seriesName} />}
+        {isFirstPage && featuredPost && (
+          <FeaturedPost post={featuredPost} seriesName={seriesName} />
+        )}
 
         <div class="max-w-content mx-auto px-6 py-16 md:py-(--spacing-section)">
           <PostGrid entries={page.data} page={page} basePath={`/field-notes/${pillar.slug}`} />
         </div>
 
-        {isFirstPage && pillarSeries && <SeriesCallout series={pillarSeries.series} episodes={pillarSeries.episodes} />}
+        {isFirstPage && pillarSeries && (
+          <SeriesCallout series={pillarSeries.series} episodes={pillarSeries.episodes} />
+        )}
       </Fragment>
     )
   }

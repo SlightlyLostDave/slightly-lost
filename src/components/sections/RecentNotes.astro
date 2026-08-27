@@ -1,13 +1,12 @@
 ---
-import { getCollection } from 'astro:content'
 import PostCard from '@/components/cards/PostCard.astro'
 import Hairline from '@/components/primitives/Hairline.astro'
 import { homepage } from '@/config'
-import { toPostCardData } from '@/lib/posts'
+import { toPostCardData, getPublishedPosts } from '@/lib/posts'
 
 const { recent: heading } = homepage.sectionHeadings
 
-const posts = await getCollection('posts')
+const posts = await getPublishedPosts()
 const recentNotes = posts
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
   .slice(0, 3)
@@ -18,12 +17,15 @@ const recentNotes = posts
   <div class="max-w-content mx-auto flex flex-col gap-16">
     <div class="flex flex-col gap-6">
       <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-        <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+        <h2
+          class="font-display text-display-l text-text-strong"
+          style="font-weight: var(--weight-display)"
+        >
           {heading}
         </h2>
         <a
           href="/field-notes"
-          class="font-mono text-label uppercase text-text-muted motion-safe:transition-colors hover:text-text-strong"
+          class="text-label text-text-muted hover:text-text-strong font-mono uppercase motion-safe:transition-colors"
         >
           All notes
         </a>
@@ -32,9 +34,7 @@ const recentNotes = posts
     </div>
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {recentNotes.map((post) => (
-        <PostCard post={post} aspect="3:2" />
-      ))}
+      {recentNotes.map((post) => <PostCard post={post} aspect="3:2" />)}
     </div>
   </div>
 </section>

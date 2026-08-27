@@ -6,6 +6,10 @@ import { allPillars, type PillarSlug } from '@/config/pillars'
 const pillarSlugValues = allPillars.map((pillar) => pillar.slug) as [PillarSlug, ...PillarSlug[]]
 const pillarSlugSchema = z.enum(pillarSlugValues)
 
+// Same import.meta.env access pattern the loader already uses for
+// STRAPI_URL/STRAPI_TOKEN. When true, the posts loader also fetches drafts.
+const STRAPI_PREVIEW = import.meta.env.STRAPI_PREVIEW === 'true'
+
 const imageSchema = z.object({
   src: z.string(),
   width: z.number(),
@@ -114,7 +118,8 @@ const postSchema = z.object({
   href: z.string(),
   readingTime: z.number(),
   photoCount: z.number(),
-  publishedAt: z.coerce.date(),
+  status: z.enum(['draft', 'published']),
+  publishedAt: z.coerce.date().nullable(),
   updatedAt: z.coerce.date(),
 })
 
@@ -160,7 +165,11 @@ const authorPopulate = { avatar: true }
 const seriesPopulate = { hero: true, posts: { fields: ['slug'] } }
 
 const posts = defineCollection({
-  loader: strapiLoader({ contentType: 'posts', populate: postPopulate }),
+  loader: strapiLoader({
+    contentType: 'posts',
+    populate: postPopulate,
+    includeDrafts: STRAPI_PREVIEW,
+  }),
   schema: postSchema,
 })
 

@@ -3,6 +3,7 @@ import { defineConfig, fontProviders } from 'astro/config'
 import sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import { loadEnv } from 'vite'
+import { pillarByEnum } from './src/config/pillars.ts'
 
 // astro.config.mjs runs directly under Node, before Vite's env pipeline is
 // live, so import.meta.env (what the loader and everything else use) isn't
@@ -11,18 +12,72 @@ import { loadEnv } from 'vite'
 // trusting the same value here means there is exactly one place per
 // environment that decides which Strapi host is allowed, instead of a
 // second hardcoded dev/prod pair that can drift out of sync.
-const { STRAPI_URL } = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '')
+const { STRAPI_URL, STRAPI_TOKEN, STRAPI_PREVIEW } = loadEnv(
+  process.env.NODE_ENV ?? 'production',
+  process.cwd(),
+  ''
+)
 
 if (!STRAPI_URL) {
-  throw new Error('astro.config.mjs: STRAPI_URL is not set, needed to allow Strapi media in the image pipeline')
+  throw new Error(
+    'astro.config.mjs: STRAPI_URL is not set, needed to allow Strapi media in the image pipeline'
+  )
 }
 
 const strapiHostname = new URL(STRAPI_URL).hostname
 
+// A draft's article page must still be statically generated so its preview
+// URL works, which means it's in Astro's final route list that the sitemap
+// integration's `filter` below walks. That filter only ever sees a URL, not
+// collection data, so getPublishedPosts() (which the loader and every page
+// already use) can't keep a draft out of the sitemap: this is the one place
+// that needs its own lookup, because it's the one place operating on the
+// emitted URL list rather than on parsed content collection data. Only runs
+// in preview builds; a production build never queries drafts, so this is a
+// no-op with no network call.
+async function fetchDraftHrefs() {
+  if (STRAPI_PREVIEW !== 'true') return new Set()
+
+  const hrefs = new Set()
+  let page = 1
+  let pageCount
+
+  do {
+    const query = new URLSearchParams({
+      status: 'draft',
+      'fields[0]': 'slug',
+      'fields[1]': 'pillar',
+      'pagination[page]': String(page),
+      'pagination[pageSize]': '100',
+    })
+    const response = await fetch(`${STRAPI_URL}/api/posts?${query}`, {
+      headers: STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {},
+    })
+    if (!response.ok) {
+      throw new Error(
+        `astro.config.mjs: could not fetch draft posts to exclude from the sitemap (${response.status})`
+      )
+    }
+
+    /** @type {{ data: { slug: string; pillar: string; publishedAt: string | null }[]; meta: { pagination: { pageCount: number } } }} */
+    const body = await response.json()
+    for (const post of body.data) {
+      if (!post.publishedAt)
+        hrefs.add(`/field-notes/${pillarByEnum[post.pillar].slug}/${post.slug}`)
+    }
+    pageCount = body.meta.pagination.pageCount
+    page += 1
+  } while (page <= pageCount)
+
+  return hrefs
+}
+
+const draftHrefs = await fetchDraftHrefs()
+
 /** @param {string} page */
 function isExcludedFromSitemap(page) {
   const path = new URL(page).pathname
-  return path === '/404' || path === '/404/'
+  return path === '/404' || path === '/404/' || draftHrefs.has(path)
 }
 
 /** @type {import('@astrojs/sitemap').SitemapOptions['serialize']} */

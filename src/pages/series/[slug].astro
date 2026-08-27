@@ -4,10 +4,11 @@ import Base from '@/layouts/Base.astro'
 import SeriesHero from '@/components/series/SeriesHero.astro'
 import SeriesEpisodeList from '@/components/series/SeriesEpisodeList.astro'
 import { getSeriesSlots, type SeriesSlot } from '@/lib/series'
+import { getPublishedPosts } from '@/lib/posts'
 
 export async function getStaticPaths() {
   const allSeries = await getCollection('series')
-  const posts = await getCollection('posts')
+  const posts = await getPublishedPosts()
 
   return allSeries
     .map((series) => getSeriesSlots(series, posts))
@@ -27,7 +28,8 @@ const episodeCount = slots.filter((slot) => slot.kind === 'published').length
 <Base
   type="website"
   title={series.data.name}
-  description={series.data.description ?? `${episodeCount} field notes in the ${series.data.name} series.`}
+  description={series.data.description ??
+    `${episodeCount} field notes in the ${series.data.name} series.`}
   surface="ink"
   headerState="transparent"
 >

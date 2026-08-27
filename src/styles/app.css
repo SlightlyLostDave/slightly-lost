@@ -122,6 +122,14 @@
      on every trigger evaluation; keep them in sync by hand. */
   --header-height-tall: 74px;
   --header-height-solid: 58px;
+  /* Height of DraftBanner.astro when present. Default 0px so Header's
+     top-(--draft-banner-height) and Base.astro's main padding are unchanged
+     on every page that isn't a draft; Base.astro overrides this to the
+     banner's real height only when rendering one. Kept as a hardcoded pixel
+     value matched to the banner's own h-(--draft-banner-height), the same
+     "duplicate and comment" approach --header-height-* already uses because
+     nothing here can be measured at runtime without JS. */
+  --draft-banner-height: 0px;
   --tap-target: 44px;
   --control-height: 3.375rem; /* 54px, Button default height (compact reuses --tap-target) */
   --outline-offset-control: 3px; /* primary/secondary/ghost button focus ring */

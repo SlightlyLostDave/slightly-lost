@@ -3,10 +3,11 @@ import { getCollection, type CollectionEntry } from 'astro:content'
 import type { GetStaticPathsOptions, Page } from 'astro'
 import Listing from '@/layouts/Listing.astro'
 import { getPostsByTag } from '@/lib/tags'
+import { getPublishedPosts, type PublishedPost } from '@/lib/posts'
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
   const tags = await getCollection('tags')
-  const posts = await getCollection('posts')
+  const posts = await getPublishedPosts()
 
   return tags.flatMap((tag) => {
     const tagPosts = getPostsByTag(tag, posts).sort(
@@ -25,7 +26,7 @@ export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
 interface Props {
   tag: CollectionEntry<'tags'>
   totalCount: number
-  page: Page<CollectionEntry<'posts'>>
+  page: Page<PublishedPost>
 }
 
 const { tag, totalCount, page } = Astro.props

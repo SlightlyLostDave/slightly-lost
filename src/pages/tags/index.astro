@@ -4,9 +4,10 @@ import Base from '@/layouts/Base.astro'
 import Label from '@/components/primitives/Label.astro'
 import Hairline from '@/components/primitives/Hairline.astro'
 import { getPostsByTag } from '@/lib/tags'
+import { getPublishedPosts } from '@/lib/posts'
 
 const tags = await getCollection('tags')
-const posts = await getCollection('posts')
+const posts = await getPublishedPosts()
 
 const rows = tags
   .map((tag) => ({ tag, count: getPostsByTag(tag, posts).length }))
@@ -14,7 +15,13 @@ const rows = tags
   .sort((a, b) => a.tag.data.name.localeCompare(b.tag.data.name))
 ---
 
-<Base type="website" title="Tags" description="Every tag used across the field notes." surface="ink" headerState="solid">
+<Base
+  type="website"
+  title="Tags"
+  description="Every tag used across the field notes."
+  surface="ink"
+  headerState="solid"
+>
   <div class="max-w-content mx-auto flex flex-col gap-16 px-6 py-16 md:py-(--spacing-section)">
     <div class="flex flex-col gap-6">
       <Label accentRule>Tags</Label>
@@ -29,10 +36,10 @@ const rows = tags
             <Hairline />
             <a
               href={`/tags/${tag.id}`}
-              class="flex items-baseline justify-between gap-4 py-5 motion-safe:transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+              class="hover:text-accent focus-visible:outline-accent flex items-baseline justify-between gap-4 py-5 focus-visible:outline-2 focus-visible:outline-offset-4 motion-safe:transition-colors"
             >
               <span class="font-display text-title text-text-strong">{tag.data.name}</span>
-              <span class="font-mono text-data tabular-nums text-text-muted">{count}</span>
+              <span class="text-data text-text-muted font-mono tabular-nums">{count}</span>
             </a>
           </li>
         ))

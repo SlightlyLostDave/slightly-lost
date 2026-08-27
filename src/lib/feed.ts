@@ -1,13 +1,16 @@
-import type { CollectionEntry } from 'astro:content'
 import type { PostBody } from '@/content.config'
 import { escapeHtml, serializeBlocks } from '@/lib/blocks'
 import { site } from '@/config'
+import type { PublishedPost } from '@/lib/posts'
 
 function absolutizeHref(url: string): string {
   return new URL(url, site.url).toString()
 }
 
-function serializeFigure(image: { src: string; width: number; height: number; alt: string }, caption?: string): string {
+function serializeFigure(
+  image: { src: string; width: number; height: number; alt: string },
+  caption?: string
+): string {
   const figcaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''
   return `<figure><img src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" />${figcaption}</figure>`
 }
@@ -27,7 +30,9 @@ export function serializePostBodyToHtml(body: PostBody[]): string {
         case 'body.figure-grid':
           return block.images.map((image) => serializeFigure(image, image.caption)).join('')
         case 'body.pull-quote': {
-          const footer = block.attribution ? `<footer>${escapeHtml(block.attribution)}</footer>` : ''
+          const footer = block.attribution
+            ? `<footer>${escapeHtml(block.attribution)}</footer>`
+            : ''
           return `<blockquote><p>${escapeHtml(block.quote)}</p>${footer}</blockquote>`
         }
         default:
@@ -37,7 +42,7 @@ export function serializePostBodyToHtml(body: PostBody[]): string {
     .join('')
 }
 
-export function toFeedItem(post: CollectionEntry<'posts'>) {
+export function toFeedItem(post: PublishedPost) {
   const authorName = post.data.authorName ?? site.author.name
   return {
     title: post.data.title,

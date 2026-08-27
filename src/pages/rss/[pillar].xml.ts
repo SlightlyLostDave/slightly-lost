@@ -1,12 +1,12 @@
 import rss from '@astrojs/rss'
 import type { APIContext } from 'astro'
-import { getCollection, type CollectionEntry } from 'astro:content'
 import { site } from '@/config'
 import { allPillars, type Pillar } from '@/config/pillars'
 import { toFeedItem } from '@/lib/feed'
+import { getPublishedPosts, type PublishedPost } from '@/lib/posts'
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts')
+  const posts = await getPublishedPosts()
 
   return allPillars.map((pillar) => {
     const pillarPosts = posts
@@ -19,7 +19,7 @@ export async function getStaticPaths() {
 
 interface Props {
   pillar: Pillar
-  posts: CollectionEntry<'posts'>[]
+  posts: PublishedPost[]
 }
 
 export async function GET(context: APIContext) {

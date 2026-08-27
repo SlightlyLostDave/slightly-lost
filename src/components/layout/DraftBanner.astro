@@ -1,0 +1,17 @@
+---
+// Safety-critical system chrome, not editorial content: a deliberate,
+// commented exception to "rust never as a large fill" (see CLAUDE.md). This
+// bar has to be impossible to miss, which is the opposite of what "resting"
+// accent styling is for.
+//
+// data-draft-banner is a stable marker: scripts/assert-no-draft-leak.mjs
+// greps the production build output for it and fails the build if it's
+// ever found there.
+---
+
+<div
+  data-draft-banner
+  class="bg-accent text-label text-inverse-text fixed inset-x-0 top-0 z-[60] flex h-(--draft-banner-height) items-center justify-center px-4 text-center font-mono uppercase"
+>
+  This is an unpublished draft, not visible on the live site
+</div>

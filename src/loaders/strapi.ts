@@ -89,7 +89,8 @@ interface StrapiPostRaw {
   seriesOrder?: number | null
   tags?: StrapiTagRaw[] | null
   author?: StrapiAuthorRaw | null
-  fieldData?: { label: string; value: string; unit?: string | null; accent?: boolean | null }[] | null
+  fieldData?:
+    { label: string; value: string; unit?: string | null; accent?: boolean | null }[] | null
   sources?: StrapiSourceRaw[] | null
   seo?: {
     metaTitle?: string | null
@@ -98,7 +99,7 @@ interface StrapiPostRaw {
     canonicalUrl?: string | null
     noindex?: boolean | null
   } | null
-  publishedAt: string
+  publishedAt: string | null
   updatedAt: string
 }
 
@@ -149,7 +150,10 @@ function computeReadingTime(bodyItems: StrapiBodyItemRaw[]): number {
   return Math.max(1, Math.ceil(totalWords / 200))
 }
 
-function computePhotoCount(gallery: StrapiMediaRaw[] | null | undefined, bodyItems: StrapiBodyItemRaw[]): number {
+function computePhotoCount(
+  gallery: StrapiMediaRaw[] | null | undefined,
+  bodyItems: StrapiBodyItemRaw[]
+): number {
   const galleryCount = gallery?.length ?? 0
   const bodyCount = bodyItems.reduce((sum, item) => {
     if (item.__component === 'body.figure') return sum + (item.image ? 1 : 0)
@@ -202,7 +206,10 @@ function normalizeBodyItem(item: StrapiBodyItemRaw): Record<string, unknown> {
   }
 }
 
-function normalizePost(raw: StrapiPostRaw, logger: LoaderContext['logger']): Record<string, unknown> {
+function normalizePost(
+  raw: StrapiPostRaw,
+  logger: LoaderContext['logger']
+): Record<string, unknown> {
   const hero = normalizeImage(raw.hero)
   if (hero) warnIfBelowMinimumHeroDimension(hero, raw.slug, logger)
 
@@ -242,6 +249,7 @@ function normalizePost(raw: StrapiPostRaw, logger: LoaderContext['logger']): Rec
     href: buildHref(raw.pillar, raw.slug),
     readingTime: computeReadingTime(raw.body),
     photoCount: computePhotoCount(raw.gallery, raw.body),
+    status: raw.publishedAt ? 'published' : 'draft',
     publishedAt: raw.publishedAt,
     updatedAt: raw.updatedAt,
   }
@@ -290,10 +298,11 @@ function normalizeEntry(
   }
 }
 
-async function fetchAllPages(opts: {
+async function fetchAllPagesForStatus(opts: {
   contentType: string
   populate?: string | string[] | Record<string, unknown>
   updatedAtGte?: string
+  status: 'draft' | 'published'
 }): Promise<Record<string, unknown>[]> {
   const strapiUrl = import.meta.env.STRAPI_URL
   const strapiToken = import.meta.env.STRAPI_TOKEN
@@ -304,13 +313,14 @@ async function fetchAllPages(opts: {
 
   const results: Record<string, unknown>[] = []
   let page = 1
-  let pageCount = 1
+  let pageCount: number
 
   do {
     const query = qs.stringify(
       {
         pagination: { page, pageSize: 100 },
         populate: opts.populate,
+        status: opts.status,
         ...(opts.updatedAtGte ? { filters: { updatedAt: { $gte: opts.updatedAtGte } } } : {}),
       },
       { encodeValuesOnly: true }
@@ -323,11 +333,16 @@ async function fetchAllPages(opts: {
         headers: strapiToken ? { Authorization: `Bearer ${strapiToken}` } : {},
       })
     } catch (cause) {
-      throw new Error(`strapi loader (${opts.contentType}): could not reach Strapi at ${strapiUrl}`, { cause })
+      throw new Error(
+        `strapi loader (${opts.contentType}): could not reach Strapi at ${strapiUrl}`,
+        { cause }
+      )
     }
 
     if (response.status === 401 || response.status === 403) {
-      throw new Error(`strapi loader (${opts.contentType}): Strapi rejected the API token (${response.status})`)
+      throw new Error(
+        `strapi loader (${opts.contentType}): Strapi rejected the API token (${response.status})`
+      )
     }
     if (!response.ok) {
       throw new Error(
@@ -347,6 +362,30 @@ async function fetchAllPages(opts: {
   return results
 }
 
+// Strapi 5's `status=draft` returns every document's draft record, and that
+// record's own publishedAt is always null, even for a document that also has
+// a live published version - it is not a signal of whether the document is
+// actually published, just a property of asking for the draft record type.
+// So the only reliable way to know which documents are live is a second,
+// separate status=published fetch, whose entries (with their real
+// publishedAt) take priority; only slugs absent from that fetch are true,
+// never-published drafts.
+async function fetchAllPages(opts: {
+  contentType: string
+  populate?: string | string[] | Record<string, unknown>
+  updatedAtGte?: string
+  includeDrafts?: boolean
+}): Promise<Record<string, unknown>[]> {
+  const published = await fetchAllPagesForStatus({ ...opts, status: 'published' })
+  if (!opts.includeDrafts) return published
+
+  const publishedSlugs = new Set(published.map((item) => item.slug as string))
+  const draftFetch = await fetchAllPagesForStatus({ ...opts, status: 'draft' })
+  const draftOnly = draftFetch.filter((item) => !publishedSlugs.has(item.slug as string))
+
+  return [...published, ...draftOnly]
+}
+
 function shouldDoFullSync(meta: MetaStore): boolean {
   return (
     import.meta.env.STRAPI_FORCE_FULL_SYNC === 'true' ||
@@ -355,9 +394,83 @@ function shouldDoFullSync(meta: MetaStore): boolean {
   )
 }
 
+// Scanned over the raw fetch batch, before parseData() runs. A missing hero
+// or alt text still hard-fails the build via the required fields in
+// postSchema; this only makes sure every offender in the batch is named
+// before that failure happens, instead of the build stopping at the first one.
+function warnAboutMissingHeroOrAlt(
+  rawItems: Record<string, unknown>[],
+  logger: LoaderContext['logger']
+): void {
+  for (const raw of rawItems) {
+    const post = raw as unknown as StrapiPostRaw
+    if (!post.hero) {
+      logger.warn(`strapi (posts): "${post.title}" (${post.slug}) has no hero image`)
+      continue
+    }
+    if (!post.hero.alternativeText?.trim()) {
+      logger.warn(`strapi (posts): "${post.title}" (${post.slug}) has a hero with no alt text`)
+    }
+    for (const image of post.gallery ?? []) {
+      if (!image.alternativeText?.trim()) {
+        logger.warn(
+          `strapi (posts): "${post.title}" (${post.slug}) has a gallery image with no alt text`
+        )
+      }
+    }
+  }
+}
+
+// Deliberately not importing the `Post` type from content.config.ts here:
+// that module imports strapiLoader from this one, and a type-only import
+// back the other way would be a circular dependency between the two.
+interface StoredPostData {
+  title: string
+  status: 'draft' | 'published'
+  publishedAt: Date | null
+  sources: unknown[]
+}
+
+// Reads from the store rather than the raw fetch batch, so counts are correct
+// on an incremental sync too: rawItems only holds entries that changed this
+// run, but store.values() reflects the full current collection.
+function logPostContentReport(
+  store: LoaderContext['store'],
+  logger: LoaderContext['logger']
+): void {
+  const posts = store.values() as unknown as { data: StoredPostData }[]
+  const published = posts.filter((post) => post.data.status === 'published')
+  const drafts = posts.filter((post) => post.data.status === 'draft')
+  const publishDates = published
+    .map((post) => post.data.publishedAt)
+    .filter((date): date is Date => date !== null)
+    .sort((a, b) => a.valueOf() - b.valueOf())
+  const missingSources = posts.filter((post) => post.data.sources.length === 0)
+
+  logger.info(
+    `content report: ${posts.length} posts total, ${published.length} published, ${drafts.length} drafts included`
+  )
+  const oldest = publishDates[0]
+  const newest = publishDates[publishDates.length - 1]
+  if (oldest && newest) {
+    logger.info(
+      `content report: oldest ${oldest.toISOString().slice(0, 10)}, newest ${newest.toISOString().slice(0, 10)}`
+    )
+  }
+  if (missingSources.length > 0) {
+    logger.warn(
+      `content report: ${missingSources.length} post(s) with no sources: ${missingSources.map((post) => post.data.title).join(', ')}`
+    )
+  }
+  logger.info(
+    'content report: no search index exists yet, so there is nothing to exclude drafts from there'
+  )
+}
+
 export function strapiLoader(opts: {
   contentType: string
   populate?: string | string[] | Record<string, unknown>
+  includeDrafts?: boolean
 }): Loader {
   return {
     name: `strapi-${opts.contentType}`,
@@ -368,7 +481,17 @@ export function strapiLoader(opts: {
       const rawItems = await fetchAllPages({
         contentType: opts.contentType,
         populate: opts.populate,
-        updatedAtGte: lastSyncedAt,
+        // Strapi's publish/unpublish document-service actions change
+        // publishedAt but do not bump updatedAt, in either direction: a post
+        // republished after being unpublished has the same stale updatedAt
+        // it always had. An incremental fetch filtered on updatedAt would
+        // silently keep serving whatever publish state was cached the last
+        // time that post's other fields changed - true regardless of which
+        // way STRAPI_PREVIEW is set on a given build, so posts always fetch
+        // in full. The per-entry digest below still skips reprocessing
+        // anything that's actually unchanged.
+        updatedAtGte: opts.contentType === 'posts' ? undefined : lastSyncedAt,
+        includeDrafts: opts.includeDrafts,
       })
 
       if (fullSync) {
@@ -380,6 +503,10 @@ export function strapiLoader(opts: {
         )
       }
 
+      if (opts.contentType === 'posts') {
+        warnAboutMissingHeroOrAlt(rawItems, logger)
+      }
+
       for (const raw of rawItems) {
         const slug = raw.slug as string
         const normalized = normalizeEntry(opts.contentType, raw, logger)
@@ -387,12 +514,21 @@ export function strapiLoader(opts: {
         store.set({
           id: slug,
           data: parsedData,
-          digest: generateDigest(raw.updatedAt as string),
+          // store.set() skips writing when the digest matches the cached
+          // entry's, and Strapi's publish/unpublish actions change
+          // publishedAt without bumping updatedAt (see the includeDrafts
+          // comment above) - so updatedAt alone as the digest source would
+          // silently keep serving a post's stale publish state forever.
+          digest: generateDigest(`${raw.updatedAt}:${raw.publishedAt}`),
         })
       }
 
       meta.set(META_LAST_SYNC_KEY, new Date().toISOString())
       meta.set(META_SCHEMA_VERSION_KEY, SCHEMA_VERSION)
+
+      if (opts.contentType === 'posts') {
+        logPostContentReport(store, logger)
+      }
     },
   }
 }

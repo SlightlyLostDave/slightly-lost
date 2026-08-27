@@ -21,6 +21,7 @@ interface Props {
   region: string
   readingTime: number
   photoCount: number
+  isDraft?: boolean
 }
 
 const {
@@ -38,6 +39,7 @@ const {
   region,
   readingTime,
   photoCount,
+  isDraft = false,
 } = Astro.props
 
 const pillarData = pillarBySlug[pillar]
@@ -61,6 +63,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
   surface={surface}
   headerState={headerState}
   pillar={pillar}
+  isDraft={isDraft}
 >
   <article>
     {
@@ -77,17 +80,15 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         <div
           data-anim="article"
           aria-hidden="true"
-          class="fixed inset-x-0 top-0 z-50 h-0.5 bg-hairline motion-reduce:hidden"
+          class="bg-hairline fixed inset-x-0 top-0 z-50 h-0.5 motion-reduce:hidden"
         >
-          {
-            /* transform (not Tailwind's scale-x-0, which sets the standalone
+          {/* transform (not Tailwind's scale-x-0, which sets the standalone
                `scale` CSS property) so the resting state and Article.motion.ts's
                GSAP scaleX tween compose on the same property, matching
                Header.astro's own documented reasoning for its transform-only
-               elements. */
-          }
+               elements. */}
           <div
-            class="progress__fill h-full w-full origin-left bg-accent"
+            class="progress__fill bg-accent h-full w-full origin-left"
             style="transform: scaleX(0)"
           />
         </div>
@@ -100,7 +101,9 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         <h1 class="font-display text-display-l text-text-strong">{title}</h1>
         <p class="font-display text-body-l text-text-muted">{description}</p>
         <Hairline class="mt-2" />
-        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-label text-text-muted wrap-break-word">
+        <div
+          class="text-label text-text-muted flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono wrap-break-word"
+        >
           <span class="text-text-body">{authorName ?? site.author.name}</span>
           <span aria-hidden="true">/</span>
           <time datetime={publishedAt.toISOString()}>{formattedDate}</time>
