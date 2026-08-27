@@ -210,6 +210,18 @@ function normalizePost(
   raw: StrapiPostRaw,
   logger: LoaderContext['logger']
 ): Record<string, unknown> {
+  // The sitemap (astro.config.mjs classifySitemapEntry) tells a pagination
+  // overflow page (/field-notes/2) apart from a post detail page
+  // (/field-notes/{pillar}/{slug}) by checking whether the last path segment
+  // is a bare number, on the assumption that no post slug is ever purely
+  // numeric. Enforce that assumption here instead of just hoping it holds.
+  if (/^\d+$/.test(raw.slug)) {
+    throw new Error(
+      `strapi (posts): slug "${raw.slug}" is purely numeric, which the sitemap's ` +
+        'pagination-page heuristic relies on never happening. Rename the slug.'
+    )
+  }
+
   const hero = normalizeImage(raw.hero)
   if (hero) warnIfBelowMinimumHeroDimension(hero, raw.slug, logger)
 

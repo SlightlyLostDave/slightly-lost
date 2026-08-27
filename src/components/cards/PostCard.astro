@@ -21,9 +21,19 @@ interface Props {
   aspect?: '3:2' | '4:5' | '1:1'
   textOnly?: boolean
   placeholderVariant?: 'a' | 'b' | 'c' | 'd'
+  // The first card in a grid is typically the LCP candidate. Everywhere else
+  // in the card, loading="lazy" is correct; forcing that on this one image
+  // too made it a below-the-fold-style late load even when it renders first.
+  priority?: boolean
 }
 
-const { post, aspect = '3:2', textOnly = false, placeholderVariant = 'a' } = Astro.props
+const {
+  post,
+  aspect = '3:2',
+  textOnly = false,
+  placeholderVariant = 'a',
+  priority = false,
+} = Astro.props
 
 const pillar = pillarBySlug[post.pillar]
 
@@ -58,50 +68,53 @@ const formattedDate = new Intl.DateTimeFormat('en-GB', {
 
 <a
   href={post.href}
-  aria-label={post.title}
-  class="group flex flex-col gap-5 border border-hairline bg-surface-raised motion-safe:transition-colors hover:border-rule-strong focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+  class="group border-hairline bg-surface-raised hover:border-rule-strong focus-visible:outline-accent flex flex-col gap-5 border focus-visible:outline-2 focus-visible:outline-offset-4 motion-safe:transition-colors"
 >
   {
     !textOnly && (
-      <div class:list={['relative overflow-hidden bg-surface', aspectClasses[aspect]]}>
-        {
-          post.image ? (
-            <Picture
-              src={post.image.src}
-              alt=""
-              width={cropDimensions[aspect].width}
-              height={cropDimensions[aspect].height}
-              formats={['avif', 'webp']}
-              fallbackFormat="jpeg"
-              sizes={cardSizes}
-              loading="lazy"
-              decoding="async"
-              class="h-full w-full object-cover"
-            />
-          ) : (
-            <Placeholder variant={placeholderVariant} />
-          )
-        }
-        <Tag label={pillar.name} onImage class="absolute top-3 left-3" />
+      <div class:list={['bg-surface relative overflow-hidden', aspectClasses[aspect]]}>
+        {post.image ? (
+          <Picture
+            src={post.image.src}
+            alt=""
+            width={cropDimensions[aspect].width}
+            height={cropDimensions[aspect].height}
+            formats={['avif', 'webp']}
+            fallbackFormat="jpeg"
+            sizes={cardSizes}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : undefined}
+            decoding="async"
+            class="h-full w-full object-cover"
+          />
+        ) : (
+          <Placeholder variant={placeholderVariant} />
+        )}
+        {/* Decorative echo of the pillar span below; the visible text there
+             already carries this into the link's accessible name, so this
+             copy would otherwise announce the pillar twice. */}
+        <span aria-hidden="true" class="absolute top-3 left-3">
+          <Tag label={pillar.name} onImage />
+        </span>
       </div>
     )
   }
 
   <div class="flex flex-1 flex-col gap-5 p-6">
-    <span class="font-mono text-label uppercase text-sage">{pillar.name}</span>
+    <span class="text-label text-sage font-mono uppercase">{pillar.name}</span>
 
     <h3
-      class="font-display text-display-m text-text-strong underline decoration-1 decoration-transparent underline-offset-4 group-hover:decoration-accent group-focus-visible:decoration-accent"
+      class="font-display text-display-m text-text-strong group-hover:decoration-accent group-focus-visible:decoration-accent underline decoration-transparent decoration-1 underline-offset-4"
       style="font-weight: var(--weight-display)"
     >
       {post.title}
     </h3>
 
-    <p class="line-clamp-2 flex-1 text-body text-text-muted">{post.dek}</p>
+    <p class="text-body text-text-muted line-clamp-2 flex-1">{post.dek}</p>
 
     <Hairline />
 
-    <div class="flex items-center justify-between font-mono text-data tabular-nums text-text-muted">
+    <div class="text-data text-text-muted flex items-center justify-between font-mono tabular-nums">
       <span>{formattedDate}</span>
       <span>{post.readingTime} min</span>
     </div>

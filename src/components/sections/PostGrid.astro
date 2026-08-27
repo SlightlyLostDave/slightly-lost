@@ -16,12 +16,18 @@ const { entries, page, basePath } = Astro.props
 const aspectPattern = ['3:2', '4:5', '1:1'] as const
 ---
 
-<div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
-  {
-    entries.map((entry, index) => (
-      <PostCard post={toPostCardData(entry)} aspect={aspectPattern[index % aspectPattern.length]} />
-    ))
-  }
-</div>
+<div class="flex flex-col gap-12">
+  <div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    {
+      entries.map((entry, index) => (
+        <PostCard
+          post={toPostCardData(entry)}
+          aspect={aspectPattern[index % aspectPattern.length]}
+          priority={index === 0}
+        />
+      ))
+    }
+  </div>
 
-<Pagination page={page} basePath={basePath} />
+  <Pagination page={page} basePath={basePath} />
+</div>

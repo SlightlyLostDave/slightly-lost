@@ -34,7 +34,11 @@ const recentNotes = posts
     </div>
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {recentNotes.map((post) => <PostCard post={post} aspect="3:2" />)}
+      {
+        recentNotes.map((post, index) => (
+          <PostCard post={post} aspect="3:2" priority={index === 0} />
+        ))
+      }
     </div>
   </div>
 </section>

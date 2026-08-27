@@ -101,9 +101,9 @@ const bodyItemSchema = z.discriminatedUnion('component', [
 const postSchema = z.object({
   title: z.string(),
   pillar: pillarSlugSchema,
-  region: z.string(),
-  dek: z.string().max(200),
-  body: z.array(bodyItemSchema),
+  region: z.string().min(1, 'region is required'),
+  dek: z.string().min(1, 'dek is required').max(200),
+  body: z.array(bodyItemSchema).min(1, 'a post needs at least one body block'),
   hero: imageSchema,
   gallery: z.array(imageSchema).default([]),
   featured: z.boolean().default(false),
