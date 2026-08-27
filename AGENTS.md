@@ -2,7 +2,7 @@
 
 Astro 7 static site. Tailwind v4 for styling, GSAP for scroll motion, Strapi 5 as the CMS from Phase 2 onward, MapLibre for the atlas from Phase 3 onward.
 
-Node 26 LTS. TypeScript strict. Zod 4.
+Node 24 LTS. TypeScript strict. Zod 4.
 
 ## Non-negotiables
 
@@ -14,7 +14,7 @@ Node 26 LTS. TypeScript strict. Zod 4.
 
 ## Version rules, because training data is older than this stack
 
-- Content collections live in `src/content.config.ts`, never `src/content/config.ts`. Entries have `id`, not `slug`. Use the standalone `render(entry)`, never `entry.render()`.
+- No content collection exists yet. `src/content.config.ts` has not been created; Phase 1 content lives as hardcoded, typed sample data under `src/content/sample/`, shaped to match the eventual Strapi/loader schema so the Phase 2 swap is a loader change, not a reshape. When that loader lands, it belongs in `src/content.config.ts`, never `src/content/config.ts`. Entries have `id`, not `slug`. Use the standalone `render(entry)`, never `entry.render()`.
 - Content loaders return an object with `name`, `load()`, and either `schema` or an async `createSchema()`. The schema-as-a-function form was removed in Astro 6.
 - Tailwind v4 is CSS-first. There is no `tailwind.config.js`. Theme values live in an `@theme` block in `src/styles/app.css`. The `@astrojs/tailwind` integration is dead; we use `@tailwindcss/vite`.
 - Zod 4, not Zod 3.
@@ -24,16 +24,17 @@ Node 26 LTS. TypeScript strict. Zod 4.
 
 ## Styling rules
 
+- Docs and design mockups can be found under `docs/`
 - Every colour, size, and spacing value comes from the `@theme` block in `src/styles/app.css`. That file is the only place a hex value may appear.
 - Utilities go in the markup. Do not use `@apply` to build component classes. The one permitted exception is the prose base in `src/styles/prose.css`, which styles CMS-authored HTML we do not control.
 - Arbitrary values in square brackets require a comment explaining why no token fits. If it happens twice, the token is missing; add it to `@theme` instead.
 - Repetition is extracted into an Astro component, never into a CSS class.
 - Inline SVG inherits `currentColor` and takes its colour from a text utility. This is the most common place hex values leak back into components.
 - No decorative shadows. Elevation is expressed by surface colour change and a 1px hairline border.
-- Amber appears once per viewport: the active state, the one link that matters, or the rule under a section label. Never for body text, never as a large fill.
-- Depth is reserved for water, wreck, map, and underwater content. It is not a general secondary colour.
-- Accents are surface-specific. `amber-deep` and `depth-deep` on light, `amber-glow` and `depth-glow` on dark. Using the wrong one is an accessibility bug, not a style choice.
-- Hairlines are birch on light and slate on dark, chosen explicitly. There is no generic hairline token.
+- Rust is the active accent: the one hover state, the one link that matters, or the rule under a section label. Never a resting default, never for body text, never as a large fill.
+- Sage is the resting accent: the quiet default used at rest across surfaces, including pillar labels and the atlas map plate.
+- Accents are surface-specific. `rust-deep` and `sage-deep` on light, `rust-glow` and `sage-glow` on dark. Using the wrong one is an accessibility bug, not a style choice.
+- Hairlines are linen on light and slate on dark, chosen explicitly. There is no generic hairline token.
 
 ## Motion rules
 
@@ -42,6 +43,18 @@ Node 26 LTS. TypeScript strict. Zod 4.
 - Animate `transform` and `opacity` only. Never `top`, `left`, `width`, `height`, `background-position`, or `filter` in a scrubbed timeline.
 - One ScrollTrigger per component instance driving one timeline. Never one trigger per tween.
 - Set `will-change: transform` only while a trigger is active, and remove it on completion.
+- Non-animation client interactivity (focus traps, toggles, menus) is not motion and does not go through the registry. It lives beside its component as `ComponentName.script.ts` and is loaded with a plain inline `<script>import './ComponentName.script'</script>` in that component. Routing DOM plumbing like this through the GSAP registry would force pages that never scroll-animate to load GSAP anyway.
+
+## Content pipeline
+
+- Strapi lives in `cms/` in this repository. It is a separate npm project with its own dependencies; never add Strapi packages to the root `package.json`.
+- Strapi is never in the runtime path. The site fetches at build time through the loader in `src/loaders/strapi.ts` and nothing else ever talks to it.
+- Content collections are defined in `src/content.config.ts` at the root of `src`. Entries have `id`, not `slug`. Render with the standalone `render(entry)`.
+- Article bodies are a Strapi dynamic zone, not rich text. Each component in the zone maps to an existing Astro component. Adding a new body component means adding it in three places: the Strapi schema, the Zod schema in `src/content.config.ts`, and the switch in `ArticleBody.astro`. All three or none.
+- Never render CMS HTML with `set:html` outside `Prose`, and never from a field that is not a controlled rich text block.
+- The read-only Strapi API token lives in `STRAPI_TOKEN` and must never carry a `PUBLIC_` prefix. Strapi's public role has no permissions at all.
+- Derived fields are computed once in the loader, never in a template: reading time, photograph count, the post href, and the pillar display data.
+- The post href is built from the pillar slug and the entry slug, in the loader. Never construct it in a component.
 
 ## Code style
 
@@ -61,7 +74,9 @@ Node 26 LTS. TypeScript strict. Zod 4.
 | JS, article route                | under 5kb                                             |
 | JS, homepage                     | under 45kb including GSAP and ScrollTrigger           |
 | Page weight, article, first load | under 900kb                                           |
-| Fonts                            | 3 families, variable, subset Latin, under 120kb total |
+| Fonts                            | 3 families, variable, subset Latin, under 360kb total |
+
+Newsreader's variable file carries both a `wght` and an `opsz` axis; Fontsource serves those together (~132-147kb per style) with no way to request `wght` alone, which is most of that budget.
 
 ## Before finishing a task
 

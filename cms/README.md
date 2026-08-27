@@ -30,64 +30,51 @@ To regenerate: delete the old token under **Settings → API Tokens**, repeat th
 
 ---
 
-## 🚀 Getting started with Strapi
+## Installing and running locally
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+```
+npm install
+cp .env.example .env
+```
 
-### `develop`
-
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
+Fill in `.env` with the secrets described below, then start Strapi:
 
 ```
 npm run develop
-# or
-yarn develop
 ```
 
-### `start`
+`develop` runs with autoReload, which restarts the server whenever a schema file changes. Use `npm run start` instead when you just need the server running without watching for schema edits. Either can also be run from the repository root, without changing directories, via `npm run cms:dev` (this maps to `develop`).
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+Local dev defaults to SQLite: `DATABASE_CLIENT=sqlite` and `DATABASE_FILENAME=.tmp/data.db` in `.env.example`, no separate database server required. Production points at Postgres 17 (14 is the floor) instead, by setting `DATABASE_CLIENT=postgres` and filling in `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `DATABASE_SSL`. No config file edits are needed either way.
 
-```
-npm run start
-# or
-yarn start
-```
+The admin panel is served at `http://localhost:1337/admin` once the server is up; the first visit prompts you to create an admin user.
 
-### `build`
+## Generating the secrets
 
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+`.env.example` documents the recipe. Generate each secret with:
 
 ```
-npm run build
-# or
-yarn build
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-## ⚙️ Deployment
+Run that once for each of `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`, and `ENCRYPTION_KEY`. `APP_KEYS` takes a comma-separated list: run the command four times and join the four values with commas.
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+## Seeding
 
 ```
-yarn strapi deploy
+npm run seed
 ```
 
-## 📚 Learn more
+(or `npm run cms:seed` from the repository root). This runs `scripts/seed.ts`, which creates one author, two tags, one series, and four posts, including `centre-hill-headframe`, which exercises every body component and both `fieldData` and `sources`, so it's a useful reference when authoring a new post by hand. Images are uploaded from placeholder photography already in the Astro repo, tagged as placeholders pending real photography.
 
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
+The seed script checks for an existing seed author first and refuses to run if it finds one, so it never creates duplicates. To reseed from empty, stop the server and delete `.tmp/data.db`, then run `npm run seed` again.
 
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
+## Adding a new body component
 
-## ✨ Community
+A new post body component always touches three places, and the rule is all three or none:
 
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
+1. The Strapi component schema, in `cms/src/components/body/`.
+2. The variant in the `bodyItemSchema` discriminated union in `src/content.config.ts`, at the repository root.
+3. A new case in the switch in `src/components/content/ArticleBody.astro`.
 
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+If the Astro-side switch is missed, the build catches it: `ArticleBody.astro` ends its switch with an `assertNever` default case, so an unhandled component variant fails the TypeScript build rather than silently rendering nothing. The loader in `src/loaders/strapi.ts` also throws at build time on any `__component` value it doesn't recognize, as a second check on the Strapi side.
