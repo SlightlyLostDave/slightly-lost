@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_body_figure_grids",
+  "info": {
+    "displayName": "Figure Grid",
+    "icon": "grid",
+    "description": "Maps to FigureGrid.astro. Editorial rule: 2 to 3 images (Strapi cannot enforce a media field item count). Captions are paired to images by array position."
+  },
+  "options": {},
+  "attributes": {
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "captions": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.caption"
+    },
+    "columns": {
+      "type": "enumeration",
+      "enum": ["2", "3"],
+      "default": "2"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "kind": "collectionType",
+  "collectionName": "posts",
+  "info": {
+    "singularName": "post",
+    "pluralName": "posts",
+    "displayName": "Post",
+    "description": "The workhorse. Every one of the six pillars is a post with a different pillar value."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "pillar": {
+      "type": "enumeration",
+      "enum": [
+        "site-deep-dive",
+        "mine-note",
+        "food-dispatch",
+        "field-kit",
+        "underwater",
+        "folklore"
+      ],
+      "required": true
+    },
+    "region": {
+      "type": "string",
+      "required": true
+    },
+    "dek": {
+      "type": "text",
+      "maxLength": 200,
+      "required": true
+    },
+    "body": {
+      "type": "dynamiczone",
+      "required": true,
+      "components": [
+        "body.rich-text",
+        "body.figure",
+        "body.figure-grid",
+        "body.pull-quote"
+      ]
+    },
+    "hero": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": ["images"]
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "series": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::series.series",
+      "inversedBy": "posts"
+    },
+    "seriesOrder": {
+      "type": "integer"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag"
+    },
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::author.author"
+    },
+    "fieldData": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.field-data"
+    },
+    "sources": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.source"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

@@ -1,4 +1,34 @@
-# 🚀 Getting started with Strapi
+# Slightly Lost CMS
+
+Strapi 5 project for the Slightly Lost content model: `post`, `author`, `tag`, and `series`, plus the shared and body components the post dynamic zone uses. Schema files live under `src/api` and `src/components` and are committed, not just present in the local SQLite database, so the model is reviewable and reproducible.
+
+There are no single types here. Site metadata, navigation, and pillar definitions live in `src/config/` in the Astro app, not in Strapi. See `docs/slightly-lost-architecture.md` section 4 in the repo root for the full rationale.
+
+## Read-only API token
+
+The Astro build is the only client that ever talks to this CMS, and it only reads. Strapi's public role should have zero permissions on anything, that's the default for new content types, verify it stayed that way under **Settings → Users & Permissions Plugin → Roles → Public**.
+
+To create the token the build uses:
+
+1. **Settings → API Tokens → Create new API Token**.
+2. Name it (e.g. `astro-build-readonly`), type **Custom**.
+3. Under permissions, grant only `find` and `findOne` for `Post`, `Author`, `Tag`, and `Series`. Nothing else, no create/update/delete, no other content types.
+4. Set a token duration appropriate to your rotation policy.
+5. Copy the generated value once, it's shown only at creation. Set it as `STRAPI_TOKEN` in the Astro project's build environment, never with a `PUBLIC_` prefix.
+
+To regenerate: delete the old token under **Settings → API Tokens**, repeat the steps above, and update `STRAPI_TOKEN` wherever it's set (local `.env`, CI secrets, host environment variables). Do this immediately if the token is ever exposed.
+
+## Editorial rules Strapi can't enforce structurally
+
+**Alt text.** Every uploaded image needs real `alternativeText` filled in in the media library at upload time. Strapi has no schema-level way to require this field, so it's not enforced automatically, treat it as a hard rule anyway: every image on the site needs real alt text, and the CMS is the only place it can come from.
+
+**Figure grid image count.** `body.figure-grid` should hold 2 to 3 images. Strapi's media fields have no schema-level item-count constraint (only components and dynamic zones support `min`/`max`), so this isn't enforced by the schema either.
+
+**Figure grid captions.** `body.figure-grid.captions` is a separate repeatable list from `images`, kept apart from `alternativeText` because that field holds accessibility alt text, not a visible caption. When entering a figure grid, add captions in the same order as the images, the Astro loader pairs `images[i]` to `captions[i]` by position, not by any structural link Strapi provides. Leave `captions` empty entirely if a grid has no captions.
+
+---
+
+## 🚀 Getting started with Strapi
 
 Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
 

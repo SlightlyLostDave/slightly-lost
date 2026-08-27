@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_body_pull_quotes",
+  "info": {
+    "displayName": "Pull Quote",
+    "icon": "quote",
+    "description": "Maps to PullQuote.astro."
+  },
+  "options": {},
+  "attributes": {
+    "quote": {
+      "type": "text",
+      "required": true
+    },
+    "attribution": {
+      "type": "string"
+    }
+  }
+}

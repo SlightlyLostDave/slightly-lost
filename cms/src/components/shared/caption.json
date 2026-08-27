@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_shared_captions",
+  "info": {
+    "displayName": "Caption",
+    "icon": "quote",
+    "description": "A single figure-grid image caption. Kept separate from alternativeText, which holds real accessibility alt text. Paired to its image by array position in the loader."
+  },
+  "options": {},
+  "attributes": {
+    "caption": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

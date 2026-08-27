@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_body_figures",
+  "info": {
+    "displayName": "Figure",
+    "icon": "picture",
+    "description": "Maps to Figure.astro."
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "caption": {
+      "type": "string"
+    },
+    "width": {
+      "type": "enumeration",
+      "enum": ["measure", "container"],
+      "default": "measure"
+    }
+  }
+}

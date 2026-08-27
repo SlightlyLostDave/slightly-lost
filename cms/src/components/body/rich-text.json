@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_body_rich_texts",
+  "info": {
+    "displayName": "Rich Text",
+    "icon": "align-left",
+    "description": "A run of prose. Renders inside <Prose>."
+  },
+  "options": {},
+  "attributes": {
+    "content": {
+      "type": "blocks",
+      "required": true
+    }
+  }
+}

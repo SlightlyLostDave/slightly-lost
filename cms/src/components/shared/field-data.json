@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_shared_field_data",
+  "info": {
+    "displayName": "Field Data",
+    "icon": "list",
+    "description": "One entry in a post's mono metadata strip: coordinates, elevation, distance walked, water temperature, and similar."
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "string",
+      "required": true
+    },
+    "unit": {
+      "type": "string"
+    },
+    "accent": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

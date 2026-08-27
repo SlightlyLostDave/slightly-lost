@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_shared_sources",
+  "info": {
+    "displayName": "Source",
+    "icon": "book",
+    "description": "A citation. Discrete fields so the loader formats the reference-list entry, rather than storing a pre-formatted string."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "author": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "string"
+    },
+    "year": {
+      "type": "integer"
+    },
+    "note": {
+      "type": "text"
+    }
+  }
+}
