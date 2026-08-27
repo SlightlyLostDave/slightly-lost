@@ -1,4 +1,6 @@
 ---
+import { getImage } from 'astro:assets'
+
 interface Props {
   src?: string
   alt: string
@@ -10,6 +12,25 @@ interface Props {
 }
 
 const { src, alt, width, height, displayHeight = '70vh', caption, class: className } = Astro.props
+
+// Art-directed hero crops: 4:5 portrait below 768px, 3:2 landscape at 768px
+// and above - matches the site's md breakpoint used everywhere else
+// (HeroLayer.astro, RecentNotes.astro). Raw px because CSS media queries
+// can't read Tailwind's --breakpoint-md custom property; keep in sync by
+// hand if that changes.
+const MOBILE_CROP = { width: 960, height: 1200 } as const // 4:5
+const DESKTOP_CROP = { width: 2400, height: 1600 } as const // 3:2
+
+const [mobileAvif, mobileWebp, desktopAvif, desktopWebp, desktopFallback] =
+  src && width && height
+    ? await Promise.all([
+        getImage({ src, ...MOBILE_CROP, format: 'avif' }),
+        getImage({ src, ...MOBILE_CROP, format: 'webp' }),
+        getImage({ src, ...DESKTOP_CROP, format: 'avif' }),
+        getImage({ src, ...DESKTOP_CROP, format: 'webp' }),
+        getImage({ src, ...DESKTOP_CROP, format: 'jpeg' }),
+      ])
+    : []
 ---
 
 <figure
@@ -27,8 +48,23 @@ const { src, alt, width, height, displayHeight = '70vh', caption, class: classNa
   ]}
 >
   {
-    src ? (
-      <img src={src} alt={alt} width={width} height={height} class="h-full w-full object-cover" loading="eager" decoding="async" />
+    mobileAvif && mobileWebp && desktopAvif && desktopWebp && desktopFallback ? (
+      <picture>
+        <source media="(max-width: 767.98px)" srcset={mobileAvif.src} type="image/avif" />
+        <source media="(max-width: 767.98px)" srcset={mobileWebp.src} type="image/webp" />
+        <source media="(min-width: 768px)" srcset={desktopAvif.src} type="image/avif" />
+        <source media="(min-width: 768px)" srcset={desktopWebp.src} type="image/webp" />
+        <img
+          src={desktopFallback.src}
+          alt={alt}
+          width={desktopFallback.attributes.width}
+          height={desktopFallback.attributes.height}
+          class="h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
     ) : (
       <div role="img" aria-label={alt} class="h-full w-full">
         <slot name="media" />

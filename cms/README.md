@@ -26,6 +26,8 @@ To regenerate: delete the old token under **Settings → API Tokens**, repeat th
 
 **Figure grid captions.** `body.figure-grid.captions` is a separate repeatable list from `images`, kept apart from `alternativeText` because that field holds accessibility alt text, not a visible caption. When entering a figure grid, add captions in the same order as the images, the Astro loader pairs `images[i]` to `captions[i]` by position, not by any structural link Strapi provides. Leave `captions` empty entirely if a grid has no captions.
 
+**Hero image minimum dimension.** `post.hero` should be at least 2400px on its long edge, the site crops it to a 4:5 portrait for mobile and a 3:2 landscape for desktop, and Astro's image pipeline never upscales, so anything smaller renders soft or letterboxed. Strapi has no schema-level way to enforce this. The Astro build's loader logs a build-time warning for any hero under that threshold, but the build still succeeds, treat the warning as a signal to reshoot or re-upload, not a hard failure.
+
 ---
 
 ## 🚀 Getting started with Strapi

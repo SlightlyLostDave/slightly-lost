@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets'
 import Tag from '@/components/primitives/Tag.astro'
 import Hairline from '@/components/primitives/Hairline.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
@@ -12,6 +13,7 @@ interface PostCardData {
   readingTime: number
   href: string
   imageAlt: string
+  image?: { src: string; width: number; height: number; alt: string }
 }
 
 interface Props {
@@ -31,6 +33,20 @@ const aspectClasses: Record<NonNullable<Props['aspect']>, string> = {
   '1:1': 'aspect-square',
 }
 
+// 2x the card's real rendered width at each aspect, so AVIF/WebP stay crisp
+// at typical device pixel ratios. Astro's image service crops to match
+// (never distorts) and never upscales past the source's own resolution.
+const cropDimensions: Record<NonNullable<Props['aspect']>, { width: number; height: number }> = {
+  '3:2': { width: 900, height: 600 },
+  '4:5': { width: 800, height: 1000 },
+  '1:1': { width: 800, height: 800 },
+}
+
+// Matches RecentNotes.astro's grid: max-w-content (1376px), px-6 (24px),
+// gap-6 (24px), md:grid-cols-3. Keep in sync by hand if that grid changes.
+const cardSizes =
+  '(min-width: 1424px) 443px, (min-width: 768px) calc((100vw - 96px) / 3), calc(100vw - 48px)'
+
 const formattedDate = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: '2-digit',
@@ -48,7 +64,24 @@ const formattedDate = new Intl.DateTimeFormat('en-GB', {
   {
     !textOnly && (
       <div class:list={['relative overflow-hidden bg-surface', aspectClasses[aspect]]}>
-        <Placeholder variant={placeholderVariant} />
+        {
+          post.image ? (
+            <Picture
+              src={post.image.src}
+              alt=""
+              width={cropDimensions[aspect].width}
+              height={cropDimensions[aspect].height}
+              formats={['avif', 'webp']}
+              fallbackFormat="jpeg"
+              sizes={cardSizes}
+              loading="lazy"
+              decoding="async"
+              class="h-full w-full object-cover"
+            />
+          ) : (
+            <Placeholder variant={placeholderVariant} />
+          )
+        }
         <Tag label={pillar.name} onImage class="absolute top-3 left-3" />
       </div>
     )

@@ -8,6 +8,8 @@ import FigureGrid from '@/components/media/FigureGrid.astro'
 import PullQuote from '@/components/sections/PullQuote.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
 import { centreHillHeadframe as post } from '@/content/sample/centre-hill-headframe'
+
+const [figureGridImageA, figureGridImageB] = post.figureGridImages
 ---
 
 <Article
@@ -22,11 +24,12 @@ import { centreHillHeadframe as post } from '@/content/sample/centre-hill-headfr
 >
   <Fragment slot="hero">
     <FullBleed
-      alt="Centre Hill headframe across the clearing, placeholder pending photography"
-      caption="Centre Hill headframe, north face — placeholder, photography pending"
-    >
-      <Placeholder slot="media" variant="a" />
-    </FullBleed>
+      src={post.hero.src}
+      width={post.hero.width}
+      height={post.hero.height}
+      alt={post.hero.alt}
+      caption="Centre Hill headframe, north face, placeholder, photography pending"
+    />
   </Fragment>
 
   <Fragment slot="field-data">
@@ -64,12 +67,20 @@ import { centreHillHeadframe as post } from '@/content/sample/centre-hill-headfr
   </p>
 
   <FigureGrid columns={2}>
-    <Figure alt="First capture session, September 2025, placeholder pending photography">
-      <Placeholder slot="media" variant="b" />
-    </Figure>
-    <Figure alt="Second capture session, August 2026, placeholder pending photography">
-      <Placeholder slot="media" variant="c" />
-    </Figure>
+    <Figure
+      src={figureGridImageA.src}
+      alt={figureGridImageA.alt}
+      imgWidth={figureGridImageA.width}
+      imgHeight={figureGridImageA.height}
+      gridColumns={2}
+    />
+    <Figure
+      src={figureGridImageB.src}
+      alt={figureGridImageB.alt}
+      imgWidth={figureGridImageB.width}
+      imgHeight={figureGridImageB.height}
+      gridColumns={2}
+    />
   </FigureGrid>
 
   <p>

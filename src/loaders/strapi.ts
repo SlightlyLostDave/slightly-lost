@@ -1,6 +1,7 @@
 import qs from 'qs'
 import type { Loader, LoaderContext, MetaStore } from 'astro/loaders'
 import { pillarByEnum, type PillarEnum } from '@/config/pillars'
+import { warnIfBelowMinimumHeroDimension } from '@/lib/images'
 
 const SCHEMA_VERSION = '1'
 const META_LAST_SYNC_KEY = 'lastSyncedAt'
@@ -201,14 +202,17 @@ function normalizeBodyItem(item: StrapiBodyItemRaw): Record<string, unknown> {
   }
 }
 
-function normalizePost(raw: StrapiPostRaw): Record<string, unknown> {
+function normalizePost(raw: StrapiPostRaw, logger: LoaderContext['logger']): Record<string, unknown> {
+  const hero = normalizeImage(raw.hero)
+  if (hero) warnIfBelowMinimumHeroDimension(hero, raw.slug, logger)
+
   return {
     title: raw.title,
     pillar: pillarByEnum[raw.pillar].slug,
     region: raw.region,
     dek: raw.dek,
     body: raw.body.map(normalizeBodyItem),
-    hero: normalizeImage(raw.hero),
+    hero,
     gallery: normalizeImages(raw.gallery),
     featured: raw.featured ?? false,
     series: raw.series?.slug,
@@ -267,10 +271,14 @@ function normalizeSeries(raw: StrapiSeriesRaw): Record<string, unknown> {
   }
 }
 
-function normalizeEntry(contentType: string, raw: Record<string, unknown>): Record<string, unknown> {
+function normalizeEntry(
+  contentType: string,
+  raw: Record<string, unknown>,
+  logger: LoaderContext['logger']
+): Record<string, unknown> {
   switch (contentType) {
     case 'posts':
-      return normalizePost(raw as unknown as StrapiPostRaw)
+      return normalizePost(raw as unknown as StrapiPostRaw, logger)
     case 'authors':
       return normalizeAuthor(raw as unknown as StrapiAuthorRaw)
     case 'tags':
@@ -374,7 +382,7 @@ export function strapiLoader(opts: {
 
       for (const raw of rawItems) {
         const slug = raw.slug as string
-        const normalized = normalizeEntry(opts.contentType, raw)
+        const normalized = normalizeEntry(opts.contentType, raw, logger)
         const parsedData = await parseData({ id: slug, data: normalized })
         store.set({
           id: slug,

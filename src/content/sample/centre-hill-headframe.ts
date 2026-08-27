@@ -20,6 +20,20 @@ export interface SourceItem {
   note?: string
 }
 
+export interface SampleImage {
+  src: string
+  width: number
+  height: number
+  alt: string
+}
+
+// Points at the local Strapi dev instance's seeded uploads (npm run
+// cms:dev, already seeded by cms/scripts/seed.ts) so the image pipeline has
+// something real to optimize. This only builds while that server is
+// running; there is no CI in this repo today, so nothing currently depends
+// on it building without Strapi up. Revisit if a CI/deploy build is added.
+const STRAPI_DEV_URL = 'http://localhost:1337'
+
 export const centreHillHeadframe = {
   pillar: 'mines' as PillarSlug,
   region: 'Sudbury Basin',
@@ -29,6 +43,26 @@ export const centreHillHeadframe = {
   publishedAt: new Date('2026-08-14'),
   readingTime: 18,
   photoCount: 32,
+  hero: {
+    src: `${STRAPI_DEV_URL}/uploads/hero_background_1_d4f3404555.webp`,
+    width: 2400,
+    height: 1600,
+    alt: 'Centre Hill headframe across the clearing, placeholder pending photography',
+  } satisfies SampleImage,
+  figureGridImages: [
+    {
+      src: `${STRAPI_DEV_URL}/uploads/hero_midground_2_98076f103c.webp`,
+      width: 2400,
+      height: 1600,
+      alt: 'First capture session, September 2025, placeholder pending photography',
+    },
+    {
+      src: `${STRAPI_DEV_URL}/uploads/hero_foreground_3_08dd804340.webp`,
+      width: 2400,
+      height: 1600,
+      alt: 'Second capture session, August 2026, placeholder pending photography',
+    },
+  ] satisfies [SampleImage, SampleImage],
   fieldData: [
     { label: 'Coordinates', value: '46.4821 N, 81.0093 W' },
     { label: 'Elevation', value: '318', unit: 'm' },

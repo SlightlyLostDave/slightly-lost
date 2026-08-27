@@ -1,4 +1,6 @@
 ---
+import { Picture } from 'astro:assets'
+
 interface Props {
   src?: string
   alt: string
@@ -6,10 +8,43 @@ interface Props {
   width?: 'measure' | 'container'
   imgWidth?: number
   imgHeight?: number
+  // Set when nesting inside <FigureGrid columns={N}>, so `sizes` reflects
+  // the real per-figure render width instead of the full measure/container
+  // width. Mutually exclusive with width="container" in practice; if both
+  // are passed, gridColumns wins.
+  gridColumns?: 2 | 3
   class?: string
 }
 
-const { src, alt, caption, width = 'measure', imgWidth, imgHeight, class: className } = Astro.props
+const { src, alt, caption, width = 'measure', imgWidth, imgHeight, gridColumns, class: className } = Astro.props
+
+// Mirrors app.css @theme tokens as plain numbers (CSS custom properties
+// aren't readable from component frontmatter) - keep in sync by hand if
+// --container-measure, --container-content, gap-6, or px-6 change.
+// MEASURE_MAX_PX approximates 68ch in Newsreader at text-body-l; verify
+// against DevTools rendered width if the type scale changes.
+const MEASURE_MAX_PX = 720
+const CONTAINER_MAX_PX = 1328 // 1376 (--container-content) - 2x24 (px-6)
+const GRID_GAP_PX = 24
+
+function maxRenderWidth(): number {
+  if (gridColumns === 3) return Math.round((MEASURE_MAX_PX - GRID_GAP_PX * 2) / 3)
+  if (gridColumns === 2) return Math.round((MEASURE_MAX_PX - GRID_GAP_PX) / 2)
+  return width === 'container' ? CONTAINER_MAX_PX : MEASURE_MAX_PX
+}
+
+function sizes(): string {
+  if (gridColumns) return `(min-width: 768px) ${maxRenderWidth()}px, calc(100vw - 48px)`
+  if (width === 'container') return `(min-width: 1424px) ${CONTAINER_MAX_PX}px, calc(100vw - 48px)`
+  return `(min-width: 768px) ${MEASURE_MAX_PX}px, calc(100vw - 48px)`
+}
+
+// Preserve the source's own aspect ratio (freeform editorial photography,
+// not a fixed card well) - scale down to the layout's max render width,
+// never upscale, derive height algebraically so no crop actually occurs.
+const targetWidth = imgWidth ? Math.min(maxRenderWidth(), imgWidth) : undefined
+const targetHeight =
+  imgWidth && imgHeight && targetWidth ? Math.round((targetWidth * imgHeight) / imgWidth) : imgHeight
 ---
 
 <figure
@@ -31,8 +66,19 @@ const { src, alt, caption, width = 'measure', imgWidth, imgHeight, class: classN
   ]}
 >
   {
-    src ? (
-      <img src={src} alt={alt} width={imgWidth} height={imgHeight} loading="lazy" decoding="async" class="h-auto w-full" />
+    src && targetWidth && targetHeight ? (
+      <Picture
+        src={src}
+        alt={alt}
+        width={targetWidth}
+        height={targetHeight}
+        formats={['avif', 'webp']}
+        fallbackFormat="jpeg"
+        sizes={sizes()}
+        loading="lazy"
+        decoding="async"
+        class="h-auto w-full"
+      />
     ) : (
       // No real photograph yet. aspect-[3/2] is a one-off box for a temporary
       // placeholder with no <img> to size it from; no aspect-ratio token

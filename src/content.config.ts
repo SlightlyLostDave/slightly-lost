@@ -10,7 +10,7 @@ const imageSchema = z.object({
   src: z.string(),
   width: z.number(),
   height: z.number(),
-  alt: z.string(),
+  alt: z.string().min(1, 'alt text is required'),
 })
 
 const fieldDataSchema = z.object({

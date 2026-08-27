@@ -65,6 +65,7 @@ const firstRichTextIndex = mergedBody.findIndex((block) => block.component === '
                 imgWidth={image.width}
                 imgHeight={image.height}
                 caption={image.caption}
+                gridColumns={block.columns}
               />
             ))}
           </FigureGrid>
