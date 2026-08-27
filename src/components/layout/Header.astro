@@ -28,12 +28,6 @@ const fillStyle = isSolid
   ? 'opacity: 1; transform: scaleY(calc(var(--header-height-solid) / var(--header-height-tall)));'
   : 'opacity: 0; transform: scaleY(1);'
 const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translateY(0);'
-
-// Text and chrome on the transparent state take a fixed literal token
-// (paper) rather than the theme's role tokens, because a photograph's
-// tonality does not change with the reader's light/dark preference.
-const chromeColor =
-  'group-data-[header-state=transparent]:text-paper group-data-[header-state=solid]:text-text-muted motion-safe:transition-colors'
 ---
 
 <header
@@ -53,7 +47,7 @@ const chromeColor =
     class="header__bar max-w-content relative mx-auto flex h-full items-center justify-between gap-6 px-6"
     style={barStyle}
   >
-    <a href="/" class:list={['font-display text-title', chromeColor]}>
+    <a href="/" class:list={['font-display text-title']}>
       {site.name}
     </a>
 
@@ -68,7 +62,6 @@ const chromeColor =
                 aria-current={current ? 'page' : undefined}
                 class:list={[
                   'text-label inline-flex min-h-(--tap-target) items-center font-mono uppercase',
-                  chromeColor,
                   current && 'group-data-[header-state=solid]:text-accent',
                 ]}
               >
@@ -81,7 +74,7 @@ const chromeColor =
 
       <div
         aria-hidden="true"
-        class:list={['hidden h-6 w-px bg-current opacity-40 lg:block', chromeColor]}
+        class:list={['hidden h-6 w-px bg-current opacity-40 lg:block']}
       >
       </div>
 
@@ -90,7 +83,6 @@ const chromeColor =
         aria-label="Search"
         class:list={[
           'inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center',
-          chromeColor,
         ]}
       >
         <svg
@@ -106,9 +98,7 @@ const chromeColor =
         </svg>
       </a>
 
-      <div class:list={[chromeColor]}>
-        <ThemeToggle />
-      </div>
+      <ThemeToggle />
 
       <button
         type="button"
@@ -118,7 +108,6 @@ const chromeColor =
         aria-label="Open menu"
         class:list={[
           'inline-flex h-(--tap-target) w-(--tap-target) items-center justify-center lg:hidden',
-          chromeColor,
         ]}
       >
         <svg
