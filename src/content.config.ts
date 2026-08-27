@@ -33,7 +33,7 @@ const seoSchema = z.object({
   noindex: z.boolean().default(false),
 })
 
-interface StrapiBlockNode {
+export interface StrapiBlockNode {
   type: string
   text?: string
   bold?: boolean

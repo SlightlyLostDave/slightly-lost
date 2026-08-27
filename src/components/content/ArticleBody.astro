@@ -1,0 +1,78 @@
+---
+import type { PostBody } from '@/content.config'
+import { serializeBlocks } from '@/lib/blocks'
+import Prose from '@/components/primitives/Prose.astro'
+import Figure from '@/components/media/Figure.astro'
+import FigureGrid from '@/components/media/FigureGrid.astro'
+import PullQuote from '@/components/sections/PullQuote.astro'
+
+interface Props {
+  body: PostBody[]
+}
+
+const { body } = Astro.props
+
+function mergeRichTextRuns(blocks: PostBody[]): PostBody[] {
+  const merged: PostBody[] = []
+  for (const block of blocks) {
+    const previous = merged.at(-1)
+    if (block.component === 'body.rich-text' && previous?.component === 'body.rich-text') {
+      merged[merged.length - 1] = { ...previous, content: [...previous.content, ...block.content] }
+    } else {
+      merged.push(block)
+    }
+  }
+  return merged
+}
+
+function assertNever(value: never): never {
+  throw new Error(`ArticleBody: unhandled body component "${JSON.stringify(value)}"`)
+}
+
+const mergedBody = mergeRichTextRuns(body)
+const firstRichTextIndex = mergedBody.findIndex((block) => block.component === 'body.rich-text')
+---
+
+{
+  mergedBody.map((block, index) => {
+    switch (block.component) {
+      case 'body.rich-text':
+        return (
+          <Prose>
+            <Fragment
+              set:html={serializeBlocks(block.content, { lede: index === firstRichTextIndex })}
+            />
+          </Prose>
+        )
+      case 'body.figure':
+        return (
+          <Figure
+            src={block.image.src}
+            alt={block.image.alt}
+            imgWidth={block.image.width}
+            imgHeight={block.image.height}
+            caption={block.caption}
+            width={block.width}
+          />
+        )
+      case 'body.figure-grid':
+        return (
+          <FigureGrid columns={block.columns}>
+            {block.images.map((image) => (
+              <Figure
+                src={image.src}
+                alt={image.alt}
+                imgWidth={image.width}
+                imgHeight={image.height}
+                caption={image.caption}
+              />
+            ))}
+          </FigureGrid>
+        )
+      case 'body.pull-quote':
+        return <PullQuote>{block.quote}</PullQuote>
+      default:
+        return assertNever(block)
+    }
+  })
+}

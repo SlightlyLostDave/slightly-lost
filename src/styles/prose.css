@@ -27,8 +27,11 @@
 
 /* The lede: the first paragraph reads brighter than the rest of the body,
    so the standfirst -> lede -> body sequence doesn't collapse into one
-   uniform tone. */
-.prose > p:first-of-type {
+   uniform tone. Marked explicitly with data-lede rather than matched by
+   position, because a single article can render more than one <Prose>
+   block (ArticleBody wraps each rich-text run separately), and only the
+   very first paragraph in the whole article should ever get this. */
+.prose p[data-lede] {
   @apply text-text-strong;
 }
 
