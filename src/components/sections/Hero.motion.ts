@@ -84,8 +84,7 @@ export const init: AnimationInit = (elements, { gsap, reducedMotion }) => {
         // 0.15/0.35/0.55/0.85 factors are fractions of ONE screen. screen
         // is the sticky h-svh box, so its offsetHeight is a stable
         // one-viewport reference no matter how long the runway is tuned.
-        if (!mobile && back)
-          timeline.to(back, { y: () => -screen.offsetHeight * factors.back }, 0)
+        if (!mobile && back) timeline.to(back, { y: () => -screen.offsetHeight * factors.back }, 0)
         timeline.to(mid, { y: () => -screen.offsetHeight * factors.mid }, 0)
         timeline.to(type, { y: () => -screen.offsetHeight * factors.type }, 0)
         timeline.to(type, { opacity: 0, duration: TYPE_OPACITY_DURATION }, 0)

@@ -66,16 +66,15 @@ export interface HomepageConfig {
 
 export const homepage = {
   hero: {
-    kicker: 'Ontario and elsewhere / since 2005',
+    kicker: 'Ontario & elsewhere / since 2005',
     headline: 'Go looking for the wrong things.',
     subhead:
-      'Abandoned headframes, drowned villages, and the long way round to dinner. Written on site, not from the archive.',
+      'Abandoned locales, drowned villages, and the long way round to dinner. Written on site, not from the archive.',
     coordinates: '38.7231° N, 105.1259° W',
-    place: 'Theresa Mine, Colorado, USA',
+    place: 'Theresa Mine, Colorado',
   },
   interstitial: {
-    // No visible kicker exists yet in the design mockup. Placeholder, easy to revise.
-    label: 'Field notes',
+    label: 'Why this exists',
     statement:
       'Most of what I find was never hidden. It was just left, and nobody went back to look at it.',
   },

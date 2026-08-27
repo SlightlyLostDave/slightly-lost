@@ -33,7 +33,7 @@ const { hero } = homepage;
 <section data-hero data-anim="hero" class="relative h-[240svh] w-full motion-reduce:h-svh">
   <div
     data-hero-screen
-    class="bg-surface sticky top-0 h-svh w-full overflow-hidden motion-reduce:static"
+    class="bg-surface sticky top-0 h-svh w-full overflow-hidden motion-reduce:static after:absolute after:inset-0 after:bg-surface/60"
   >
     <HeroLayer layer="back" />
     <HeroLayer layer="mid" />
@@ -48,7 +48,7 @@ const { hero } = homepage;
 
     <div
       data-hero-layer="type"
-      class="relative flex h-full w-full flex-col justify-between px-6 py-10 md:px-10 md:py-14"
+      class="relative z-20 flex h-full w-full flex-col justify-between px-6 py-10 md:px-10 md:py-14"
     >
       <div class="max-w-content mx-auto my-auto flex w-full flex-col gap-6">
         <Label accentRule>{hero.kicker}</Label>
@@ -115,7 +115,7 @@ const { hero } = homepage;
     -->
     <div
       data-hero-foreground
-      class="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden md:motion-safe:block"
+      class="pointer-events-none absolute inset-0 hidden overflow-hidden md:motion-safe:block"
     >
       <HeroLayer layer="front" />
     </div>

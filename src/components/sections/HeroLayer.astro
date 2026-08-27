@@ -13,28 +13,7 @@ interface Props {
 const { layer, class: className } = Astro.props;
 
 const src = layer === 'back' ? heroBackgroundImage : layer === 'mid' ? heroMidgroundImage : heroForegroundImage;
-const alt = layer === 'back' ? 'Theresa Mine background' : layer === 'mid' ? 'Theresa Mine midground' : 'Theresa Mine foreground';
-
-// Overscan needed so Hero.motion.ts's translateY parallax never reveals a
-// gap at a layer's leading edge before scroll completes. Sized per layer
-// against its own translateY factor (see Hero.motion.ts), not a flat 110%:
-//  - back: the only fully opaque, full-bleed plate with nothing rendered
-//    behind it, so it's the one layer that actually needs guaranteed
-//    coverage. 20% comfortably covers its 0.15 factor.
-//  - mid: not full-bleed (a silhouette over transparent), so today anything
-//    revealed at its edge is just back's plate showing through, which is
-//    intentional layering, not a bug. 40% is a forward-looking margin for
-//    once this becomes a real full-bleed photo, covering its 0.35 factor.
-//  - front: kept at the literal 110% from the spec, since front is designed
-//    to exit the frame, revealing the intentional layers behind it.
-// Each value is a one-off used exactly once in the codebase, so per
-// CLAUDE.md's "twice, then it's a token" rule none of these graduate to
-// @theme yet.
-const insetByLayer: Record<Props['layer'], string> = {
-  back: 'inset-[-20%]',
-  mid: 'inset-[-40%]',
-  front: 'inset-[-5%]',
-}
+const alt = `'Theresa Mine ${layer}ground'`;
 
 // Absent below 768px per the hero's two-layer mobile spec (mid and type
 // only); mid has no such class and stays visible at every breakpoint.
@@ -45,7 +24,7 @@ const mobileVisibility = layer === 'back' || layer === 'front' ? 'hidden md:bloc
   data-hero-layer={layer}
   aria-hidden="true"
   role="presentation"
-  class:list={['absolute', insetByLayer[layer], mobileVisibility, className]}
+  class:list={['absolute', 'inset-y-[-20%]', mobileVisibility, className]}
 >
   <Image src={src} alt={alt} />
 </div>
