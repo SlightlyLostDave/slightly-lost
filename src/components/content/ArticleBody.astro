@@ -40,7 +40,10 @@ const firstRichTextIndex = mergedBody.findIndex((block) => block.component === '
         return (
           <Prose>
             <Fragment
-              set:html={serializeBlocks(block.content, { lede: index === firstRichTextIndex })}
+              set:html={serializeBlocks(block.content, {
+                lede: index === firstRichTextIndex,
+                firstBlock: index === 0,
+              })}
             />
           </Prose>
         )

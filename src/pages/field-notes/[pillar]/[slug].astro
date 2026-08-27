@@ -1,0 +1,56 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import Article from '@/layouts/Article.astro'
+import FullBleed from '@/components/media/FullBleed.astro'
+import FieldDataStrip from '@/components/sections/FieldDataStrip.astro'
+import ArticleBody from '@/components/content/ArticleBody.astro'
+import SourceList from '@/components/sections/SourceList.astro'
+import { pillarBySlug } from '@/config/pillars'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts')
+  return posts.map((post) => {
+    const pillar = pillarBySlug[post.data.pillar]
+    if (!pillar) {
+      throw new Error(`Post "${post.id}" has an unrecognized pillar slug "${post.data.pillar}"`)
+    }
+    return { params: { pillar: pillar.slug, slug: post.id }, props: { post } }
+  })
+}
+
+interface Props {
+  post: CollectionEntry<'posts'>
+}
+
+const { post } = Astro.props
+---
+
+<Article
+  title={post.data.title}
+  description={post.data.dek}
+  publishedAt={post.data.publishedAt}
+  authorName={post.data.authorName}
+  pillar={post.data.pillar}
+  region={post.data.region}
+  readingTime={post.data.readingTime}
+  photoCount={post.data.photoCount}
+>
+  <Fragment slot="hero">
+    <FullBleed
+      src={post.data.hero.src}
+      width={post.data.hero.width}
+      height={post.data.hero.height}
+      alt={post.data.hero.alt}
+    />
+  </Fragment>
+
+  <Fragment slot="field-data">
+    <FieldDataStrip items={post.data.fieldData} />
+  </Fragment>
+
+  <ArticleBody body={post.data.body} />
+
+  <Fragment slot="sources">
+    <SourceList sources={post.data.sources} />
+  </Fragment>
+</Article>
