@@ -1,0 +1,48 @@
+---
+import Hairline from '@/components/primitives/Hairline.astro'
+import type { PillarSeries } from '@/lib/pillars'
+
+interface Props extends PillarSeries {}
+
+const { series, episodes } = Astro.props
+---
+
+<section class="border-t border-b border-hairline bg-surface-raised">
+  <div class="max-w-content mx-auto grid grid-cols-1 gap-12 px-6 py-16 md:grid-cols-[44fr_56fr] md:gap-24 md:py-(--spacing-section)">
+    <div class="flex flex-col gap-6">
+      <span class="font-mono text-label uppercase text-sage">Series in this pillar</span>
+      <h2 class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+        {series.data.name}
+      </h2>
+      {
+        series.data.description && (
+          <p class="max-w-measure font-display text-body-l text-text-body">
+            {series.data.description}
+          </p>
+        )
+      }
+    </div>
+
+    <ol class="flex flex-col">
+      {
+        episodes.map((episode, index) => (
+          <li>
+            <Hairline />
+            <a
+              href={episode.data.href}
+              class="grid grid-cols-[44px_1fr_auto] items-baseline gap-4 py-5 motion-safe:transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+            >
+              <span class="font-mono text-data tabular-nums text-text-muted">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="font-display text-title text-text-strong">{episode.data.title}</span>
+              <span class="font-mono text-label uppercase text-text-muted">
+                {episode.data.readingTime} min
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

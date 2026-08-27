@@ -1,0 +1,21 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import Button from '@/components/primitives/Button.astro'
+import type { Pillar } from '@/config/pillars'
+
+interface Props {
+  pillar: Pillar
+}
+
+const { pillar } = Astro.props
+---
+
+<section class="bg-surface px-6 py-16 md:py-(--spacing-section)">
+  <div class="mx-auto flex max-w-md flex-col items-center gap-8 text-center">
+    <Label>No dispatches yet</Label>
+    <p class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+      Nothing filed under {pillar.name} yet. Check back once there is ground truth to report.
+    </p>
+    <Button href="/field-notes" variant="secondary">Browse all field notes</Button>
+  </div>
+</section>

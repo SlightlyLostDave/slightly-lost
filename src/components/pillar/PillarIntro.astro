@@ -1,0 +1,17 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import type { Pillar } from '@/config/pillars'
+
+interface Props {
+  pillar: Pillar
+}
+
+const { pillar } = Astro.props
+---
+
+<section class="max-w-content mx-auto grid grid-cols-1 gap-8 px-6 py-16 md:grid-cols-[240px_1fr] md:gap-20 md:py-(--spacing-section)">
+  <Label class="pt-3">About this pillar</Label>
+  <p class="max-w-measure font-display text-body-l text-text-body">
+    {pillar.intro}
+  </p>
+</section>

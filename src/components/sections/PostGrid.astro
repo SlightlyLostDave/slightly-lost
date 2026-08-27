@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import type { Page } from 'astro'
+import Pagination from '@/components/layout/Pagination.astro'
+import PostCard from '@/components/cards/PostCard.astro'
+import { toPostCardData } from '@/lib/posts'
+
+interface Props {
+  entries: CollectionEntry<'posts'>[]
+  page: Page<CollectionEntry<'posts'>>
+  basePath: string
+}
+
+const { entries, page, basePath } = Astro.props
+
+const aspectPattern = ['3:2', '4:5', '1:1'] as const
+---
+
+<div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
+  {
+    entries.map((entry, index) => (
+      <PostCard post={toPostCardData(entry)} aspect={aspectPattern[index % aspectPattern.length]} />
+    ))
+  }
+</div>
+
+<Pagination page={page} basePath={basePath} />

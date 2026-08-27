@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content'
+import type { GetStaticPathsOptions, Page } from 'astro'
+import Base from '@/layouts/Base.astro'
+import PillarHero from '@/components/pillar/PillarHero.astro'
+import PillarIntro from '@/components/pillar/PillarIntro.astro'
+import PillarEmptyState from '@/components/pillar/PillarEmptyState.astro'
+import FeaturedPost from '@/components/pillar/FeaturedPost.astro'
+import SeriesCallout from '@/components/pillar/SeriesCallout.astro'
+import PostGrid from '@/components/sections/PostGrid.astro'
+import { allPillars, type Pillar } from '@/config/pillars'
+import { getFeaturedPost, getPillarSeries, type PillarSeries } from '@/lib/pillars'
+import type { CollectionEntry } from 'astro:content'
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const posts = await getCollection('posts')
+  const allSeries = await getCollection('series')
+
+  return allPillars.flatMap((pillar) => {
+    const pillarPosts = posts
+      .filter((post) => post.data.pillar === pillar.slug)
+      .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+
+    const featuredPost = getFeaturedPost(pillarPosts)
+    const pillarSeries = getPillarSeries(pillarPosts, allSeries)
+
+    return paginate(pillarPosts, {
+      params: { pillar: pillar.slug },
+      pageSize: 12,
+      props: { pillar, featuredPost, pillarSeries, totalCount: pillarPosts.length },
+    })
+  })
+}
+
+interface Props {
+  pillar: Pillar
+  featuredPost?: CollectionEntry<'posts'>
+  pillarSeries?: PillarSeries
+  totalCount: number
+  page: Page<CollectionEntry<'posts'>>
+}
+
+const { pillar, featuredPost, pillarSeries, totalCount, page } = Astro.props
+
+const isFirstPage = page.currentPage === 1
+const seriesName =
+  featuredPost && pillarSeries && featuredPost.data.series?.id === pillarSeries.series.id
+    ? pillarSeries.series.data.name
+    : undefined
+---
+
+<Base
+  type="website"
+  title={`${pillar.name} — Field Notes`}
+  description={pillar.description}
+  surface="ink"
+  headerState="transparent"
+>
+  <PillarHero pillar={pillar} count={totalCount} />
+  <PillarIntro pillar={pillar} />
+
+  {
+    totalCount === 0 ? (
+      <PillarEmptyState pillar={pillar} />
+    ) : (
+      <Fragment>
+        {isFirstPage && featuredPost && <FeaturedPost post={featuredPost} seriesName={seriesName} />}
+
+        <div class="max-w-content mx-auto px-6 py-16 md:py-(--spacing-section)">
+          <PostGrid entries={page.data} page={page} basePath={`/field-notes/${pillar.slug}`} />
+        </div>
+
+        {isFirstPage && pillarSeries && <SeriesCallout series={pillarSeries.series} episodes={pillarSeries.episodes} />}
+      </Fragment>
+    )
+  }
+</Base>

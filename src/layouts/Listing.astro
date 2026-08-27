@@ -4,9 +4,7 @@ import type { Page } from 'astro'
 import Base from './Base.astro'
 import Label from '@/components/primitives/Label.astro'
 import Hairline from '@/components/primitives/Hairline.astro'
-import Pagination from '@/components/layout/Pagination.astro'
-import PostCard from '@/components/cards/PostCard.astro'
-import { toPostCardData } from '@/lib/posts'
+import PostGrid from '@/components/sections/PostGrid.astro'
 
 interface Props {
   title: string
@@ -35,8 +33,6 @@ const {
   page,
   basePath,
 } = Astro.props
-
-const aspectPattern = ['3:2', '4:5', '1:1'] as const
 ---
 
 <Base
@@ -65,14 +61,6 @@ const aspectPattern = ['3:2', '4:5', '1:1'] as const
 
     <slot />
 
-    <div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {
-        entries.map((entry, index) => (
-          <PostCard post={toPostCardData(entry)} aspect={aspectPattern[index % aspectPattern.length]} />
-        ))
-      }
-    </div>
-
-    <Pagination page={page} basePath={basePath} />
+    <PostGrid entries={entries} page={page} basePath={basePath} />
   </div>
 </Base>

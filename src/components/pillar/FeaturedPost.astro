@@ -1,0 +1,79 @@
+---
+import { Picture } from 'astro:assets'
+import Label from '@/components/primitives/Label.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Placeholder from '@/components/media/Placeholder.astro'
+import type { CollectionEntry } from 'astro:content'
+
+interface Props {
+  post: CollectionEntry<'posts'>
+  seriesName?: string
+}
+
+const { post, seriesName } = Astro.props
+
+const formattedDate = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})
+  .format(post.data.publishedAt)
+  .replaceAll('/', '.')
+---
+
+<section class="max-w-content mx-auto px-6 py-16 md:py-(--spacing-section)">
+  <Hairline variant="strong" class="mb-14" />
+
+  <a href={post.data.href} class="group grid grid-cols-1 gap-8 md:grid-cols-[55fr_45fr] md:items-start md:gap-16">
+    {
+      /* 4/3 is unique to the featured-post treatment; no existing aspect
+         token (aspect-card-wide 3/2, aspect-card-portrait 4/5) fits it. */
+    }
+    <div class:list={['relative overflow-hidden bg-surface-raised aspect-[4/3]']}>
+      {
+        post.data.hero ? (
+          <Picture
+            src={post.data.hero.src}
+            alt=""
+            width={900}
+            height={675}
+            formats={['avif', 'webp']}
+            fallbackFormat="jpeg"
+            sizes="(min-width: 768px) 55vw, 100vw"
+            loading="eager"
+            decoding="async"
+            class="h-full w-full object-cover"
+          />
+        ) : (
+          <Placeholder variant="a" />
+        )
+      }
+    </div>
+
+    <div class="flex flex-col gap-6">
+      <div class="flex items-center gap-3.5">
+        <span aria-hidden="true" class="h-px w-8 bg-accent"></span>
+        <Label>Most read in this pillar</Label>
+      </div>
+
+      <h2
+        class="font-display text-display-l text-text-strong underline decoration-1 decoration-transparent underline-offset-4 group-hover:decoration-accent group-focus-visible:decoration-accent"
+        style="font-weight: var(--weight-display)"
+      >
+        {post.data.title}
+      </h2>
+
+      <p class="max-w-measure font-display text-body-l text-text-muted">
+        {post.data.dek}
+      </p>
+
+      <Hairline />
+
+      <div class="flex flex-wrap gap-10 font-mono text-label uppercase text-text-muted">
+        <span>{formattedDate}</span>
+        <span>{post.data.readingTime} min</span>
+        {seriesName && <span class="text-sage">{seriesName}</span>}
+      </div>
+    </div>
+  </a>
+</section>
