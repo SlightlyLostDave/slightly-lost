@@ -74,9 +74,9 @@ export const homepage = {
     place: 'Theresa Mine, Colorado',
   },
   interstitial: {
-    label: 'Why this exists',
+    label: 'What this is',
     statement:
-      'Most of what I find was never hidden. It was just left, and nobody went back to look at it.',
+      'Notes, photographs, recipes, and other miscellany from the places I have been, and the things I have seen.',
   },
   featuredDispatch: {
     label: 'Latest / Mine notes',

@@ -12,7 +12,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cms:dev": "npm run develop --prefix cms",
+    "cms:build": "npm run build --prefix cms"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
