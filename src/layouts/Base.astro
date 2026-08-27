@@ -3,13 +3,18 @@ import { Font } from 'astro:assets'
 
 import { buildSeo, type SeoInput } from '@lib/seo'
 import { site } from '@/config'
+import { pillarBySlug, type PillarSlug } from '@/config/pillars'
 import Header from '@components/layout/Header.astro'
 import Footer from '@components/layout/Footer.astro'
 import '@styles/app.css'
 
-type Props = SeoInput & { surface: 'paper' | 'ink'; headerState?: 'transparent' | 'solid' }
+type Props = SeoInput & {
+  surface: 'paper' | 'ink'
+  headerState?: 'transparent' | 'solid'
+  pillar?: PillarSlug
+}
 
-const { surface, headerState = 'solid', ...seoInput } = Astro.props
+const { surface, headerState = 'solid', pillar, ...seoInput } = Astro.props
 const seo = buildSeo(seoInput, Astro.url)
 const themeColor = surface === 'paper' ? '#f7f3ea' : '#1e1813'
 const currentPath = Astro.url.pathname
@@ -61,6 +66,16 @@ const currentPath = Astro.url.pathname
 
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
+    {
+      pillar && (
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={`${site.name}: ${pillarBySlug[pillar].name}`}
+          href={`/rss/${pillar}.xml`}
+        />
+      )
+    }
   </head>
   <body>
     <a
