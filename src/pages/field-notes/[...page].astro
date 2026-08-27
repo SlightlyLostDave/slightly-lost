@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content'
+import type { GetStaticPathsOptions } from 'astro'
+import Listing from '@/layouts/Listing.astro'
+import { fieldNotes, pillars } from '@/config'
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const posts = await getCollection('posts')
+  const sorted = [...posts].sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  return paginate(sorted, { pageSize: 12 })
+}
+
+const { page } = Astro.props
+---
+
+<Listing
+  title={fieldNotes.title}
+  description={fieldNotes.intro}
+  label={fieldNotes.label}
+  entries={page.data}
+  page={page}
+  basePath="/field-notes"
+>
+  <Fragment slot="intro">{fieldNotes.intro}</Fragment>
+
+  <nav aria-label="Filter by pillar" class="flex flex-wrap gap-2">
+    <a
+      href="/field-notes"
+      aria-current="page"
+      class="inline-flex items-center rounded-full border border-sage bg-sage/20 px-3 py-1.5 font-mono text-label uppercase text-sage"
+    >
+      All
+    </a>
+    {
+      pillars.map((pillar) => (
+        <a
+          href={`/field-notes/${pillar.slug}`}
+          class="inline-flex items-center rounded-full border border-hairline px-3 py-1.5 font-mono text-label uppercase text-text-muted motion-safe:transition-colors hover:border-sage hover:text-sage focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+        >
+          {pillar.name}
+        </a>
+      ))
+    }
+  </nav>
+</Listing>

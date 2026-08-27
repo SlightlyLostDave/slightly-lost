@@ -1,25 +1,42 @@
 ---
+import type { CollectionEntry } from 'astro:content'
+import type { Page } from 'astro'
 import Base from './Base.astro'
+import Label from '@/components/primitives/Label.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Pagination from '@/components/layout/Pagination.astro'
+import PostCard from '@/components/cards/PostCard.astro'
+import { toPostCardData } from '@/lib/posts'
 
 interface Props {
   title: string
   description: string
+  label: string
   openGraphImage?: string
   canonicalUrl?: string
   noindex?: boolean
   surface?: 'paper' | 'ink'
   headerState?: 'transparent' | 'solid'
+  entries: CollectionEntry<'posts'>[]
+  page: Page<CollectionEntry<'posts'>>
+  basePath: string
 }
 
 const {
   title,
   description,
+  label,
   openGraphImage,
   canonicalUrl,
   noindex,
   surface = 'ink',
   headerState = 'solid',
+  entries,
+  page,
+  basePath,
 } = Astro.props
+
+const aspectPattern = ['3:2', '4:5', '1:1'] as const
 ---
 
 <Base
@@ -32,9 +49,30 @@ const {
   surface={surface}
   headerState={headerState}
 >
-  <slot />
-  {
-    /* Future: pagination controls, pillar/tag filter chips, and the card grid
-       (PostCard/AtlasCard/GuideCard/LogbookCard) iterating the passed entries. */
-  }
+  <div class="max-w-content mx-auto flex flex-col gap-16 px-6 py-16 md:py-(--spacing-section)">
+    <div class="flex flex-col gap-6">
+      <Label accentRule>{label}</Label>
+      <h1 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
+        {title}
+      </h1>
+      {Astro.slots.has('intro') && (
+        <p class="font-display text-body-l text-text-muted">
+          <slot name="intro" />
+        </p>
+      )}
+      <Hairline class="mt-2" />
+    </div>
+
+    <slot />
+
+    <div data-anim="reveal" data-anim-stagger class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {
+        entries.map((entry, index) => (
+          <PostCard post={toPostCardData(entry)} aspect={aspectPattern[index % aspectPattern.length]} />
+        ))
+      }
+    </div>
+
+    <Pagination page={page} basePath={basePath} />
+  </div>
 </Base>

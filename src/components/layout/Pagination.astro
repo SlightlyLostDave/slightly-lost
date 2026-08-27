@@ -1,0 +1,51 @@
+---
+import type { Page } from 'astro'
+
+interface Props {
+  page: Page<unknown>
+  basePath: string
+}
+
+const { page, basePath } = Astro.props
+
+const pageNumbers = Array.from({ length: page.lastPage }, (_, index) => index + 1)
+
+const pillClasses =
+  'inline-flex items-center justify-center rounded-full border font-mono text-label uppercase px-3 py-1.5 min-w-(--tap-target) motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2'
+const restingClasses = 'border-hairline text-text-muted hover:border-sage hover:text-sage'
+const currentClasses = 'border-sage bg-sage/20 text-sage'
+---
+
+<nav aria-label="Pagination" class="flex flex-wrap items-center gap-2">
+  {
+    page.url.prev && (
+      <a href={page.url.prev} rel="prev" class:list={[pillClasses, restingClasses]}>
+        Previous
+      </a>
+    )
+  }
+
+  {
+    pageNumbers.map((pageNumber) => {
+      const href = pageNumber === 1 ? basePath : `${basePath}/${pageNumber}`
+      const isCurrent = pageNumber === page.currentPage
+      return (
+        <a
+          href={href}
+          aria-current={isCurrent ? 'page' : undefined}
+          class:list={[pillClasses, isCurrent ? currentClasses : restingClasses]}
+        >
+          {pageNumber}
+        </a>
+      )
+    })
+  }
+
+  {
+    page.url.next && (
+      <a href={page.url.next} rel="next" class:list={[pillClasses, restingClasses]}>
+        Next
+      </a>
+    )
+  }
+</nav>
