@@ -14,7 +14,7 @@ Node 26 LTS. TypeScript strict. Zod 4.
 
 ## Version rules, because training data is older than this stack
 
-- Content collections live in `src/content.config.ts`, never `src/content/config.ts`. Entries have `id`, not `slug`. Use the standalone `render(entry)`, never `entry.render()`.
+- No content collection exists yet. `src/content.config.ts` has not been created; Phase 1 content lives as hardcoded, typed sample data under `src/content/sample/`, shaped to match the eventual Strapi/loader schema so the Phase 2 swap is a loader change, not a reshape. When that loader lands, it belongs in `src/content.config.ts`, never `src/content/config.ts`. Entries have `id`, not `slug`. Use the standalone `render(entry)`, never `entry.render()`.
 - Content loaders return an object with `name`, `load()`, and either `schema` or an async `createSchema()`. The schema-as-a-function form was removed in Astro 6.
 - Tailwind v4 is CSS-first. There is no `tailwind.config.js`. Theme values live in an `@theme` block in `src/styles/app.css`. The `@astrojs/tailwind` integration is dead; we use `@tailwindcss/vite`.
 - Zod 4, not Zod 3.
@@ -43,6 +43,7 @@ Node 26 LTS. TypeScript strict. Zod 4.
 - Animate `transform` and `opacity` only. Never `top`, `left`, `width`, `height`, `background-position`, or `filter` in a scrubbed timeline.
 - One ScrollTrigger per component instance driving one timeline. Never one trigger per tween.
 - Set `will-change: transform` only while a trigger is active, and remove it on completion.
+- Non-animation client interactivity (focus traps, toggles, menus) is not motion and does not go through the registry. It lives beside its component as `ComponentName.script.ts` and is loaded with a plain inline `<script>import './ComponentName.script'</script>` in that component. Routing DOM plumbing like this through the GSAP registry would force pages that never scroll-animate to load GSAP anyway.
 
 ## Code style
 

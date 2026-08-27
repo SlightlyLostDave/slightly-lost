@@ -1,5 +1,5 @@
 ---
-import Label from '@/components/primitives/Label.astro'
+import Label from '@components/primitives/Label.astro'
 import { homepage } from '@/config'
 
 const { interstitial } = homepage
@@ -21,7 +21,7 @@ const { interstitial } = homepage
   z-10 still outranks both and stays visible in front throughout. No
   @theme token fits a one-off viewport-relative offset used exactly once.
 -->
-<section class="bg-surface relative z-0 mt-[-100svh]">
+<section class=`bg-surface bg-[url(/assets/home/interstitial-bg.svg)] bg-cover bg-center relative z-0 mt-[-100svh]`>
   <div
     data-anim="reveal"
     class="flex flex-col items-center gap-8 px-6 py-16 text-center md:pt-42 md:pb-38"
