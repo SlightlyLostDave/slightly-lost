@@ -1,0 +1,48 @@
+---
+import Hairline from '@/components/primitives/Hairline.astro'
+import type { SeriesPosition } from '@/lib/series'
+
+interface Props {
+  position: SeriesPosition
+}
+
+const { position } = Astro.props
+---
+
+<div class="max-w-content mx-auto mt-(--spacing-section) px-6">
+  <Hairline variant="heavy" />
+  <div class="flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
+    <div class="flex flex-col gap-2">
+      <a
+        href={`/series/${position.series.id}`}
+        class="font-mono text-label uppercase text-sage motion-safe:transition-colors hover:text-accent"
+      >
+        Part of the {position.series.data.name} series
+      </a>
+      <span class="font-mono text-data tabular-nums text-text-muted">
+        Episode {String(position.position).padStart(2, '0')} of {String(position.totalSlots).padStart(2, '0')}
+      </span>
+    </div>
+
+    <nav aria-label="Series navigation" class="flex gap-8 font-mono text-label uppercase">
+      {
+        position.previous ? (
+          <a href={position.previous.data.href} class="text-text-muted motion-safe:transition-colors hover:text-accent">
+            &larr; Previous
+          </a>
+        ) : (
+          <span class="text-text-subtle">&larr; Previous</span>
+        )
+      }
+      {
+        position.next ? (
+          <a href={position.next.data.href} class="text-text-muted motion-safe:transition-colors hover:text-accent">
+            Next &rarr;
+          </a>
+        ) : (
+          <span class="text-text-subtle">Next &rarr;</span>
+        )
+      }
+    </nav>
+  </div>
+</div>

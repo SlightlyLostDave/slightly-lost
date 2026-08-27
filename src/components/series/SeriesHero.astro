@@ -1,0 +1,68 @@
+---
+import { Picture } from 'astro:assets'
+import Placeholder from '@/components/media/Placeholder.astro'
+import type { CollectionEntry } from 'astro:content'
+
+interface Props {
+  series: CollectionEntry<'series'>
+  episodeCount: number
+}
+
+const { series, episodeCount } = Astro.props
+const { name, description, hero } = series.data
+---
+
+<section
+  data-hero
+  class:list={[
+    /* Same breakout formula as PillarHero.astro. No @theme token fits a
+       one-off hero height, so h-[70svh]/h-[720px] are arbitrary values. */
+    'relative mx-[calc(50%-50vw)] h-[70svh] w-auto overflow-hidden md:h-[720px]',
+  ]}
+>
+  {
+    hero ? (
+      <Picture
+        src={hero.src}
+        alt={hero.alt}
+        width={hero.width}
+        height={hero.height}
+        formats={['avif', 'webp']}
+        fallbackFormat="jpeg"
+        sizes="100vw"
+        loading="eager"
+        fetchpriority="high"
+        class="absolute inset-0 h-full w-full object-cover"
+      />
+    ) : (
+      <div class="absolute inset-0" aria-hidden="true">
+        <Placeholder variant="a" />
+      </div>
+    )
+  }
+
+  <div class="absolute inset-0 bg-surface/70" aria-hidden="true"></div>
+
+  <div
+    aria-hidden="true"
+    class="absolute top-6 left-6 font-mono text-label uppercase text-text-muted md:top-10 md:left-10"
+  >
+    {episodeCount} episode{episodeCount === 1 ? '' : 's'}
+  </div>
+
+  <div class="absolute right-6 bottom-8 left-6 md:right-24 md:bottom-16 md:left-24">
+    <h1
+      class="font-display text-display-xl text-text-strong"
+      style="font-weight: var(--weight-display)"
+    >
+      {name}
+    </h1>
+    {
+      description && (
+        <p class="mt-4 max-w-measure font-display text-body-l text-text-body md:mt-7">
+          {description}
+        </p>
+      )
+    }
+  </div>
+</section>

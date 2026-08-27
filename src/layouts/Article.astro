@@ -123,6 +123,9 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       </Prose>
     </div>
 
+    <slot name="series-nav" />
+    <slot name="tags" />
+
     <slot name="sources" />
 
     <div class="max-w-content mx-auto mt-(--spacing-section) px-6">

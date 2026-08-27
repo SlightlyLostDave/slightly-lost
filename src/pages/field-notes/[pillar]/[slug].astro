@@ -5,24 +5,38 @@ import FullBleed from '@/components/media/FullBleed.astro'
 import FieldDataStrip from '@/components/sections/FieldDataStrip.astro'
 import ArticleBody from '@/components/content/ArticleBody.astro'
 import SourceList from '@/components/sections/SourceList.astro'
+import SeriesStrip from '@/components/series/SeriesStrip.astro'
+import TagList from '@/components/content/TagList.astro'
 import { pillarBySlug } from '@/config/pillars'
+import { getSeriesPosition, type SeriesPosition } from '@/lib/series'
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts')
+  const allSeries = await getCollection('series')
+  const allTags = await getCollection('tags')
+
   return posts.map((post) => {
     const pillar = pillarBySlug[post.data.pillar]
     if (!pillar) {
       throw new Error(`Post "${post.id}" has an unrecognized pillar slug "${post.data.pillar}"`)
     }
-    return { params: { pillar: pillar.slug, slug: post.id }, props: { post } }
+
+    const seriesPosition = getSeriesPosition(post, posts, allSeries)
+    const postTags = post.data.tags
+      .map((ref) => allTags.find((tag) => tag.id === ref.id))
+      .filter((tag): tag is CollectionEntry<'tags'> => tag !== undefined)
+
+    return { params: { pillar: pillar.slug, slug: post.id }, props: { post, seriesPosition, postTags } }
   })
 }
 
 interface Props {
   post: CollectionEntry<'posts'>
+  seriesPosition?: SeriesPosition
+  postTags: CollectionEntry<'tags'>[]
 }
 
-const { post } = Astro.props
+const { post, seriesPosition, postTags } = Astro.props
 ---
 
 <Article
@@ -49,6 +63,18 @@ const { post } = Astro.props
   </Fragment>
 
   <ArticleBody body={post.data.body} />
+
+  {seriesPosition && (
+    <Fragment slot="series-nav">
+      <SeriesStrip position={seriesPosition} />
+    </Fragment>
+  )}
+
+  {postTags.length > 0 && (
+    <Fragment slot="tags">
+      <TagList tags={postTags} />
+    </Fragment>
+  )}
 
   <Fragment slot="sources">
     <SourceList sources={post.data.sources} />

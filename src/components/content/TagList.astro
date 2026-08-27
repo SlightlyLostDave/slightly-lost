@@ -1,0 +1,25 @@
+---
+import Tag from '@/components/primitives/Tag.astro'
+import type { CollectionEntry } from 'astro:content'
+
+interface Props {
+  tags: CollectionEntry<'tags'>[]
+}
+
+const { tags } = Astro.props
+---
+
+<div class="max-w-content mx-auto px-6 py-16">
+  <div class="flex flex-wrap gap-3">
+    {
+      tags.map((tag) => (
+        <a
+          href={`/tags/${tag.id}`}
+          class="rounded-full focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+        >
+          <Tag label={tag.data.name} />
+        </a>
+      ))
+    }
+  </div>
+</div>

@@ -1,0 +1,36 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import Base from '@/layouts/Base.astro'
+import SeriesHero from '@/components/series/SeriesHero.astro'
+import SeriesEpisodeList from '@/components/series/SeriesEpisodeList.astro'
+import { getSeriesSlots, type SeriesSlot } from '@/lib/series'
+
+export async function getStaticPaths() {
+  const allSeries = await getCollection('series')
+  const posts = await getCollection('posts')
+
+  return allSeries
+    .map((series) => getSeriesSlots(series, posts))
+    .filter(({ slots }) => slots.length > 0)
+    .map(({ series, slots }) => ({ params: { slug: series.id }, props: { series, slots } }))
+}
+
+interface Props {
+  series: CollectionEntry<'series'>
+  slots: SeriesSlot[]
+}
+
+const { series, slots } = Astro.props
+const episodeCount = slots.filter((slot) => slot.kind === 'published').length
+---
+
+<Base
+  type="website"
+  title={series.data.name}
+  description={series.data.description ?? `${episodeCount} field notes in the ${series.data.name} series.`}
+  surface="ink"
+  headerState="transparent"
+>
+  <SeriesHero series={series} episodeCount={episodeCount} />
+  <SeriesEpisodeList slots={slots} />
+</Base>

@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from 'astro:content'
+
+interface Props {
+  rows: { series: CollectionEntry<'series'>; episodeCount: number }[]
+}
+
+const { rows } = Astro.props
+---
+
+<div class="grid grid-cols-1 border-t border-l border-hairline md:grid-cols-3">
+  {
+    rows.map(({ series, episodeCount }) => (
+      <a
+        href={`/series/${series.id}`}
+        aria-label={series.data.name}
+        class="flex flex-col gap-4 border-r border-b border-hairline p-10 motion-safe:transition-colors hover:bg-surface-raised focus-visible:bg-surface-raised"
+      >
+        <span class="font-mono text-data tabular-nums text-text-muted">
+          {episodeCount} episode{episodeCount === 1 ? '' : 's'}
+        </span>
+        <h3 class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+          {series.data.name}
+        </h3>
+        {series.data.description && <p class="line-clamp-2 text-body text-text-muted">{series.data.description}</p>}
+      </a>
+    ))
+  }
+</div>

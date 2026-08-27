@@ -1,0 +1,46 @@
+---
+import Hairline from '@/components/primitives/Hairline.astro'
+import type { SeriesSlot } from '@/lib/series'
+
+interface Props {
+  slots: SeriesSlot[]
+}
+
+const { slots } = Astro.props
+---
+
+<div class="max-w-content mx-auto px-6 py-16 md:py-(--spacing-section)">
+  <ol class="flex flex-col">
+    {
+      slots.map((slot) => (
+        <li>
+          <Hairline />
+          {slot.kind === 'published' ? (
+            <a
+              href={slot.post.data.href}
+              class="grid grid-cols-[44px_1fr_auto] items-baseline gap-4 py-5 motion-safe:transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+            >
+              <span class="font-mono text-data tabular-nums text-text-muted">
+                {String(slot.order).padStart(2, '0')}
+              </span>
+              <span class="flex flex-col gap-1">
+                <span class="font-display text-title text-text-strong">{slot.post.data.title}</span>
+                <span class="font-display text-body text-text-muted">{slot.post.data.dek}</span>
+              </span>
+              <span class="font-mono text-label uppercase text-text-muted">
+                {slot.post.data.readingTime} min
+              </span>
+            </a>
+          ) : (
+            <div class="grid grid-cols-[44px_1fr] items-baseline gap-4 py-5">
+              <span class="font-mono text-data tabular-nums text-text-subtle">
+                {String(slot.order).padStart(2, '0')}
+              </span>
+              <span class="font-mono text-label uppercase text-text-subtle">Not published</span>
+            </div>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</div>

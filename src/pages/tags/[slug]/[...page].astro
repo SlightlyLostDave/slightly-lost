@@ -1,0 +1,45 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import type { GetStaticPathsOptions, Page } from 'astro'
+import Listing from '@/layouts/Listing.astro'
+import { getPostsByTag } from '@/lib/tags'
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const tags = await getCollection('tags')
+  const posts = await getCollection('posts')
+
+  return tags.flatMap((tag) => {
+    const tagPosts = getPostsByTag(tag, posts).sort(
+      (a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()
+    )
+    if (tagPosts.length === 0) return []
+
+    return paginate(tagPosts, {
+      params: { slug: tag.id },
+      pageSize: 12,
+      props: { tag, totalCount: tagPosts.length },
+    })
+  })
+}
+
+interface Props {
+  tag: CollectionEntry<'tags'>
+  totalCount: number
+  page: Page<CollectionEntry<'posts'>>
+}
+
+const { tag, totalCount, page } = Astro.props
+---
+
+<Listing
+  title={tag.data.name}
+  description={tag.data.description ?? `Field notes tagged ${tag.data.name}.`}
+  label="Tag"
+  entries={page.data}
+  page={page}
+  basePath={`/tags/${tag.id}`}
+>
+  <Fragment slot="intro">
+    {totalCount} field note{totalCount === 1 ? '' : 's'} tagged {tag.data.name}.
+  </Fragment>
+</Listing>
