@@ -2,7 +2,7 @@
 
 Astro 7 static site. Tailwind v4 for styling, GSAP for scroll motion, Strapi 5 as the CMS from Phase 2 onward, MapLibre for the atlas from Phase 3 onward.
 
-Node 26 LTS. TypeScript strict. Zod 4.
+Node 24 LTS. TypeScript strict. Zod 4.
 
 ## Non-negotiables
 
@@ -44,6 +44,17 @@ Node 26 LTS. TypeScript strict. Zod 4.
 - One ScrollTrigger per component instance driving one timeline. Never one trigger per tween.
 - Set `will-change: transform` only while a trigger is active, and remove it on completion.
 - Non-animation client interactivity (focus traps, toggles, menus) is not motion and does not go through the registry. It lives beside its component as `ComponentName.script.ts` and is loaded with a plain inline `<script>import './ComponentName.script'</script>` in that component. Routing DOM plumbing like this through the GSAP registry would force pages that never scroll-animate to load GSAP anyway.
+
+## Content pipeline
+
+- Strapi lives in `cms/` in this repository. It is a separate npm project with its own dependencies; never add Strapi packages to the root `package.json`.
+- Strapi is never in the runtime path. The site fetches at build time through the loader in `src/loaders/strapi.ts` and nothing else ever talks to it.
+- Content collections are defined in `src/content.config.ts` at the root of `src`. Entries have `id`, not `slug`. Render with the standalone `render(entry)`.
+- Article bodies are a Strapi dynamic zone, not rich text. Each component in the zone maps to an existing Astro component. Adding a new body component means adding it in three places: the Strapi schema, the Zod schema in `src/content.config.ts`, and the switch in `ArticleBody.astro`. All three or none.
+- Never render CMS HTML with `set:html` outside `Prose`, and never from a field that is not a controlled rich text block.
+- The read-only Strapi API token lives in `STRAPI_TOKEN` and must never carry a `PUBLIC_` prefix. Strapi's public role has no permissions at all.
+- Derived fields are computed once in the loader, never in a template: reading time, photograph count, the post href, and the pillar display data.
+- The post href is built from the pillar slug and the entry slug, in the loader. Never construct it in a component.
 
 ## Code style
 
