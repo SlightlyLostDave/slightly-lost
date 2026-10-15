@@ -1,0 +1,79 @@
+name: Seeded build
+description: >
+  Boots the CMS on SQLite, seeds it, mints a read-only build token, and builds
+  the site against it. Shared by the PR checks and the production deploy so the
+  two can never build differently. Until a hosted Strapi exists, this seeded
+  content is what production serves; once one does, the deploy workflow swaps
+  this for STRAPI_URL and STRAPI_TOKEN secrets.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          cms/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm ci
+        npm ci --prefix cms
+
+    # Fresh random secrets every run. The database is thrown away with the
+    # runner, so nothing needs to survive between builds. The admin UI is
+    # never built or served: the build only needs the content API.
+    - name: Configure the CMS
+      shell: bash
+      run: |
+        secret() { node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"; }
+        {
+          echo "HOST=127.0.0.1"
+          echo "PORT=1337"
+          echo "APP_KEYS=$(secret),$(secret),$(secret),$(secret)"
+          echo "API_TOKEN_SALT=$(secret)"
+          echo "ADMIN_JWT_SECRET=$(secret)"
+          echo "TRANSFER_TOKEN_SALT=$(secret)"
+          echo "JWT_SECRET=$(secret)"
+          echo "ENCRYPTION_KEY=$(secret)"
+          echo "DATABASE_CLIENT=sqlite"
+          echo "DATABASE_FILENAME=.tmp/data.db"
+          echo "SERVE_ADMIN_PANEL=false"
+        } > cms/.env
+
+    - name: Seed the CMS
+      shell: bash
+      run: npm run cms:seed
+
+    - name: Mint the build token
+      shell: bash
+      run: |
+        token_file="$RUNNER_TEMP/strapi-build-token"
+        BUILD_TOKEN_FILE="$token_file" npm run cms:token
+        token="$(cat "$token_file")"
+        rm "$token_file"
+        echo "::add-mask::$token"
+        echo "STRAPI_URL=http://127.0.0.1:1337" >> "$GITHUB_ENV"
+        echo "STRAPI_TOKEN=$token" >> "$GITHUB_ENV"
+
+    - name: Start the CMS
+      shell: bash
+      run: |
+        nohup npm run start --prefix cms > "$RUNNER_TEMP/strapi.log" 2>&1 &
+        for attempt in $(seq 1 60); do
+          if curl --silent --fail --output /dev/null http://127.0.0.1:1337/_health; then
+            echo "Strapi is up after ${attempt} checks."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "::error::Strapi did not become healthy within two minutes."
+        cat "$RUNNER_TEMP/strapi.log"
+        exit 1
+
+    - name: Build the site
+      shell: bash
+      run: npm run build

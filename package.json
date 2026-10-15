@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && node scripts/assert-no-draft-leak.mjs",
+    "deploy": "npm run build && wrangler deploy",
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write .",
@@ -16,11 +17,14 @@
     "cms:dev": "npm run develop --prefix cms",
     "cms:build": "npm run build --prefix cms",
     "cms:seed": "npm run seed --prefix cms",
+    "cms:token": "npm run token --prefix cms",
     "pretest:e2e": "npm run build && (astro preview stop || true) && npm run preview -- --port 4400",
     "test:e2e": "playwright test",
     "posttest:e2e": "astro preview stop",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:budget": "playwright test --project=chromium --grep budget",
+    "lhci": "lhci autorun --config=./lighthouserc.cjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
@@ -33,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.62.1",
     "@types/qs": "^6.15.1",
     "eslint": "^10.9.0",
@@ -41,6 +46,7 @@
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.67.0",
+    "wrangler": "^4.151.0"
   }
 }

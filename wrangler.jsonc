@@ -1,0 +1,37 @@
+// Cloudflare Workers with static assets, not Pages. The site is fully static,
+// so this is an assets-only Worker: there is no `main` script and no server
+// logic, every request is served straight from the uploaded `dist/` output.
+// Requests to static assets are free and unmetered on Workers, which matters
+// on a photograph-heavy archive.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "slightly-lost",
+  "compatibility_date": "2026-10-01",
+
+  // The build output. An assets `binding` only exists so a Worker script can
+  // call into its assets; wrangler rejects one without `main`, so this Worker
+  // deliberately has none.
+  "assets": {
+    "directory": "./dist",
+    // Astro builds with trailingSlash: 'never' and directory format, so
+    // /field-notes is served from dist/field-notes/index.html and
+    // /field-notes/ redirects to it.
+    "html_handling": "drop-trailing-slash",
+    // Unknown paths get dist/404.html with a real 404 status.
+    "not_found_handling": "404-page",
+  },
+
+  // Production lives at slightly-lost.<subdomain>.workers.dev until the
+  // slightlylost.com zone moves to Cloudflare. PR previews are version
+  // preview aliases (pr-<number>-slightly-lost.<subdomain>.workers.dev),
+  // which need both of these on.
+  "workers_dev": true,
+  "preview_urls": true,
+
+  // Uncomment once the slightlylost.com zone is on Cloudflare. See the
+  // Deploying section of README.md.
+  // "routes": [{ "pattern": "slightlylost.com", "custom_domain": true }],
+
+  // Cache-Control lives in public/_headers, which Astro copies into dist/ and
+  // the assets runtime applies without any Worker code.
+}

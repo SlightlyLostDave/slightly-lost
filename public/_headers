@@ -1,0 +1,47 @@
+# Cache policy for the Cloudflare Workers static assets runtime. Astro copies
+# this file into dist/ and the runtime applies it; nothing here is served.
+#
+# Every rule that matches a path applies, and a header set by two matching
+# rules is joined with a comma. The more specific rules below therefore
+# detach the default with `! Cache-Control` before setting their own.
+
+# Default, which covers HTML, feeds, and the sitemap: always revalidate,
+# which is cheap because the runtime sends an ETag and answers with a 304.
+# Not a few-minutes TTL on purpose: a deploy removes the previous build's
+# hashed files, so stale cached HTML would point at JS and CSS that no
+# longer exist.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Everything Astro emits with a content hash in its filename: JS, CSS,
+# optimised images, and the fonts (_astro/fonts/*.woff2). A changed file
+# gets a new name, so these never need revalidating.
+/_astro/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+
+# Unhashed files copied from public/. They change rarely, but they keep
+# their names when they do, so a day rather than a year.
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+/favicon.ico
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+/favicon-*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+/apple-touch-icon.png
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+/android-chrome-*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
+/site.webmanifest
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
