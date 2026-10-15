@@ -18,6 +18,7 @@
     "cms:build": "npm run build --prefix cms",
     "cms:seed": "npm run seed --prefix cms",
     "cms:token": "npm run token --prefix cms",
+    "test": "node --test \"src/**/*.test.ts\"",
     "pretest:e2e": "npm run build && (astro preview stop || true) && npm run preview -- --port 4400",
     "test:e2e": "playwright test",
     "posttest:e2e": "astro preview stop",
