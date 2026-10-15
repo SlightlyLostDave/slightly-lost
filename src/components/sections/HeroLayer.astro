@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Image } from 'astro:assets'
 
 import heroBackgroundImage from '@assets/home/hero-background.webp'
 import heroMidgroundImage from '@assets/home/hero-midground.webp'
@@ -10,21 +10,45 @@ interface Props {
   class?: string
 }
 
-const { layer, class: className } = Astro.props;
+const { layer, class: className } = Astro.props
 
-const src = layer === 'back' ? heroBackgroundImage : layer === 'mid' ? heroMidgroundImage : heroForegroundImage;
-const alt = `'Theresa Mine ${layer}ground'`;
+const src =
+  layer === 'back' ? heroBackgroundImage : layer === 'mid' ? heroMidgroundImage : heroForegroundImage
 
 // Absent below 768px per the hero's two-layer mobile spec (mid and type
 // only); mid has no such class and stays visible at every breakpoint.
 const mobileVisibility = layer === 'back' || layer === 'front' ? 'hidden md:block' : undefined
+
+// mid is the one layer painted at every breakpoint, so it is the LCP
+// candidate and loads eagerly at high priority. back and front stay lazy:
+// they are display:none below 768px, and an eager image downloads even when
+// hidden, which would spend mobile bandwidth on layers nobody sees.
+const isPriority = layer === 'mid'
+
+// Every layer renders at full viewport width (preflight's max-width: 100%
+// clamps the 2400px source to its container), so 100vw is exact.
+const responsiveWidths = [640, 960, 1280, 1920, 2400]
 ---
 
+<!--
+  inset-y-[-20%]: vertical overscan so Hero.motion.ts's translateY parallax
+  never reveals a gap at a layer's leading edge; 20% covers the largest
+  per-screen factor the type-free layers travel before the hero unpins. A
+  one-off motion allowance with no matching @theme token.
+-->
 <div
   data-hero-layer={layer}
   aria-hidden="true"
   role="presentation"
   class:list={['absolute', 'inset-y-[-20%]', mobileVisibility, className]}
 >
-  <Image src={src} alt={alt} />
+  <Image
+    src={src}
+    alt=""
+    widths={responsiveWidths}
+    sizes="100vw"
+    loading={isPriority ? 'eager' : 'lazy'}
+    fetchpriority={isPriority ? 'high' : undefined}
+    decoding="async"
+  />
 </div>

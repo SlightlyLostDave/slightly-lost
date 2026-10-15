@@ -25,7 +25,7 @@ const STAGE_VH = SCREEN_VH + RUNWAY_VH
 const TYPE_OPACITY_DURATION = SCREEN_VH / STAGE_VH
 
 // Matches Tailwind's default `md` breakpoint, also mirrored in
-// HeroPlaceholder.astro's `hidden md:block`. Hardcoded here for the same
+// HeroLayer.astro's `hidden md:block`. Hardcoded here for the same
 // reason Header.motion.ts hardcodes --header-height-*: a JS media query
 // needs a plain number, not a computed-style read on every check.
 const MOBILE_BREAKPOINT = 768

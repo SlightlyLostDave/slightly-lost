@@ -14,7 +14,7 @@ const { newsletter } = homepage
 
     <div class="flex flex-col gap-6 md:pt-2">
       <p class="max-w-measure text-body text-text-muted">
-        No schedule, no growth strategy, no sponsored anything. If a month is quiet you will not hear from me.
+        {newsletter.intro}
       </p>
 
       {/* Posts nowhere yet: no newsletter provider is wired up. Swap the action once one is. */}
@@ -33,7 +33,7 @@ const { newsletter } = homepage
           />
           <Button type="submit" variant="primary">Send it</Button>
         </div>
-        <p id="newsletter-fine-print" class="font-mono text-label uppercase text-text-muted">
+        <p id="newsletter-fine-print" class="font-mono text-label uppercase text-text-subtle">
           {newsletter.finePrint}
         </p>
       </form>

@@ -83,6 +83,7 @@ Newsreader's variable file carries both a `wght` and an `opsz` axis; Fontsource 
 - Run `npm run build` and confirm it passes.
 - Confirm no new client JavaScript landed on a route that previously had none.
 - Confirm the page still reads correctly with JavaScript disabled and with reduced motion enabled.
+- **Hand-off.** Don't commit or push unless asked. Finish with the files changed, how you verified them, follow-ups, and a Conventional Commit message.
 
 ## Development
 

@@ -62,6 +62,39 @@ test.describe('mobile menu', () => {
   })
 })
 
+test.describe('keyboard', () => {
+  test('the skip link is the first stop, is visible, and moves focus to main', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await page.keyboard.press('Tab')
+
+    const skipLink = page.locator('a[href="#main-content"]')
+    await expect(skipLink).toBeFocused()
+    await expect(skipLink).toBeInViewport()
+
+    await page.keyboard.press('Enter')
+    await expect(page.locator('main#main-content')).toBeFocused()
+  })
+})
+
+test.describe('header over the hero', () => {
+  test('is a dark island while transparent and solid once the interstitial reaches it', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const header = page.locator('header#site-header')
+    await expect(header).toHaveAttribute('data-theme', 'dark')
+
+    const interstitialTop = await page
+      .locator('[data-hero] + section')
+      .evaluate((section) => section.getBoundingClientRect().top + window.scrollY)
+    await page.evaluate((y) => window.scrollTo(0, y), interstitialTop)
+    await expect(header).toHaveAttribute('data-header-state', 'solid')
+    await expect(header).not.toHaveAttribute('data-theme', 'dark')
+  })
+})
+
 test.describe('hero parallax', () => {
   test('the mid layer transform changes as the hero stage scrolls', async ({ page }) => {
     await page.goto('/')

@@ -32,13 +32,24 @@ const fillStyle = isSolid
   ? 'opacity: 1; transform: scaleY(calc(var(--header-height-solid) / var(--header-height-tall)));'
   : 'opacity: 0; transform: scaleY(1);'
 const barStyle = isSolid ? 'transform: translateY(-8px);' : 'transform: translateY(0);'
+
+// Transparent means "over the hero photograph", which is dark in both
+// themes, so the header is a fixed-dark island until Header.motion.ts flips
+// it solid. Without JS nothing ever flips it, so it stays absolute and
+// scrolls away with the hero instead of floating, fill-less, over every
+// section below; the js variant upgrades it to fixed.
+const positionClasses = isSolid ? 'fixed' : 'absolute js:fixed'
 ---
 
 <header
   id="site-header"
   data-anim={isSolid ? undefined : 'header'}
   data-header-state={state}
-  class="group fixed inset-x-0 top-(--draft-banner-height) z-50 h-(--header-height-tall)"
+  data-theme={isSolid ? undefined : 'dark'}
+  class:list={[
+    'group text-text-body inset-x-0 top-(--draft-banner-height) z-50 h-(--header-height-tall)',
+    positionClasses,
+  ]}
 >
   <div
     class="header__fill border-hairline bg-surface absolute inset-0 border-b"

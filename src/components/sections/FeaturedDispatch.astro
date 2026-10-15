@@ -5,6 +5,7 @@ import Hairline from '@/components/primitives/Hairline.astro'
 import Button from '@/components/primitives/Button.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
 import { homepage } from '@/config'
+import type { FeaturedDispatchStat } from '@/config/homepage'
 
 const { featuredDispatch } = homepage
 ---
@@ -14,12 +15,18 @@ const { featuredDispatch } = homepage
     <div role="img" aria-label={featuredDispatch.imageAlt} class="h-full w-full overflow-hidden">
       <Placeholder variant="a" />
     </div>
-    <figcaption class="absolute bottom-4 left-6 bg-ink/70 px-2 py-1 font-mono text-caption text-paper wrap-break-word">
+    <!-- A caption over a photograph is the same in both themes: a dark island. -->
+    <figcaption
+      data-theme="dark"
+      class="bg-surface/70 text-caption text-text-strong absolute bottom-4 left-6 px-2 py-1 font-mono wrap-break-word"
+    >
       {featuredDispatch.imageCaption}
     </figcaption>
   </figure>
 
-  <div class="bg-surface-raised flex flex-col justify-center gap-8 px-6 py-16 md:p-24">
+  <!-- 96px padding only from xl: at md/lg each column is half the viewport,
+       and 96px a side left the headline about 190px to wrap in. -->
+  <div class="bg-surface-raised flex flex-col justify-center gap-8 px-6 py-16 md:p-12 xl:p-24">
     <Label accentRule>{featuredDispatch.label}</Label>
     <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
       {featuredDispatch.title}
@@ -28,8 +35,9 @@ const { featuredDispatch } = homepage
       {featuredDispatch.standfirst}
     </p>
     <Hairline />
-    <div class="grid grid-cols-3 gap-6">
-      {featuredDispatch.stats.map((stat) => (
+    <!-- Wraps instead of squashing: a fixed three-up row collided at 320 and 1024. -->
+    <div class="flex flex-wrap gap-x-10 gap-y-6">
+      {featuredDispatch.stats.map((stat: FeaturedDispatchStat) => (
         <DataValue label={stat.label} value={stat.value} unit={stat.unit} />
       ))}
     </div>

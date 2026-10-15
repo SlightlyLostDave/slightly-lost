@@ -29,11 +29,15 @@ const toneVariantClasses: Record<TagTone, Record<TagVariant, string>> = {
   },
 }
 
-/* A photograph is a photograph in both themes: on-image tags stay ink/paper
-   regardless of tone, variant, or theme toggle, rather than repainting. */
-const onImageClasses = 'bg-ink/70 border-transparent text-paper'
+/* A photograph is a photograph in both themes: on-image tags are a
+   fixed-dark island (see app.css) regardless of tone, variant, or theme
+   toggle, rather than repainting. */
+const onImageClasses = 'bg-surface/70 border-transparent text-text-strong'
 ---
 
-<span class:list={[base, onImage ? onImageClasses : toneVariantClasses[tone][variant], className]}>
+<span
+  data-theme={onImage ? 'dark' : undefined}
+  class:list={[base, onImage ? onImageClasses : toneVariantClasses[tone][variant], className]}
+>
   {label}
 </span>

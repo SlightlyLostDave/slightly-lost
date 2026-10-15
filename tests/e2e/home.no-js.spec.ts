@@ -12,4 +12,15 @@ test('hero, primary nav, and homepage teasers render with JavaScript disabled', 
   await expect(page.locator('[data-hero-layer="type"] h1')).toBeVisible()
   await expect(page.locator('header#site-header a[href="/"]')).toBeVisible()
   await expect(page.locator('nav[aria-label="Primary"] a').first()).toBeVisible()
+  await expect(page.locator('[data-count-to]')).toHaveText(['214', '96', '31'])
+})
+
+test('the transparent header scrolls away instead of floating without JavaScript', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const position = await page
+    .locator('header#site-header')
+    .evaluate((header) => getComputedStyle(header).position)
+  expect(position).toBe('absolute')
 })

@@ -29,22 +29,19 @@ const { hero } = homepage;
   Header.motion.ts. motion-reduce:h-svh collapses the stage back to a normal
   one-screen section -- the pin itself is scroll-linked motion, not just the
   parallax, so it's gated behind prefers-reduced-motion too.
+
+  data-theme="dark" on the screen box: the photograph, its scrim, and the
+  type over it keep their dark tonality in both themes (see app.css's
+  fixed-dark islands). The transparent header over it does the same.
 -->
 <section data-hero data-anim="hero" class="relative h-[240svh] w-full motion-reduce:h-svh">
   <div
     data-hero-screen
+    data-theme="dark"
     class="bg-surface sticky top-0 h-svh w-full overflow-hidden motion-reduce:static after:absolute after:inset-0 after:bg-surface/70"
   >
     <HeroLayer layer="back" />
     <HeroLayer layer="mid" />
-    <!--
-      fetchpriority="high" and explicit width/height were originally specified
-      for this (LCP-candidate) layer with a real <img> in mind. fetchpriority
-      only applies to fetchable elements (img/link/script/iframe) -- this is
-      inline SVG with no network request, so there is no target for it.
-      Re-add both, exactly as originally specified, on whatever <img> replaces
-      HeroPlaceholder's "mid" branch once real photography exists.
-    -->
 
     <div
       data-hero-layer="type"
@@ -110,7 +107,7 @@ const { hero } = homepage;
       Tailwind's internal variant sort order rather than an explicit rule.
       Stacking the variants on one utility (only show at md+ when motion is
       NOT reduced) is unambiguous: front is purely decorative (aria-hidden in
-      HeroPlaceholder.astro), so it simply stays hidden under reduced motion
+      HeroLayer.astro), so it simply stays hidden under reduced motion
       at every breakpoint.
     -->
     <div
