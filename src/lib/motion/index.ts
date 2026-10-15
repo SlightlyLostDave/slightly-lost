@@ -1,5 +1,6 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { NO_MOTION_PREFERENCE_QUERY, REDUCED_MOTION_QUERY } from './media'
 import { animationRegistry, isAnimationName, type AnimationName } from './registry'
 import type { MotionContext } from './types'
 
@@ -37,8 +38,8 @@ export async function register(): Promise<void> {
   // resolves to one of these two values, so exactly one always matches.
   gsap.matchMedia().add(
     {
-      reduced: '(prefers-reduced-motion: reduce)',
-      motion: '(prefers-reduced-motion: no-preference)',
+      reduced: REDUCED_MOTION_QUERY,
+      motion: NO_MOTION_PREFERENCE_QUERY,
     },
     (context) => {
       const motionContext: MotionContext = {

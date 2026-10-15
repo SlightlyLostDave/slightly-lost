@@ -1,0 +1,159 @@
+---
+import AtlasCard from './AtlasCard.astro'
+import { atlas, basemap } from '@/config'
+import type { LocatedAtlasEntry, PublishedAtlasEntry } from '@/lib/atlas'
+
+// The map is an enhancement over the server-rendered list that follows it
+// on the page (#atlas-list). It takes no part in the GSAP motion system and
+// carries no data-anim attribute: its only motion is MapLibre's own camera,
+// which the island gates on the same reduced-motion query the runtime uses.
+interface Props {
+  entries: LocatedAtlasEntry<PublishedAtlasEntry>[]
+}
+
+const { entries } = Astro.props
+const copy = atlas.map
+---
+
+<!-- Without JavaScript there is no map to operate, so the whole unit is not
+     displayed and the list carries the page. The js variant is set by the
+     head script before first paint, so nothing is hidden and then revealed. -->
+<div data-atlas-map class="js:flex hidden flex-col gap-3">
+  <a
+    href="#atlas-list"
+    class="focus:text-text-strong sr-only focus:not-sr-only focus:self-start focus:px-4 focus:py-2"
+  >
+    {copy.skipLabel}
+  </a>
+
+  <!-- lg:grid-cols-[1fr_var(--atlas-panel-width)]: the map takes whatever
+       the fixed-width panel column leaves. A column template, not a value
+       any spacing token could express. -->
+  <div
+    class="border-hairline bg-surface-raised relative grid h-(--atlas-map-height-mobile) grid-cols-1 overflow-hidden border lg:h-(--atlas-map-height) lg:grid-cols-[1fr_var(--atlas-panel-width)]"
+  >
+    <!-- group-has-[canvas:focus-visible]: a selector, not a value. The reticle
+         shows only while MapLibre's canvas has keyboard focus. -->
+    <div class="group/map relative min-h-0">
+      <!-- Sized, not positioned: maplibre-gl.css sets position: relative on
+           this element once the map mounts, which would undo inset-0. -->
+      <div
+        data-atlas-map-canvas
+        role="region"
+        aria-label={copy.label}
+        aria-describedby="atlas-map-description"
+        class="h-full w-full"
+      >
+      </div>
+
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 32 32"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        class="text-accent pointer-events-none absolute top-1/2 left-1/2 hidden h-8 w-8 -translate-1/2 group-has-[canvas:focus-visible]/map:block"
+      >
+        <circle cx="16" cy="16" r="9"></circle>
+        <path d="M16 1v8M16 23v8M1 16h8M23 16h8"></path>
+      </svg>
+
+      <p class="text-label text-text-subtle absolute right-5 bottom-4 font-mono">
+        {'Basemap: '}
+        {
+          basemap.credits.map((credit, index) => (
+            <>
+              {index > 0 && ' / '}
+              {credit.copyright && '© '}
+              <a href={credit.href} class="hover:text-accent motion-safe:transition-colors">
+                {credit.label}
+              </a>
+            </>
+          ))
+        }
+      </p>
+
+      <div
+        class="rounded-control border-hairline absolute top-5 right-5 flex flex-col overflow-hidden border"
+      >
+        <button
+          type="button"
+          data-atlas-zoom="in"
+          aria-label={copy.zoomIn}
+          class="border-hairline bg-surface-raised text-text-strong hover:text-accent flex h-(--tap-target) w-(--tap-target) items-center justify-center border-b aria-disabled:opacity-40 motion-safe:transition-colors"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="h-4 w-4"
+          >
+            <path d="M8 2v12M2 8h12"></path>
+          </svg>
+        </button>
+        <button
+          type="button"
+          data-atlas-zoom="out"
+          aria-label={copy.zoomOut}
+          class="bg-surface-raised text-text-strong hover:text-accent flex h-(--tap-target) w-(--tap-target) items-center justify-center aria-disabled:opacity-40 motion-safe:transition-colors"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="h-4 w-4"
+          >
+            <path d="M2 8h12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Below lg this is a sheet over the map, parked below its bottom edge
+         and inert until a place is selected; AtlasPanel.client.ts positions
+         it from there. From lg up it is a plain column beside the map. -->
+    <aside
+      id="atlas-map-panel"
+      data-atlas-panel
+      aria-label={copy.panelLabel}
+      inert
+      class="border-hairline bg-surface absolute inset-0 z-10 flex translate-y-full flex-col border-t motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out lg:static lg:z-auto lg:translate-y-0 lg:border-t-0 lg:border-l"
+    >
+      <button
+        type="button"
+        data-atlas-sheet-handle
+        aria-expanded="false"
+        aria-controls="atlas-map-panel-body"
+        class="flex h-(--tap-target) w-full shrink-0 touch-none items-center justify-center lg:hidden"
+      >
+        <span aria-hidden="true" class="bg-hairline block h-1 w-10 rounded-full"></span>
+        <span data-atlas-sheet-handle-label class="sr-only">{copy.expandPanel}</span>
+      </button>
+      <div id="atlas-map-panel-body" data-atlas-panel-body class="min-h-0 flex-1 overflow-y-auto">
+        <p data-atlas-panel-empty class="text-body text-text-muted p-6">{copy.emptyPanel}</p>
+      </div>
+    </aside>
+  </div>
+
+  <p id="atlas-map-description" class="sr-only">{copy.description}</p>
+  <p data-atlas-map-status aria-live="polite" class="sr-only"></p>
+
+  <!-- The panel renders from markup already on the page, one inert template
+       per plotted entry, so selecting a place fetches nothing and the panel
+       is AtlasCard itself rather than a second rendering of it. -->
+  {
+    entries.map((entry) => (
+      <template data-atlas-panel-entry={entry.id}>
+        <AtlasCard entry={entry} variant="panel" />
+      </template>
+    ))
+  }
+</div>
+
+<script>
+  import './AtlasMap.script'
+</script>

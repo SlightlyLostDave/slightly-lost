@@ -144,11 +144,38 @@ export interface AtlasLegendItem {
   marker: AtlasMarker
 }
 
+// Copy for the map island: AtlasMap.astro renders the static strings, and
+// the island imports the announcements it fills in at runtime from here.
+export interface AtlasMapCopy {
+  label: string
+  description: string
+  skipLabel: string
+  zoomIn: string
+  zoomOut: string
+  panelLabel: string
+  emptyPanel: string
+  expandPanel: string
+  collapsePanel: string
+  // {name} is replaced with the place nearest the map centre.
+  nearestPlace: string
+  // {count} is replaced with the number of places in the cluster.
+  nearestCluster: string
+  noNearbyPlace: string
+  unavailable: string
+}
+
 export interface AtlasConfig {
   label: string
   title: string
   intro: string
   legend: readonly AtlasLegendItem[]
+  listHeading: string
+  // Served by src/pages/atlas.geojson.ts.
+  geojsonPath: string
+  // Above this many plotted entries the map clusters its markers. The layers
+  // are written for both cases, so crossing it changes no layer.
+  mapClusterThreshold: number
+  map: AtlasMapCopy
 }
 
 export const atlas = {
@@ -161,4 +188,23 @@ export const atlas = {
     { status: 'documented', marker: 'primary' },
     { status: 'visited', marker: 'secondary' },
   ],
+  listHeading: 'Every entry',
+  geojsonPath: '/atlas.geojson',
+  mapClusterThreshold: 200,
+  map: {
+    label: 'Map of the atlas',
+    description:
+      'An interactive map of the places in the list below. Arrow keys pan the map, plus and minus zoom, and Enter opens the place nearest the centre. Every place is in the list, including the ones with no published location.',
+    skipLabel: 'Skip the map to the full list',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    panelLabel: 'Selected place',
+    emptyPanel: 'Select a place on the map to read about it here.',
+    expandPanel: 'Show more of this place',
+    collapsePanel: 'Show less of this place',
+    nearestPlace: 'Nearest place: {name}. Press Enter to open it.',
+    nearestCluster: '{count} places near the centre. Press Enter to zoom in.',
+    noNearbyPlace: 'No place near the centre of the map.',
+    unavailable: 'The map could not load here. Every place is in the list below.',
+  },
 } as const satisfies AtlasConfig

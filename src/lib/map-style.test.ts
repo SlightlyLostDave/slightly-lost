@@ -2,7 +2,18 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, test } from 'node:test'
 import { basemap } from '../config/basemap.ts'
+import type { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl'
+import { atlas } from '../config/atlas.ts'
+import { markerImageFor } from './map-marker-images.ts'
 import {
+  ATLAS_CLUSTER_IMAGE,
+  ATLAS_CLUSTER_LAYER_ID,
+  ATLAS_MARKER_LAYER_ID,
+  ATLAS_RING_IMAGE,
+  ATLAS_SELECTION_LAYER_ID,
+  ATLAS_SOURCE_ID,
+  createAtlasLayers,
+  createAtlasMapStyle,
   createMapStyle,
   mapPaletteRoles,
   mapRamp,
@@ -108,5 +119,155 @@ describe('createMapStyle', () => {
         )
       }
     }
+  })
+})
+
+// Evaluates the small subset of style expressions the atlas layers use
+// against one feature's properties, so the tests can ask "would this feature
+// draw, and in what colour" without a WebGL context.
+type Properties = Record<string, string | number>
+
+function evaluate(expression: unknown, properties: Properties): unknown {
+  if (!Array.isArray(expression)) return expression
+  const [operator, ...args] = expression as [string, ...unknown[]]
+  switch (operator) {
+    case 'get':
+      return properties[args[0] as string]
+    case 'has':
+      return (args[0] as string) in properties
+    case '!':
+      return !evaluate(args[0], properties)
+    case 'all':
+      return args.every((arg) => Boolean(evaluate(arg, properties)))
+    case '==':
+      return evaluate(args[0], properties) === evaluate(args[1], properties)
+    case 'concat':
+      return args.map((arg) => String(evaluate(arg, properties))).join('')
+    case 'match': {
+      const input = evaluate(args[0], properties)
+      for (let index = 1; index < args.length - 1; index += 2) {
+        const labels = args[index]
+        const matched = Array.isArray(labels) ? labels.includes(input) : labels === input
+        if (matched) return evaluate(args[index + 1], properties)
+      }
+      return evaluate(args[args.length - 1], properties)
+    }
+    default:
+      throw new Error(`test evaluator does not handle ${operator}`)
+  }
+}
+
+function layerById(layers: LayerSpecification[], id: string) {
+  const layer = layers.find((candidate) => candidate.id === id)
+  assert.ok(layer && layer.type === 'symbol', id)
+  return layer
+}
+
+const place = (properties: Partial<Properties> = {}): Properties => ({
+  slug: 'centre-hill',
+  name: 'Centre Hill No. 2',
+  kind: 'mine',
+  status: 'visited',
+  href: '/atlas/centre-hill',
+  ...properties,
+})
+const cluster: Properties = { cluster: 1, point_count: 12, point_count_abbreviated: '12' }
+
+describe('createAtlasLayers', () => {
+  test('markers draw places and never clusters, clusters only clusters', () => {
+    const layers = createAtlasLayers()
+    const markers = layerById(layers, ATLAS_MARKER_LAYER_ID)
+    const clusters = layerById(layers, ATLAS_CLUSTER_LAYER_ID)
+    assert.equal(evaluate(markers.filter, place()), true)
+    assert.equal(evaluate(markers.filter, cluster), false)
+    assert.equal(evaluate(clusters.filter, place()), false)
+    assert.equal(evaluate(clusters.filter, cluster), true)
+  })
+
+  test('the marker image is chosen by kind', () => {
+    const markers = layerById(createAtlasLayers(), ATLAS_MARKER_LAYER_ID)
+    assert.equal(
+      evaluate(markers.layout?.['icon-image'], place({ kind: 'wreck' })),
+      'atlas-marker-wreck'
+    )
+  })
+
+  for (const theme of ['dark', 'light'] as const) {
+    test(`${theme}: legend primaries read as the accent, everything else as sage`, () => {
+      const markers = layerById(createAtlasLayers({ theme }), ATLAS_MARKER_LAYER_ID)
+      const roles = mapPaletteRoles[theme]
+      for (const item of atlas.legend) {
+        const expected = item.marker === 'primary' ? mapRamp[roles.accent] : mapRamp[roles.sage]
+        assert.equal(
+          evaluate(markers.paint?.['icon-color'], place({ status: item.status })),
+          expected
+        )
+      }
+      for (const status of ['researched', 'unconfirmed']) {
+        assert.equal(
+          evaluate(markers.paint?.['icon-color'], place({ status })),
+          mapRamp[roles.sage]
+        )
+      }
+    })
+  }
+
+  test('the selection ring draws only the selected place', () => {
+    const unselected = layerById(createAtlasLayers(), ATLAS_SELECTION_LAYER_ID)
+    assert.equal(evaluate(unselected.filter, place()), false)
+
+    const selected = layerById(
+      createAtlasLayers({ selectedSlug: 'centre-hill' }),
+      ATLAS_SELECTION_LAYER_ID
+    )
+    assert.equal(evaluate(selected.filter, place()), true)
+    assert.equal(evaluate(selected.filter, place({ slug: 'the-ardmore' })), false)
+    assert.equal(evaluate(selected.filter, cluster), false)
+  })
+
+  test('every atlas image id the layers can ask for is drawable', () => {
+    for (const kind of ['mine', 'wreck', 'settlement', 'structure', 'folklore', 'natural']) {
+      assert.ok(markerImageFor(`atlas-marker-${kind}`), kind)
+    }
+    assert.ok(markerImageFor(ATLAS_RING_IMAGE))
+    assert.ok(markerImageFor(ATLAS_CLUSTER_IMAGE))
+    assert.equal(markerImageFor('something-else'), undefined)
+  })
+
+  test('the atlas label font exists in public/basemap', () => {
+    const clusters = layerById(createAtlasLayers(), ATLAS_CLUSTER_LAYER_ID)
+    const fontStack = clusters.layout?.['text-font']
+    assert.ok(Array.isArray(fontStack))
+    for (const font of fontStack) {
+      assert.ok(existsSync(new URL(`fonts/${font}/0-255.pbf`, publicBasemap)), font)
+    }
+  })
+})
+
+describe('createAtlasMapStyle', () => {
+  const atlasSource: GeoJSONSourceSpecification = { type: 'geojson', data: '/atlas.geojson' }
+
+  test('draws the atlas above the whole basemap, from its own source', () => {
+    const style = createAtlasMapStyle({ basemapUrl: 'https://example.test/basemap', atlasSource })
+    assert.deepEqual(style.sources[ATLAS_SOURCE_ID], atlasSource)
+    const firstAtlasLayer = style.layers.findIndex((layer) => layer.id.startsWith('atlas-'))
+    assert.ok(firstAtlasLayer > 0)
+    for (const layer of style.layers.slice(firstAtlasLayer)) {
+      assert.ok('source' in layer && layer.source === ATLAS_SOURCE_ID, layer.id)
+    }
+  })
+})
+
+describe('markerImageFor', () => {
+  test('draws an SDF whose edge sits at alpha 0.75', () => {
+    const marker = markerImageFor('atlas-marker-mine')
+    assert.ok(marker)
+    const { width, height, data } = marker.image
+    assert.equal(data.length, width * height * 4)
+    const alphaAt = (column: number, row: number) => data[(row * width + column) * 4 + 3] ?? 0
+    const centre = Math.floor(width / 2)
+    assert.equal(alphaAt(centre, centre), 255)
+    assert.equal(alphaAt(0, 0), 0)
+    assert.equal(marker.options.sdf, true)
   })
 })

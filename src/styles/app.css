@@ -144,6 +144,13 @@
      nothing here can be measured at runtime without JS. */
   --draft-banner-height: 0px;
   --tap-target: 44px;
+  /* The atlas map unit, AtlasMap.astro. Below lg the map fills most of a
+     phone screen and the panel is a sheet over its lower part; from lg up
+     the panel is a fixed column beside the map. AtlasCard.astro's image
+     sizes attribute assumes the 24rem panel; keep the two in sync by hand. */
+  --atlas-map-height: 40rem;
+  --atlas-map-height-mobile: 75svh;
+  --atlas-panel-width: 24rem;
   --control-height: 3.375rem; /* 54px, Button default height (compact reuses --tap-target) */
   --outline-offset-control: 3px; /* primary/secondary/ghost button focus ring */
   --outline-offset-link: 4px; /* link-style focus ring: Button's link variant and Prose links */

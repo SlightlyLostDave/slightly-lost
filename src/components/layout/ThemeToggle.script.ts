@@ -1,4 +1,4 @@
-export {}
+import { THEME_CHANGE_EVENT } from '@/lib/theme'
 
 const toggle = document.querySelector<HTMLButtonElement>('#theme-toggle')
 const label = toggle?.querySelector<HTMLElement>('.theme-toggle__label')
@@ -35,6 +35,10 @@ toggle?.addEventListener('click', () => {
     // Private browsing can throw on localStorage access; the toggle still
     // works for the current session, it just won't persist.
   }
+
+  document.dispatchEvent(
+    new CustomEvent(THEME_CHANGE_EVENT, { detail: { theme: goingLight ? 'light' : 'dark' } })
+  )
 
   requestAnimationFrame(() => root.classList.remove('theme-swap-instant'))
 })

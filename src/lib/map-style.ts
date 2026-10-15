@@ -12,10 +12,17 @@
 // Pure on purpose: no DOM, no env, no maplibre-gl at runtime (the import is
 // type-only), so it is cheap to import and testable under node --test.
 
-import type { LayerSpecification, StyleSpecification } from 'maplibre-gl'
+import type {
+  ExpressionSpecification,
+  GeoJSONSourceSpecification,
+  LayerSpecification,
+  StyleSpecification,
+} from 'maplibre-gl'
+import { atlas, type AtlasStatusSlug } from '../config/atlas.ts'
 import { basemap } from '../config/basemap.ts'
+import type { SiteTheme } from './theme.ts'
 
-export type MapTheme = 'dark' | 'light'
+export type MapTheme = SiteTheme
 
 // Mirrored from the @theme ramp in src/styles/app.css, only the steps the
 // map uses.
@@ -27,6 +34,10 @@ export const mapRamp = {
   slate: '#6e5f4d',
   graphite: '#3b3129',
   ink: '#1e1813',
+  'rust-deep': '#9c4520',
+  'rust-glow': '#de8a5a',
+  'sage-deep': '#5f6653',
+  'sage-glow': '#a9b096',
 } as const
 
 export type MapRampName = keyof typeof mapRamp
@@ -34,20 +45,27 @@ export type MapRampName = keyof typeof mapRamp
 // Keys are app.css role names without the --color- prefix, so the test can
 // compare them to the stylesheet directly. No third palette: the map uses
 // the same roles as every other surface on the site.
-export type MapRole = 'surface' | 'surface-raised' | 'text-muted' | 'hairline'
+export type MapRole =
+  'surface' | 'surface-raised' | 'text-strong' | 'text-muted' | 'hairline' | 'accent' | 'sage'
 
 export const mapPaletteRoles = {
   dark: {
     surface: 'ink',
     'surface-raised': 'graphite',
+    'text-strong': 'paper',
     'text-muted': 'mist',
     hairline: 'slate',
+    accent: 'rust-glow',
+    sage: 'sage-glow',
   },
   light: {
     surface: 'paper',
     'surface-raised': 'fog',
+    'text-strong': 'ink',
     'text-muted': 'slate',
     hairline: 'linen',
+    accent: 'rust-deep',
+    sage: 'sage-deep',
   },
 } as const satisfies Record<MapTheme, Record<MapRole, MapRampName>>
 
@@ -310,5 +328,141 @@ export function createMapStyle({
       ...labelLayers('overview', palette, overview),
       ...labelLayers('detail', palette, detail),
     ],
+  }
+}
+
+// The atlas layers, drawn above the basemap from one GeoJSON source. The
+// island adds the source and these layers to createMapStyle()'s output via
+// createAtlasMapStyle(), so a theme change is one setStyle() call that diffs
+// paint values and keeps the data, the camera, and the selection.
+
+export const ATLAS_SOURCE_ID = 'atlas'
+export const ATLAS_SELECTION_LAYER_ID = 'atlas-selection'
+export const ATLAS_MARKER_LAYER_ID = 'atlas-markers'
+export const ATLAS_CLUSTER_LAYER_ID = 'atlas-clusters'
+
+// Image ids the layers ask for. The island draws them on demand when the map
+// reports them missing (src/lib/map-marker-images.ts). The marker image is
+// keyed by kind so that giving a kind its own glyph later is a change to the
+// image drawing alone, never to the layer.
+export const ATLAS_MARKER_IMAGE_PREFIX = 'atlas-marker-'
+export const ATLAS_RING_IMAGE = 'atlas-ring'
+export const ATLAS_CLUSTER_IMAGE = 'atlas-cluster'
+
+// Marker images are drawn 10px across at icon-size 1. Primary reads as 12px
+// and secondary as 6px, the two weights on the homepage teaser plate.
+const PRIMARY_MARKER_SIZE = 1.2
+const SECONDARY_MARKER_SIZE = 0.6
+
+// The two visual weights come from the one legend in src/config/atlas.ts:
+// a status the legend marks primary (an entry with a written dispatch) draws
+// in the accent, and every other status draws in sage at the smaller size.
+export const primaryMarkerStatuses: readonly AtlasStatusSlug[] = atlas.legend
+  .filter((item) => item.marker === 'primary')
+  .map((item) => item.status)
+
+function byMarkerWeight<Value extends number | string>(
+  primary: Value,
+  secondary: Value
+): ExpressionSpecification | Value {
+  if (primaryMarkerStatuses.length === 0) return secondary
+  return ['match', ['get', 'status'], [...primaryMarkerStatuses], primary, secondary]
+}
+
+const isCluster: ExpressionSpecification = ['has', 'point_count']
+const isPlace: ExpressionSpecification = ['!', isCluster]
+
+export interface AtlasLayerOptions {
+  theme?: MapTheme
+  // The slug of the entry whose panel is open. The selection ring draws
+  // nothing when this is absent.
+  selectedSlug?: string
+}
+
+export function createAtlasLayers({
+  theme = 'dark',
+  selectedSlug,
+}: AtlasLayerOptions = {}): LayerSpecification[] {
+  const roles = mapPaletteRoles[theme]
+  const color = (role: MapRole) => mapRamp[roles[role]]
+
+  return [
+    {
+      id: ATLAS_SELECTION_LAYER_ID,
+      type: 'symbol',
+      source: ATLAS_SOURCE_ID,
+      filter: ['all', isPlace, ['==', ['get', 'slug'], selectedSlug ?? '']],
+      layout: {
+        'icon-image': ATLAS_RING_IMAGE,
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+      },
+      paint: { 'icon-color': color('accent') },
+    },
+    {
+      // The single marker layer. Clustering only ever changes which features
+      // reach it, never the layer itself.
+      id: ATLAS_MARKER_LAYER_ID,
+      type: 'symbol',
+      source: ATLAS_SOURCE_ID,
+      filter: isPlace,
+      layout: {
+        'icon-image': ['concat', ATLAS_MARKER_IMAGE_PREFIX, ['get', 'kind']],
+        'icon-size': byMarkerWeight(PRIMARY_MARKER_SIZE, SECONDARY_MARKER_SIZE),
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        // Primary markers draw above secondary ones where they overlap.
+        'symbol-sort-key': byMarkerWeight(1, 0),
+      },
+      paint: {
+        'icon-color': byMarkerWeight(color('accent'), color('sage')),
+        'icon-halo-color': color('surface'),
+        'icon-halo-width': 1,
+      },
+    },
+    {
+      // Matches nothing until the source is clustered, above
+      // atlas.mapClusterThreshold features.
+      id: ATLAS_CLUSTER_LAYER_ID,
+      type: 'symbol',
+      source: ATLAS_SOURCE_ID,
+      filter: isCluster,
+      layout: {
+        'icon-image': ATLAS_CLUSTER_IMAGE,
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': FONT_REGULAR,
+        'text-size': 11,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+      },
+      paint: {
+        'icon-color': color('surface-raised'),
+        'icon-halo-color': color('hairline'),
+        'icon-halo-width': 1,
+        'text-color': color('text-strong'),
+      },
+    },
+  ]
+}
+
+export interface AtlasMapStyleOptions extends MapStyleOptions, AtlasLayerOptions {
+  atlasSource: GeoJSONSourceSpecification
+}
+
+// The basemap with the atlas source and layers on top: the whole style the
+// island hands to MapLibre, at construction and on every theme change.
+export function createAtlasMapStyle({
+  basemapUrl,
+  theme,
+  selectedSlug,
+  atlasSource,
+}: AtlasMapStyleOptions): StyleSpecification {
+  const base = createMapStyle({ basemapUrl, theme })
+  return {
+    ...base,
+    sources: { ...base.sources, [ATLAS_SOURCE_ID]: atlasSource },
+    layers: [...base.layers, ...createAtlasLayers({ theme, selectedSlug })],
   }
 }
