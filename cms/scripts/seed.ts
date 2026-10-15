@@ -1,10 +1,11 @@
 // Seeds the Strapi content model with real, publishable content so the loader
-// (src/loaders/strapi.ts, Phase 2 prompt 05) has something to fetch. Run with
+// (src/loaders/strapi.ts, Phase 2 prompt 05) has something to fetch, including
+// atlas entries covering every location policy branch (Phase 3). Run with
 // `npm run cms:seed` from the repo root. Safe to run against a fresh database
 // only: it checks for prior seed data and fails loudly rather than duplicating
 // anything, since the expected workflow is to drop cms/.tmp/data.db (or the
 // configured database) and reseed from scratch.
-import { compileStrapi, createStrapi } from '@strapi/strapi'
+import { compileStrapi, createStrapi, type Modules } from '@strapi/strapi'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -24,6 +25,22 @@ const PLACEHOLDER_SOURCES = [
   path.join(REPO_ROOT, 'src/assets/home/hero-midground.webp'),
   path.join(REPO_ROOT, 'src/assets/home/hero-foreground.webp'),
 ]
+
+// Every fuzzed and withheld coordinate in this seed is invented. None of them
+// is a real place, hazardous or otherwise, so nothing in a seeded development
+// database points anyone at an open shaft. Each uses a repeated-digit pattern
+// so a person reading the CMS can tell at a glance that it is not a survey
+// reading, and so a leak check can grep for it: no two share a digit run or a
+// rounded form, which means 888888, 46.89, or -81.44 turning up in the build
+// can only have come from the withheld stope. Only the two exact entries below
+// carry real coordinates, and both are public places where precision is
+// harmless.
+const SYNTHETIC_LOCATIONS = {
+  centreHillHeadframe: { lat: 46.666666, lng: -81.111111 },
+  powderMagazine: { lat: 46.555555, lng: -81.222222 },
+  kawarthaTug: { lat: 44.444444, lng: -78.777777 },
+  collapsedStope: { lat: 46.888888, lng: -81.444444 },
+}
 
 let placeholderIndex = 0
 
@@ -87,6 +104,22 @@ function richText(...blocks: unknown[]) {
   return { __component: 'body.rich-text', content: blocks }
 }
 
+type AtlasEntryData = Modules.Documents.Params.Data.Input<'api::atlas-entry.atlas-entry'>
+
+// Published before any post that points at it, so the published post links to
+// the entry's published version rather than to a draft. Generic over the data
+// the same way documents().create() is, because this project has no generated
+// schema types for the attributes to be checked against.
+async function createPublishedAtlasEntry<const TData extends AtlasEntryData>(
+  strapi: Strapi,
+  data: TData,
+): Promise<string> {
+  const atlasEntries = strapi.documents('api::atlas-entry.atlas-entry')
+  const draft = await atlasEntries.create({ data })
+  await atlasEntries.publish({ documentId: draft.documentId })
+  return draft.documentId
+}
+
 async function run() {
   const appContext = await compileStrapi()
   const strapi = await createStrapi(appContext).load()
@@ -132,6 +165,24 @@ async function run() {
       strapi,
       'The old Pryce place, placeholder pending photography',
     )
+    // Atlas entries that have been visited get a stand-in hero. The researched
+    // and unconfirmed ones have none, because nobody has photographed them.
+    const heroDinLligwy = await uploadPlaceholderImage(
+      strapi,
+      'Din Lligwy hut group, low limestone walls of the enclosure in short grass, placeholder pending photography',
+    )
+    const heroCwmIdwal = await uploadPlaceholderImage(
+      strapi,
+      "Llyn Idwal from the path above Ogwen, with the Devil's Kitchen at the back of the cwm, placeholder pending photography",
+    )
+    const heroPowderMagazine = await uploadPlaceholderImage(
+      strapi,
+      'Stone powder magazine in birch scrub, its corrugated roof partly fallen in, placeholder pending photography',
+    )
+    const heroCollapsedStope = await uploadPlaceholderImage(
+      strapi,
+      'Timber cap over the stope opening, failed on one side and half buried in leaf litter, placeholder pending photography',
+    )
 
     console.log('Creating author...')
     const authorDraft = await strapi.documents('api::author.author').create({
@@ -176,6 +227,205 @@ async function run() {
     })
     await strapi.documents('api::series.series').publish({ documentId: seriesDraft.documentId })
 
+    // Eight entries chosen to exercise every branch of the location policy
+    // rather than to look plentiful: exact with real coordinates, fuzzed with
+    // synthetic ones, withheld with coordinates recorded and withheld with none,
+    // and a fuzzed entry with nothing recorded at all. Across the set they cover
+    // every kind and every status. Exact is used only on a settlement and a
+    // natural site, so the content report's exact-on-a-mine warning stays
+    // meaningful instead of firing on every seeded build.
+    console.log('Creating atlas entries...')
+
+    // Exact: a public Cadw site with a signed path. Real coordinates.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'Din Lligwy hut group',
+      slug: 'din-lligwy',
+      kind: 'settlement',
+      atlasStatus: 'visited',
+      location: { lat: 53.3507, lng: -4.2623 },
+      locationPolicy: 'exact',
+      locationNote:
+        'Published exactly. This is a signed Cadw site with a footpath to the enclosure, and precision here can hurt no one.',
+      summary:
+        'A walled enclosure of stone round and rectangular buildings on Anglesey, lived in during the Roman period and roofless for a very long time since.',
+      hero: heroDinLligwy,
+      body: [
+        richText(
+          paragraph(
+            'The walls stand somewhere between knee and waist height, limestone laid without mortar, and the enclosure reads better from inside than from the path. Round buildings for living in and rectangular ones for working in, at least by the usual reading of sites like this one. It is a short walk through woodland from the lane, and on a weekday it is often empty.',
+          ),
+        ),
+      ],
+      sources: [
+        {
+          author: 'Cadw',
+          title: 'Din Lligwy hut group, scheduled monument record [Cadw monument ID]',
+        },
+      ],
+    })
+
+    // Exact: a marked trailhead. Real coordinates, and the note says they are
+    // the trailhead rather than the lake.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'Cwm Idwal',
+      slug: 'cwm-idwal',
+      kind: 'natural',
+      atlasStatus: 'visited',
+      location: { lat: 53.1229, lng: -4.016 },
+      locationPolicy: 'exact',
+      locationNote:
+        'The coordinates are the marked trailhead at Ogwen, where the path into the cwm starts, not the lake itself. The path from there is pitched stone and signed.',
+      summary:
+        "A glacial cwm above Ogwen with a lake at the bottom and a cleft at the back called the Devil's Kitchen, reached on a marked path from the road.",
+      hero: heroCwmIdwal,
+    })
+
+    // Fuzzed mine, linked from the Centre Hill post below. Synthetic coordinates.
+    const centreHillEntryId = await createPublishedAtlasEntry(strapi, {
+      name: 'Centre Hill headframe',
+      slug: 'centre-hill-headframe',
+      kind: 'mine',
+      atlasStatus: 'documented',
+      location: SYNTHETIC_LOCATIONS.centreHillHeadframe,
+      locationPolicy: 'fuzzed',
+      locationNote:
+        'Rounded to two decimal places, about a kilometre. The shaft under the headframe is open, and that is the whole reason.',
+      summary:
+        'A riveted steel headframe from 1938 over a shaft that was never filled, leaning on its north leg by an amount that two survey sessions can now put a number on.',
+      hero: heroCentreHill,
+      firstVisited: '2025-09-28',
+      lastVisited: '2026-08-28',
+      body: [
+        richText(
+          paragraph(
+            "The headframe is nineteen metres of riveted steel standing over an open shaft, left in place when the mine closed in 1962 because taking it down would have cost more than leaving it. The surface plant is gone. What remains is the frame, the concrete collar it stands on, and a north footing that moved fifty-eight millimetres at deck height between two capture sessions eleven months apart. The measurements, and the method's limits, are in the dispatch.",
+          ),
+        ),
+      ],
+      safetyNotes: [
+        {
+          heading: 'Open shaft at the collar',
+          body: 'The shaft under the headframe is open and goes down several hundred metres. There is no fence, no sign, and no cap. The collar edge sits level with the ground and is under leaf litter for most of the year, so it is not visible until you are standing at it. Stay outside the four legs.',
+        },
+        {
+          heading: 'Ground at the north footing',
+          body: 'The pad under the north leg has slumped since September 2025 and is wet all year. Do not stand under that leg or use it to climb. It is the part of the frame that is moving.',
+        },
+      ],
+      fieldData: [
+        { label: 'Elevation', value: '318', unit: 'm' },
+        { label: 'Walked in', value: '2.4', unit: 'km' },
+      ],
+      sources: [
+        {
+          author: 'Ontario Ministry of Mines',
+          title: 'Abandoned Mines Information System, Centre Hill workings, record [AMIS ID]',
+          note: 'Assessment file [AFRI number]',
+        },
+      ],
+    })
+
+    // Fuzzed structure. Synthetic coordinates.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'The powder magazine on the haul road',
+      slug: 'haul-road-powder-magazine',
+      kind: 'structure',
+      atlasStatus: 'visited',
+      location: SYNTHETIC_LOCATIONS.powderMagazine,
+      locationPolicy: 'fuzzed',
+      locationNote: 'Rounded to two decimal places. The roof is failing and the building is unsafe to enter.',
+      summary:
+        'A small stone magazine set well back from any working, as explosives stores had to be, with walls a metre thick and a corrugated iron roof coming down one sheet at a time.',
+      hero: heroPowderMagazine,
+      safetyNotes: [
+        {
+          heading: 'Roof failure inside',
+          body: 'The roof is corrugated iron on timber purlins that have rotted through where they meet the walls. Two sheets have already fallen in and others hang by a single fixing, moving in any wind. The floor inside is a layer of fallen sheet, broken glass, and loose stone, deep enough to hide the drain channel along the back wall. Look in from the doorway and go no further.',
+        },
+      ],
+    })
+
+    // Fuzzed wreck, researched rather than visited. Synthetic coordinates.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'The tug in the shallows',
+      slug: 'kawartha-tug',
+      kind: 'wreck',
+      atlasStatus: 'researched',
+      location: SYNTHETIC_LOCATIONS.kawarthaTug,
+      locationPolicy: 'fuzzed',
+      locationNote:
+        'Rounded to two decimal places. The position comes from a chart annotation, not from anyone standing over it.',
+      summary:
+        'A steam tug said to have been left to sink in shallow water once it stopped being worth repairing, marked on one chart and missing from the next. Not yet visited.',
+    })
+
+    // Withheld, with coordinates recorded in the CMS. Those coordinates are
+    // synthetic, and they must never reach the content store; the build check
+    // greps for them.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'The collapsed stope',
+      slug: 'collapsed-stope',
+      kind: 'mine',
+      atlasStatus: 'visited',
+      location: SYNTHETIC_LOCATIONS.collapsedStope,
+      locationPolicy: 'withheld',
+      locationNote:
+        'Withheld. The position is recorded and will stay unpublished: the ground is failing and the cap over the opening has failed with it.',
+      summary:
+        'A stope that broke through to surface sometime after the mine closed, leaving a collapse in the bush with a timber cap over the worst of it. The cap has failed.',
+      hero: heroCollapsedStope,
+      body: [
+        richText(
+          paragraph(
+            'A stope is the hollow left behind when ore is taken out from underground. This one was worked close enough to surface that the rock above it eventually gave way, and what is left is a depression in the bush with steep, loose sides and a darker opening at the low end. Someone capped that opening with timber at some point. Nobody has maintained it since.',
+          ),
+        ),
+      ],
+      safetyNotes: [
+        {
+          heading: 'Failed timber cap',
+          body: 'The opening at the low end of the depression is capped with timber that has failed on one side and is covered in leaf litter. From above it looks like solid forest floor. It will not hold a person.',
+        },
+        {
+          heading: 'Loose sides',
+          body: 'The sides of the depression are broken rock and fill lying at the angle they settled at, and they move underfoot. The trees nearest the rim lean in toward the hole, which is the clearest sign the edge is still creeping outward.',
+        },
+      ],
+    })
+
+    // Withheld, with no coordinates recorded at all. The location key is left
+    // out entirely: "we know where it is and will not say" is a different
+    // case from "nobody has pinned it down", and both have to work.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'The lumber camp on the survey plan',
+      slug: 'survey-plan-lumber-camp',
+      kind: 'settlement',
+      atlasStatus: 'researched',
+      locationPolicy: 'withheld',
+      locationNote:
+        'Withheld because there is nothing to withhold yet. The camp is drawn on a survey plan with no usable grid, and nobody has found it on the ground.',
+      summary:
+        'A logging camp with a bunkhouse, a cookhouse, and a stable, drawn on a township survey plan and not found since. Somewhere in the Sudbury Basin, possibly under second growth, possibly gone.',
+      sources: [
+        {
+          title: 'Township survey plan showing the camp buildings, [plan reference]',
+        },
+      ],
+    })
+
+    // The emptiest an entry is allowed to be: required fields only. No hero,
+    // no body, no location. Its policy is fuzzed, so it also covers a policy
+    // that would publish coordinates on an entry that has none recorded.
+    await createPublishedAtlasEntry(strapi, {
+      name: 'The lamp in the sealed adit',
+      slug: 'lamp-in-the-sealed-adit',
+      kind: 'folklore',
+      atlasStatus: 'unconfirmed',
+      locationPolicy: 'fuzzed',
+      summary:
+        "A miner's lamp seen moving inside an adit that was sealed decades ago. Everyone who tells it agrees the adit is sealed, and nobody agrees which one, so there is nothing to put on the map.",
+    })
+
     console.log('Creating the Centre Hill post...')
     const centreHillDraft = await strapi.documents('api::post.post').create({
       data: {
@@ -189,9 +439,12 @@ async function run() {
         series: seriesDraft.documentId,
         seriesOrder: 1,
         tags: [structuralSurveyDraft.documentId, underwaterArchaeologyDraft.documentId],
+        atlasEntry: centreHillEntryId,
         hero: heroCentreHill,
         fieldData: [
-          { label: 'Coordinates', value: '46.4821 N, 81.0093 W' },
+          // Hand-typed, so it must match the linked entry's published location:
+          // SYNTHETIC_LOCATIONS.centreHillHeadframe after fuzzing.
+          { label: 'Coordinates', value: '46.67 N, 81.11 W' },
           { label: 'Elevation', value: '318', unit: 'm' },
           { label: 'Walked in', value: '2.4', unit: 'km' },
           { label: 'First visited', value: '2025.09.28' },
@@ -385,7 +638,8 @@ async function run() {
     console.log('  2 tags (Structural Survey, Underwater Archaeology)')
     console.log('  1 series (Sudbury Basin)')
     console.log('  4 posts (centre-hill-headframe, sonar-return-bridge, sychnant-pass-chip-van, old-pryce-place)')
-    console.log('  7 placeholder images uploaded')
+    console.log('  8 atlas entries (2 exact, 4 fuzzed, 2 withheld), centre-hill-headframe linked from its post')
+    console.log('  11 placeholder images uploaded')
   } finally {
     await strapi.destroy()
   }
