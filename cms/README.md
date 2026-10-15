@@ -1,6 +1,6 @@
 # Slightly Lost CMS
 
-Strapi 5 project for the Slightly Lost content model: `post`, `author`, `tag`, and `series`, plus the shared and body components the post dynamic zone uses. Schema files live under `src/api` and `src/components` and are committed, not just present in the local SQLite database, so the model is reviewable and reproducible.
+Strapi 5 project for the Slightly Lost content model: `post`, `atlas-entry`, `author`, `tag`, and `series`, plus the shared and body components they use. Schema files live under `src/api` and `src/components` and are committed, not just present in the local SQLite database, so the model is reviewable and reproducible.
 
 There are no single types here. Site metadata, navigation, and pillar definitions live in `src/config/` in the Astro app, not in Strapi. See `docs/slightly-lost-architecture.md` section 4 in the repo root for the full rationale.
 
@@ -8,15 +8,21 @@ There are no single types here. Site metadata, navigation, and pillar definition
 
 The Astro build is the only client that ever talks to this CMS, and it only reads. Strapi's public role should have zero permissions on anything, that's the default for new content types, verify it stayed that way under **Settings → Users & Permissions Plugin → Roles → Public**.
 
-To create the token the build uses:
+The token the build uses is minted by `scripts/create-build-token.ts`, not created in the admin UI:
 
-1. **Settings → API Tokens → Create new API Token**.
-2. Name it (e.g. `astro-build-readonly`), type **Custom**.
-3. Under permissions, grant only `find` and `findOne` for `Post`, `Author`, `Tag`, and `Series`. Nothing else, no create/update/delete, no other content types.
-4. Set a token duration appropriate to your rotation policy.
-5. Copy the generated value once, it's shown only at creation. Set it as `STRAPI_TOKEN` in the Astro project's build environment, never with a `PUBLIC_` prefix.
+```
+npm run token
+```
 
-To regenerate: delete the old token under **Settings → API Tokens**, repeat the steps above, and update `STRAPI_TOKEN` wherever it's set (local `.env`, CI secrets, host environment variables). Do this immediately if the token is ever exposed.
+(or `npm run cms:token` from the repository root). It creates a **Custom** token named `build` with `find` and `findOne` on `Post`, `Atlas Entry`, `Author`, `Tag`, and `Series`, and nothing else: no create, update, or delete, no users, no upload library. It's deliberately not Strapi's **Read-only** type, which grants `find` and `findOne` on every content API route, users and uploads included. A new content type the build needs to read has to be added to `READABLE_CONTENT_TYPES` in that script.
+
+Rerunning it regenerates the key, resets the permissions to that list, and invalidates the previous key, so it's also how you rotate. Set the printed value as `STRAPI_TOKEN` in the Astro project's build environment, never with a `PUBLIC_` prefix, and update it wherever it's set (local `.env`, CI secrets, host environment variables). Do this immediately if the token is ever exposed.
+
+## Atlas entry location policy
+
+`atlas-entry.locationPolicy` is required with no default, and Strapi 5 normally checks required fields only on publish, never on a draft save. `src/index.ts` registers a document service middleware that rejects any create, or any update that clears the field, while it is empty, so an entry cannot exist without a policy even as a draft. Don't remove it to make seeding or importing easier; set the policy instead.
+
+The status field is `atlasStatus`, not `status`, because Strapi reserves `status` on any type with draft and publish enabled. The site loader is where it becomes `status` again, the name `src/config/atlas.ts` uses.
 
 ## Editorial rules Strapi can't enforce structurally
 

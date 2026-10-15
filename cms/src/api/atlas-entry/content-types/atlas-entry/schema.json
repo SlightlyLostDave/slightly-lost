@@ -1,0 +1,103 @@
+{
+  "kind": "collectionType",
+  "collectionName": "atlas_entries",
+  "info": {
+    "singularName": "atlas-entry",
+    "pluralName": "atlas-entries",
+    "displayName": "Atlas Entry",
+    "description": "One place in the Atlas. kind, atlasStatus, and locationPolicy values must match src/config/atlas.ts exactly. The status field is named atlasStatus because Strapi reserves status for draft and publish."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["mine", "wreck", "settlement", "structure", "folklore", "natural"],
+      "required": true
+    },
+    "atlasStatus": {
+      "type": "enumeration",
+      "enum": ["visited", "documented", "researched", "unconfirmed"],
+      "required": true
+    },
+    "location": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.geopoint"
+    },
+    "locationPolicy": {
+      "type": "enumeration",
+      "enum": ["exact", "fuzzed", "withheld"],
+      "required": true
+    },
+    "locationNote": {
+      "type": "text"
+    },
+    "summary": {
+      "type": "text",
+      "required": true
+    },
+    "body": {
+      "type": "dynamiczone",
+      "components": [
+        "body.rich-text",
+        "body.figure",
+        "body.figure-grid",
+        "body.pull-quote"
+      ]
+    },
+    "hero": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": ["images"]
+    },
+    "firstVisited": {
+      "type": "date"
+    },
+    "lastVisited": {
+      "type": "date"
+    },
+    "posts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::post.post",
+      "mappedBy": "atlasEntry"
+    },
+    "safetyNotes": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.safety-note"
+    },
+    "fieldData": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.field-data"
+    },
+    "sources": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.source"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

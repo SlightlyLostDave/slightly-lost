@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_shared_safety_notes",
+  "info": {
+    "displayName": "Safety Note",
+    "icon": "shield",
+    "description": "One hazard worth naming, rendered as the safety notice on an atlas entry page. Be specific: a notice that says nothing trains readers to skip the ones that say something."
+  },
+  "options": {},
+  "attributes": {
+    "heading": {
+      "type": "string"
+    },
+    "body": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

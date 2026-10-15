@@ -86,6 +86,12 @@
       "relation": "manyToOne",
       "target": "api::author.author"
     },
+    "atlasEntry": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::atlas-entry.atlas-entry",
+      "inversedBy": "posts"
+    },
     "fieldData": {
       "type": "component",
       "repeatable": true,
