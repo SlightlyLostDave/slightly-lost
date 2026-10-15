@@ -2,10 +2,15 @@
 import Label from '@/components/primitives/Label.astro'
 import Hairline from '@/components/primitives/Hairline.astro'
 import Button from '@/components/primitives/Button.astro'
-import { homepage } from '@/config'
+import { homepage, atlas as atlasConfig, atlasStatusBySlug, type AtlasMarker } from '@/config'
 
 const { atlas: heading } = homepage.sectionHeadings
 const { atlas, atlasStats } = homepage
+
+const swatchClassByMarker: Record<AtlasMarker, string> = {
+  primary: 'h-3 w-3 bg-accent',
+  secondary: 'h-2 w-2 bg-sage',
+}
 ---
 
 <!--
@@ -69,14 +74,6 @@ const { atlas, atlasStats } = homepage
             stroke-width="2"
             class="text-rule-strong"
           />
-          <polyline
-            points="96,392 148,330 186,286 244,268 292,222 348,206 402,166 452,140"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-dasharray="7 7"
-            class="text-sage"
-          />
           <circle cx="244" cy="268" r="8" fill="currentColor" class="text-accent" />
           <circle cx="402" cy="166" r="8" fill="currentColor" class="text-accent" />
           <circle cx="148" cy="330" r="4.5" fill="currentColor" class="text-sage" />
@@ -88,18 +85,12 @@ const { atlas, atlasStats } = homepage
       </div>
 
       <div class="flex flex-wrap gap-8 font-mono text-label uppercase text-text-muted">
-        <span class="flex items-center gap-2">
-          <span aria-hidden="true" class="block h-3 w-3 rounded-full bg-accent"></span>
-          {atlas.legend.published}
-        </span>
-        <span class="flex items-center gap-2">
-          <span aria-hidden="true" class="block h-2 w-2 rounded-full bg-sage"></span>
-          {atlas.legend.logged}
-        </span>
-        <span class="flex items-center gap-2">
-          <span aria-hidden="true" class="block h-px w-4 bg-sage"></span>
-          {atlas.legend.route}
-        </span>
+        {atlasConfig.legend.map((item) => (
+          <span class="flex items-center gap-2">
+            <span aria-hidden="true" class:list={['block rounded-full', swatchClassByMarker[item.marker]]}></span>
+            {atlasStatusBySlug[item.status].name}
+          </span>
+        ))}
       </div>
     </div>
   </div>

@@ -1,3 +1,5 @@
+import { atlas as atlasConfig, atlasStatusBySlug, atlasLocationPolicyBySlug } from './atlas'
+
 export interface HomepageHero {
   kicker: string
   headline: string
@@ -33,18 +35,11 @@ export interface HomepageGuideLogbookCard {
   imageAlt: string
 }
 
-export interface HomepageAtlasLegend {
-  published: string
-  logged: string
-  route: string
-}
-
 export interface HomepageAtlas {
   label: string
   intro: string
   ctaLabel: string
   href: string
-  legend: HomepageAtlasLegend
 }
 
 export interface HomepageNewsletter {
@@ -122,22 +117,17 @@ export const homepage = {
     newsletter: 'One dispatch a month, sent when there is something to say',
   },
   atlas: {
-    label: 'The Atlas',
+    label: atlasConfig.label,
     intro:
       'Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong to somebody.',
     ctaLabel: 'Open the atlas',
     // The atlas route lands in Phase 3; this link is a known 404 until then.
     href: '/atlas',
-    legend: {
-      published: 'Site note published',
-      logged: 'Logged, not written up',
-      route: 'Route walked',
-    },
   },
   atlasStats: [
     { label: 'Entries', value: 214 },
-    { label: 'Visited', value: 96 },
-    { label: 'Withheld', value: 31 },
+    { label: atlasStatusBySlug.visited.name, value: 96 },
+    { label: atlasLocationPolicyBySlug.withheld.name, value: 31 },
   ],
   guidesLogbooks: [
     {

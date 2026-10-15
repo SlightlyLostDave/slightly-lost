@@ -76,9 +76,9 @@ export const pillars = [
     slug: 'folklore',
     name: 'Folklore',
     description:
-      'The Haunted Atlas. Stories attached to places, and what the places look like now.',
+      'Stories attached to places, and what the places look like now.',
     intro:
-      'The Haunted Atlas started as a joke and turned into the largest pillar on the site. Every entry is attached to a real, visitable place, and tries to separate what is actually told locally from what has been added since by the internet. The place is real either way. What happened there is a separate question, and these dispatches try to keep the two apart.',
+      'This started as a joke and turned into the largest pillar on the site. Every entry is attached to a real, visitable place, and tries to separate what is actually told locally from what has been added since by the internet. The place is real either way. What happened there is a separate question, and these dispatches try to keep the two apart.',
     number: '06',
   },
 ] as const satisfies readonly Pillar[]

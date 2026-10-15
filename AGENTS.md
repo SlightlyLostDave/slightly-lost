@@ -56,6 +56,29 @@ Node 24 LTS. TypeScript strict. Zod 4.
 - Derived fields are computed once in the loader, never in a template: reading time, photograph count, the post href, and the pillar display data.
 - The post href is built from the pillar slug and the entry slug, in the loader. Never construct it in a component.
 
+## Content pipeline, from Phase 2
+
+- Strapi lives in `cms/` in this repository. It is a separate npm project with its own dependencies; never add Strapi packages to the root `package.json`.
+- Strapi is never in the runtime path. The site fetches at build time through the loader in `src/loaders/strapi.ts` and nothing else ever talks to it.
+- Content collections are defined in `src/content.config.ts` at the root of `src`. Entries have `id`, not `slug`. Render with the standalone `render(entry)`.
+- Article bodies are a Strapi dynamic zone, not rich text. Each component in the zone maps to an existing Astro component. Adding a new body component means adding it in three places: the Strapi schema, the Zod schema in `src/content.config.ts`, and the switch in `ArticleBody.astro`. All three or none.
+- Never render CMS HTML with `set:html` outside `Prose`, and never from a field that is not a controlled rich text block.
+- The read-only Strapi API token lives in `STRAPI_TOKEN` and must never carry a `PUBLIC_` prefix. Strapi's public role has no permissions at all.
+- Derived fields are computed once in the loader, never in a template: reading time, photograph count, the post href, and the pillar display data.
+- The post href is built from the pillar slug and the entry slug, in the loader. Never construct it in a component.
+
+## The Atlas, from Phase 3
+
+- Location policy is enforced in `src/lib/location-policy.ts` and applied in the loader, never in a template, never in a component, never at render time.
+- Precise coordinates for a `fuzzed` or `withheld` entry must never reach the content store, the GeoJSON, the HTML, or any client bundle. The loader is the only code that ever sees them and it discards them immediately.
+- `withheld` means the geometry key is absent, not null and not zero. A template must not be able to write `entry.location ?? fallback` and get something.
+- `fuzzed` means two decimal places, applied once in the loader. Never round at render time; a value that arrives at a template is already final.
+- Never weaken, bypass, or add an override to the policy. If a page seems to need precise coordinates, the answer is that the page is wrong.
+- `getPublishedAtlasEntries()` in `src/lib/atlas.ts` is the choke point for every listing, feed, and map, exactly as `getPublishedPosts()` is for posts.
+- The atlas list is the canonical representation and the map is an enhancement. Every entry must be reachable and readable with JavaScript disabled.
+- MapLibre stays on the 5.x line and loads only on the atlas route, as a `client:visible` island. If it appears in any other route's bundle, that is a bug.
+- Run `npm test` before finishing any task that touches the atlas.
+
 ## Code style
 
 - TypeScript strict, no `any`.
