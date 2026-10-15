@@ -15,7 +15,12 @@
     "lint": "eslint .",
     "cms:dev": "npm run develop --prefix cms",
     "cms:build": "npm run build --prefix cms",
-    "cms:seed": "npm run seed --prefix cms"
+    "cms:seed": "npm run seed --prefix cms",
+    "pretest:e2e": "npm run build && (astro preview stop || true) && npm run preview -- --port 4400",
+    "test:e2e": "playwright test",
+    "posttest:e2e": "astro preview stop",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
@@ -28,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@types/qs": "^6.15.1",
     "eslint": "^10.9.0",
     "eslint-plugin-astro": "^3.1.0",

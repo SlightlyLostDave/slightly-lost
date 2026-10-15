@@ -67,7 +67,7 @@ export interface HomepageConfig {
 export const homepage = {
   hero: {
     kicker: 'Ontario & elsewhere / since 2005',
-    headline: 'Go looking for wondrous things.',
+    headline: 'Go looking for hidden things.',
     subhead:
       'Abandoned locales, drowned villages, and the long way round to dinner. Notes from where my curiosity leads me.',
     coordinates: '38.7231° N, 105.1259° W',
