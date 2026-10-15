@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import qs from 'qs'
 import type { Loader, LoaderContext, MetaStore } from 'astro/loaders'
 import { pillarByEnum, type PillarEnum } from '@/config/pillars'
@@ -582,6 +583,7 @@ interface StoredAtlasEntryData {
   name: string
   kind: AtlasKindSlug
   status: AtlasStatusSlug
+  location?: Coordinates
   locationPolicy: AtlasLocationPolicySlug
   publishedAt: Date | null
 }
@@ -635,6 +637,34 @@ function logAtlasContentReport(
   }
 }
 
+// scripts/assert-atlas-policy.mjs reads this path; keep the two in step.
+const ATLAS_POLICY_MANIFEST_FILENAME = 'atlas-policy-manifest.json'
+
+// What scripts/assert-atlas-policy.mjs checks the built GeoJSON and HTML
+// against: each entry's name and policy, which the GeoJSON deliberately does
+// not carry. It holds no coordinates of any kind. It goes in Astro's cache
+// directory, which is never deployed, and is rewritten on every build because
+// atlas entries always fetch in full.
+async function writeAtlasPolicyManifest(
+  store: LoaderContext['store'],
+  cacheDir: URL
+): Promise<void> {
+  const atlasEntries = store.values() as unknown as { id: string; data: StoredAtlasEntryData }[]
+  const manifest = atlasEntries.map((entry) => ({
+    slug: entry.id,
+    name: entry.data.name,
+    locationPolicy: entry.data.locationPolicy,
+    published: entry.data.publishedAt !== null,
+    hasLocation: 'location' in entry.data,
+  }))
+
+  await mkdir(cacheDir, { recursive: true })
+  await writeFile(
+    new URL(ATLAS_POLICY_MANIFEST_FILENAME, cacheDir),
+    JSON.stringify(manifest, null, 2)
+  )
+}
+
 export function strapiLoader(opts: {
   contentType: string
   populate?: string | string[] | Record<string, unknown>
@@ -642,7 +672,15 @@ export function strapiLoader(opts: {
 }): Loader {
   return {
     name: `strapi-${opts.contentType}`,
-    async load({ store, meta, parseData, generateDigest, logger, collection }: LoaderContext) {
+    async load({
+      store,
+      meta,
+      parseData,
+      generateDigest,
+      logger,
+      collection,
+      config,
+    }: LoaderContext) {
       const fullSync = shouldDoFullSync(meta)
       const lastSyncedAt = fullSync ? undefined : meta.get(META_LAST_SYNC_KEY)
 
@@ -702,6 +740,7 @@ export function strapiLoader(opts: {
         logPostContentReport(store, logger)
       } else if (opts.contentType === 'atlas-entries') {
         logAtlasContentReport(store, logger)
+        await writeAtlasPolicyManifest(store, config.cacheDir)
       }
     },
   }
