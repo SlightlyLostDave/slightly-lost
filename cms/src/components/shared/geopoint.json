@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_shared_geopoints",
+  "info": {
+    "displayName": "Geopoint",
+    "icon": "pinMap",
+    "description": "The coordinates as recorded, in decimal degrees. Precision is not stored here: how precisely a place may be published is the entry's locationPolicy, applied in the loader."
+  },
+  "options": {},
+  "attributes": {
+    "lat": {
+      "type": "decimal",
+      "required": true,
+      "min": -90,
+      "max": 90
+    },
+    "lng": {
+      "type": "decimal",
+      "required": true,
+      "min": -180,
+      "max": 180
+    }
+  }
+}

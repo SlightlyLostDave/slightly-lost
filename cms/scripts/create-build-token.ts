@@ -6,6 +6,11 @@
 // Rerunning is safe: if a token named "build" already exists it is
 // regenerated rather than duplicated, and the previous key stops working.
 //
+// The token is custom, not Strapi's read-only type. Read-only grants find and
+// findOne on every content API route, users and uploads included. Custom
+// grants exactly the list below and nothing else, so a new content type is
+// unreadable by the build until it is added here.
+//
 // Strapi logs its own startup lines to stdout, so the key is written to the
 // file named by BUILD_TOKEN_FILE when that is set (what CI does), and printed
 // on a labelled line otherwise.
@@ -13,6 +18,16 @@ import { compileStrapi, createStrapi } from '@strapi/strapi'
 import { writeFile } from 'node:fs/promises'
 
 const TOKEN_NAME = 'build'
+
+const READABLE_CONTENT_TYPES = [
+  'api::post.post',
+  'api::author.author',
+  'api::tag.tag',
+  'api::series.series',
+  'api::atlas-entry.atlas-entry',
+]
+
+const TOKEN_PERMISSIONS = READABLE_CONTENT_TYPES.flatMap((uid) => [`${uid}.find`, `${uid}.findOne`])
 
 async function run() {
   const appContext = await compileStrapi()
@@ -22,13 +37,19 @@ async function run() {
     const tokenService = strapi.service('admin::api-token-content-api')
     const existing = await tokenService.getByName(TOKEN_NAME)
 
+    if (existing) {
+      // Also migrates a token minted as read-only before it became custom.
+      await tokenService.update(existing.id, { type: 'custom', permissions: TOKEN_PERMISSIONS })
+    }
+
     const { accessKey } = existing
       ? await tokenService.regenerate(existing.id)
       : await tokenService.create({
           name: TOKEN_NAME,
           description:
             'Read-only token for the Astro site build. Managed by scripts/create-build-token.ts.',
-          type: 'read-only',
+          type: 'custom',
+          permissions: TOKEN_PERMISSIONS,
           lifespan: null,
         })
 
