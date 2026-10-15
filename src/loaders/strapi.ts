@@ -1,9 +1,21 @@
 import qs from 'qs'
 import type { Loader, LoaderContext, MetaStore } from 'astro/loaders'
 import { pillarByEnum, type PillarEnum } from '@/config/pillars'
+import {
+  allAtlasKinds,
+  allAtlasLocationPolicies,
+  allAtlasStatuses,
+  atlasKindBySlug,
+  type AtlasKindSlug,
+  type AtlasLocationPolicySlug,
+  type AtlasStatusSlug,
+} from '@/config/atlas'
 import { warnIfBelowMinimumHeroDimension } from '@/lib/images'
+import { applyLocationPolicy, type Coordinates } from '@/lib/location-policy'
 
-const SCHEMA_VERSION = '1'
+// Bumped to 2 when posts gained the atlasEntry reference and the atlas-entries
+// collection arrived: every cached entry predates both and needs a full resync.
+const SCHEMA_VERSION = '2'
 const META_LAST_SYNC_KEY = 'lastSyncedAt'
 const META_SCHEMA_VERSION_KEY = 'schemaVersion'
 
@@ -89,6 +101,7 @@ interface StrapiPostRaw {
   seriesOrder?: number | null
   tags?: StrapiTagRaw[] | null
   author?: StrapiAuthorRaw | null
+  atlasEntry?: StrapiRelationRef | null
   fieldData?:
     { label: string; value: string; unit?: string | null; accent?: boolean | null }[] | null
   sources?: StrapiSourceRaw[] | null
@@ -99,6 +112,35 @@ interface StrapiPostRaw {
     canonicalUrl?: string | null
     noindex?: boolean | null
   } | null
+  publishedAt: string | null
+  updatedAt: string
+}
+
+interface StrapiSafetyNoteRaw {
+  heading?: string | null
+  body: string
+}
+
+// Strapi names the status field atlasStatus because it reserves `status` for
+// draft and publish. The collection stores it as `status`.
+interface StrapiAtlasEntryRaw {
+  slug: string
+  name: string
+  kind: AtlasKindSlug
+  atlasStatus: AtlasStatusSlug
+  location?: Coordinates | null
+  locationPolicy: AtlasLocationPolicySlug
+  locationNote?: string | null
+  summary: string
+  body?: StrapiBodyItemRaw[] | null
+  hero?: StrapiMediaRaw | null
+  gallery?: StrapiMediaRaw[] | null
+  firstVisited?: string | null
+  lastVisited?: string | null
+  safetyNotes?: StrapiSafetyNoteRaw[] | null
+  fieldData?: StrapiPostRaw['fieldData']
+  sources?: StrapiSourceRaw[] | null
+  seo?: StrapiPostRaw['seo']
   publishedAt: string | null
   updatedAt: string
 }
@@ -202,7 +244,7 @@ function normalizeBodyItem(item: StrapiBodyItemRaw): Record<string, unknown> {
         attribution: item.attribution ?? undefined,
       }
     default:
-      throw new Error(`strapi loader (posts): unrecognized body component "${item.__component}"`)
+      throw new Error(`strapi loader: unrecognized body component "${item.__component}"`)
   }
 }
 
@@ -239,6 +281,7 @@ function normalizePost(
     tags: (raw.tags ?? []).map((tag) => tag.slug),
     author: raw.author?.slug,
     authorName: raw.author?.name,
+    atlasEntry: raw.atlasEntry?.slug,
     fieldData: (raw.fieldData ?? []).map((item) => ({
       label: item.label,
       value: item.value,
@@ -262,6 +305,58 @@ function normalizePost(
     readingTime: computeReadingTime(raw.body),
     photoCount: computePhotoCount(raw.gallery, raw.body),
     status: raw.publishedAt ? 'published' : 'draft',
+    publishedAt: raw.publishedAt,
+    updatedAt: raw.updatedAt,
+  }
+}
+
+function normalizeAtlasEntry(raw: StrapiAtlasEntryRaw): Record<string, unknown> {
+  // The only read of the recorded coordinates anywhere in the site. Only the
+  // policy's result is kept. When the policy publishes nothing, the location
+  // key is left off entirely, not set to undefined or null, so a withheld
+  // entry cannot carry a present-but-empty location through the store for a
+  // template to fall back on.
+  const publishedLocation = applyLocationPolicy(raw.location ?? undefined, raw.locationPolicy)
+  const body = raw.body ?? []
+
+  return {
+    name: raw.name,
+    kind: raw.kind,
+    status: raw.atlasStatus,
+    ...(publishedLocation ? { location: publishedLocation } : {}),
+    locationPolicy: raw.locationPolicy,
+    locationNote: raw.locationNote ?? undefined,
+    summary: raw.summary,
+    body: body.map(normalizeBodyItem),
+    hero: normalizeImage(raw.hero),
+    gallery: normalizeImages(raw.gallery),
+    firstVisited: raw.firstVisited ?? undefined,
+    lastVisited: raw.lastVisited ?? undefined,
+    safetyNotes: (raw.safetyNotes ?? []).map((note) => ({
+      heading: note.heading ?? undefined,
+      body: note.body,
+    })),
+    fieldData: (raw.fieldData ?? []).map((item) => ({
+      label: item.label,
+      value: item.value,
+      unit: item.unit ?? undefined,
+      accent: item.accent ?? false,
+    })),
+    sources: (raw.sources ?? []).map((source) => ({
+      citation: formatCitation(source),
+      note: source.note ?? undefined,
+    })),
+    seo: raw.seo
+      ? {
+          metaTitle: raw.seo.metaTitle ?? undefined,
+          metaDescription: raw.seo.metaDescription ?? undefined,
+          ogImage: normalizeImage(raw.seo.ogImage),
+          canonicalUrl: raw.seo.canonicalUrl ?? undefined,
+          noindex: raw.seo.noindex ?? false,
+        }
+      : undefined,
+    href: `/atlas/${raw.slug}`,
+    photoCount: computePhotoCount(raw.gallery, body),
     publishedAt: raw.publishedAt,
     updatedAt: raw.updatedAt,
   }
@@ -305,6 +400,8 @@ function normalizeEntry(
       return normalizeTag(raw as unknown as StrapiTagRaw)
     case 'series-entries':
       return normalizeSeries(raw as unknown as StrapiSeriesRaw)
+    case 'atlas-entries':
+      return normalizeAtlasEntry(raw as unknown as StrapiAtlasEntryRaw)
     default:
       throw new Error(`strapi loader: no normalizer registered for content type "${contentType}"`)
   }
@@ -479,6 +576,65 @@ function logPostContentReport(
   )
 }
 
+// Deliberately not importing the `AtlasEntry` type, for the same circular
+// dependency reason as StoredPostData above.
+interface StoredAtlasEntryData {
+  name: string
+  kind: AtlasKindSlug
+  status: AtlasStatusSlug
+  locationPolicy: AtlasLocationPolicySlug
+  publishedAt: Date | null
+}
+
+// An exact coordinate on one of these kinds points a stranger at an open
+// shaft, a dive site, or a building someone may still own. The policy allows
+// it, so this does not fail the build; it makes sure it was a decision.
+const kindsWorthASecondLookWhenExact: readonly AtlasKindSlug[] = ['mine', 'wreck', 'structure']
+
+// Reads from the store for the same reason logPostContentReport does.
+function logAtlasContentReport(
+  store: LoaderContext['store'],
+  logger: LoaderContext['logger']
+): void {
+  const atlasEntries = store.values() as unknown as { data: StoredAtlasEntryData }[]
+  const drafts = atlasEntries.filter((entry) => entry.data.publishedAt === null)
+
+  const countBySlug = <Slug extends string>(
+    vocabulary: readonly { slug: Slug }[],
+    fieldOf: (data: StoredAtlasEntryData) => Slug
+  ): string =>
+    vocabulary
+      .map(({ slug }) => {
+        const count = atlasEntries.filter((entry) => fieldOf(entry.data) === slug).length
+        return `${count} ${slug}`
+      })
+      .join(', ')
+
+  logger.info(
+    `content report: ${atlasEntries.length} atlas entries total, ${drafts.length} drafts included`
+  )
+  logger.info(`content report: by kind, ${countBySlug(allAtlasKinds, (data) => data.kind)}`)
+  logger.info(`content report: by status, ${countBySlug(allAtlasStatuses, (data) => data.status)}`)
+  logger.info(
+    `content report: by location policy, ${countBySlug(allAtlasLocationPolicies, (data) => data.locationPolicy)}`
+  )
+
+  const exactOnSensitiveKind = atlasEntries.filter(
+    (entry) =>
+      entry.data.locationPolicy === 'exact' &&
+      kindsWorthASecondLookWhenExact.includes(entry.data.kind)
+  )
+  if (exactOnSensitiveKind.length > 0) {
+    logger.warn(
+      `content report: ${exactOnSensitiveKind.length} atlas entry(s) publish exact coordinates ` +
+        `for a ${kindsWorthASecondLookWhenExact.join(', ')}; confirm before publishing: ` +
+        exactOnSensitiveKind
+          .map((entry) => `${entry.data.name} (${atlasKindBySlug[entry.data.kind].name})`)
+          .join(', ')
+    )
+  }
+}
+
 export function strapiLoader(opts: {
   contentType: string
   populate?: string | string[] | Record<string, unknown>
@@ -500,9 +656,13 @@ export function strapiLoader(opts: {
         // silently keep serving whatever publish state was cached the last
         // time that post's other fields changed - true regardless of which
         // way STRAPI_PREVIEW is set on a given build, so posts always fetch
-        // in full. The per-entry digest below still skips reprocessing
-        // anything that's actually unchanged.
-        updatedAtGte: opts.contentType === 'posts' ? undefined : lastSyncedAt,
+        // in full. Atlas entries share that publish lifecycle, so they do
+        // too. The per-entry digest below still skips reprocessing anything
+        // that's actually unchanged.
+        updatedAtGte:
+          opts.contentType === 'posts' || opts.contentType === 'atlas-entries'
+            ? undefined
+            : lastSyncedAt,
         includeDrafts: opts.includeDrafts,
       })
 
@@ -540,6 +700,8 @@ export function strapiLoader(opts: {
 
       if (opts.contentType === 'posts') {
         logPostContentReport(store, logger)
+      } else if (opts.contentType === 'atlas-entries') {
+        logAtlasContentReport(store, logger)
       }
     },
   }

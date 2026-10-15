@@ -2,12 +2,39 @@ import { defineCollection, reference } from 'astro:content'
 import { z } from 'astro/zod'
 import { strapiLoader } from '@/loaders/strapi'
 import { allPillars, type PillarSlug } from '@/config/pillars'
+import {
+  allAtlasKinds,
+  allAtlasLocationPolicies,
+  allAtlasStatuses,
+  type AtlasKindSlug,
+  type AtlasLocationPolicySlug,
+  type AtlasStatusSlug,
+} from '@/config/atlas'
 
 const pillarSlugValues = allPillars.map((pillar) => pillar.slug) as [PillarSlug, ...PillarSlug[]]
 const pillarSlugSchema = z.enum(pillarSlugValues)
 
+const atlasKindValues = allAtlasKinds.map((kind) => kind.slug) as [
+  AtlasKindSlug,
+  ...AtlasKindSlug[],
+]
+const atlasKindSchema = z.enum(atlasKindValues)
+
+const atlasStatusValues = allAtlasStatuses.map((status) => status.slug) as [
+  AtlasStatusSlug,
+  ...AtlasStatusSlug[],
+]
+const atlasStatusSchema = z.enum(atlasStatusValues)
+
+const atlasLocationPolicyValues = allAtlasLocationPolicies.map((policy) => policy.slug) as [
+  AtlasLocationPolicySlug,
+  ...AtlasLocationPolicySlug[],
+]
+const atlasLocationPolicySchema = z.enum(atlasLocationPolicyValues)
+
 // Same import.meta.env access pattern the loader already uses for
-// STRAPI_URL/STRAPI_TOKEN. When true, the posts loader also fetches drafts.
+// STRAPI_URL/STRAPI_TOKEN. When true, the posts and atlas loaders also fetch
+// drafts.
 const STRAPI_PREVIEW = import.meta.env.STRAPI_PREVIEW === 'true'
 
 const imageSchema = z.object({
@@ -112,6 +139,7 @@ const postSchema = z.object({
   tags: z.array(reference('tags')).default([]),
   author: reference('authors').optional(),
   authorName: z.string().optional(),
+  atlasEntry: reference('atlasEntries').optional(),
   fieldData: z.array(fieldDataSchema).default([]),
   sources: z.array(sourceSchema).default([]),
   seo: seoSchema.optional(),
@@ -122,6 +150,44 @@ const postSchema = z.object({
   publishedAt: z.coerce.date().nullable(),
   updatedAt: z.coerce.date(),
 })
+
+const safetyNoteSchema = z.object({
+  heading: z.string().optional(),
+  body: z.string().min(1, 'a safety note needs a body'),
+})
+
+// location has already been through applyLocationPolicy in the loader, so
+// whatever arrives here is final. Publication is read from publishedAt rather
+// than a status field, because `status` here is the atlas status.
+const atlasEntrySchema = z
+  .object({
+    name: z.string(),
+    kind: atlasKindSchema,
+    status: atlasStatusSchema,
+    location: z.object({ lat: z.number(), lng: z.number() }).optional(),
+    locationPolicy: atlasLocationPolicySchema,
+    locationNote: z.string().optional(),
+    summary: z.string().min(1, 'summary is required'),
+    body: z.array(bodyItemSchema).default([]),
+    hero: imageSchema.optional(),
+    gallery: z.array(imageSchema).default([]),
+    firstVisited: z.coerce.date().optional(),
+    lastVisited: z.coerce.date().optional(),
+    safetyNotes: z.array(safetyNoteSchema).default([]),
+    fieldData: z.array(fieldDataSchema).default([]),
+    sources: z.array(sourceSchema).default([]),
+    seo: seoSchema.optional(),
+    href: z.string(),
+    photoCount: z.number(),
+    publishedAt: z.coerce.date().nullable(),
+    updatedAt: z.coerce.date(),
+  })
+  // The loader omits the key for a withheld entry, so the key itself must be
+  // absent, not merely undefined. A failure here is a policy leak.
+  .refine((entry) => entry.locationPolicy !== 'withheld' || !('location' in entry), {
+    message: 'a withheld atlas entry must not carry a location',
+    path: ['location'],
+  })
 
 const authorSchema = z.object({
   name: z.string(),
@@ -147,6 +213,7 @@ const postPopulate = {
   author: true,
   tags: true,
   series: { fields: ['slug'] },
+  atlasEntry: { fields: ['slug'] },
   fieldData: true,
   sources: true,
   seo: { populate: ['ogImage'] },
@@ -163,6 +230,17 @@ const postPopulate = {
 const authorPopulate = { avatar: true }
 
 const seriesPopulate = { hero: true, posts: { fields: ['slug'] } }
+
+const atlasEntryPopulate = {
+  location: true,
+  hero: true,
+  gallery: true,
+  safetyNotes: true,
+  fieldData: true,
+  sources: true,
+  seo: { populate: ['ogImage'] },
+  body: postPopulate.body,
+}
 
 const posts = defineCollection({
   loader: strapiLoader({
@@ -188,10 +266,20 @@ const series = defineCollection({
   schema: seriesSchema,
 })
 
-export const collections = { posts, authors, tags, series }
+const atlasEntries = defineCollection({
+  loader: strapiLoader({
+    contentType: 'atlas-entries',
+    populate: atlasEntryPopulate,
+    includeDrafts: STRAPI_PREVIEW,
+  }),
+  schema: atlasEntrySchema,
+})
+
+export const collections = { posts, authors, tags, series, atlasEntries }
 
 export type Post = z.infer<typeof postSchema>
 export type PostBody = z.infer<typeof bodyItemSchema>
 export type Author = z.infer<typeof authorSchema>
 export type Tag = z.infer<typeof tagSchema>
 export type Series = z.infer<typeof seriesSchema>
+export type AtlasEntry = z.infer<typeof atlasEntrySchema>
