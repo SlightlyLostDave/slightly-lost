@@ -1,12 +1,11 @@
 ---
 // Flat vector stand-in for a photograph that does not exist yet. Five
 // stacked bands (sky / far ridge / mid ground / near ground / foreground)
-// drawn from four consecutive windows of the ink-to-paper ramp already
-// declared in @theme (src/styles/app.css) — fill="currentColor" resolves
-// each rect's own text-* utility, so this introduces no new hex values and
-// needs no manual sync with app.css. Delete this file and pass a real `src`
-// at each Figure/FullBleed call site once photography exists; no other
-// component changes needed.
+// drawn from four consecutive windows of the fixed photo-1..8 tones in
+// @theme (src/styles/app.css), which never change with the theme because a
+// photograph would not. fill="currentColor" resolves each rect's own text-*
+// utility. Delete this file and pass a real `src` at each Figure/FullBleed
+// call site once photography exists; no other component changes needed.
 interface Props {
   variant?: 'a' | 'b' | 'c' | 'd'
   class?: string
@@ -15,10 +14,10 @@ interface Props {
 const { variant = 'a', class: className } = Astro.props
 
 const bandsByVariant: Record<NonNullable<Props['variant']>, string[]> = {
-  a: ['text-fog', 'text-linen', 'text-mist', 'text-dun', 'text-slate'],
-  b: ['text-linen', 'text-mist', 'text-dun', 'text-slate', 'text-loam'],
-  c: ['text-mist', 'text-dun', 'text-slate', 'text-loam', 'text-graphite'],
-  d: ['text-dun', 'text-slate', 'text-loam', 'text-graphite', 'text-peat'],
+  a: ['text-photo-1', 'text-photo-2', 'text-photo-3', 'text-photo-4', 'text-photo-5'],
+  b: ['text-photo-2', 'text-photo-3', 'text-photo-4', 'text-photo-5', 'text-photo-6'],
+  c: ['text-photo-3', 'text-photo-4', 'text-photo-5', 'text-photo-6', 'text-photo-7'],
+  d: ['text-photo-4', 'text-photo-5', 'text-photo-6', 'text-photo-7', 'text-photo-8'],
 }
 const bands = bandsByVariant[variant]
 ---

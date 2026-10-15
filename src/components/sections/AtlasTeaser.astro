@@ -5,20 +5,22 @@ import Button from '@/components/primitives/Button.astro'
 import { homepage } from '@/config'
 
 const { atlas: heading } = homepage.sectionHeadings
-const { atlasStats } = homepage
+const { atlas, atlasStats } = homepage
 ---
 
+<!--
+  md:grid-cols-[1fr_1.05fr]: the mockup gives the map plate a hair more
+  width than the copy column. A one-off column ratio, no @theme token.
+-->
 <section class="bg-surface-raised px-6 py-16 md:py-(--spacing-section)">
   <div class="max-w-content mx-auto grid grid-cols-1 items-center gap-16 md:grid-cols-[1fr_1.05fr] md:gap-20">
     <div class="flex flex-col gap-8">
-      <Label accentRule>The Atlas</Label>
+      <Label accentRule>{atlas.label}</Label>
       <h2 class="font-display text-display-l text-text-strong" style="font-weight: var(--weight-display)">
         {heading}
       </h2>
       <p class="max-w-measure font-display text-body-l text-text-muted">
-        Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately
-        fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong
-        to somebody.
+        {atlas.intro}
       </p>
       <Hairline />
       <div data-anim="atlasStats" class="grid grid-cols-3 gap-6">
@@ -35,11 +37,13 @@ const { atlasStats } = homepage
           </div>
         ))}
       </div>
-      <Button href="/atlas" variant="secondary" class="self-start">Open the atlas</Button>
+      <Button href={atlas.href} variant="secondary" class="self-start">{atlas.ctaLabel}</Button>
     </div>
 
     <div class="flex flex-col gap-4">
-      <div class="border border-hairline bg-surface p-6">
+      <!-- A map is an object on the page rather than part of it, so the plate
+           keeps its own dark ground in both themes. See app.css. -->
+      <div data-theme="dark" class="border border-hairline bg-surface p-6">
         <svg viewBox="0 0 620 440" class="block h-auto w-full" role="presentation" aria-hidden="true">
           <g stroke="currentColor" stroke-width="1" class="text-hairline">
             <line x1="0" y1="88" x2="620" y2="88" />
@@ -86,15 +90,15 @@ const { atlasStats } = homepage
       <div class="flex flex-wrap gap-8 font-mono text-label uppercase text-text-muted">
         <span class="flex items-center gap-2">
           <span aria-hidden="true" class="block h-3 w-3 rounded-full bg-accent"></span>
-          Site note published
+          {atlas.legend.published}
         </span>
         <span class="flex items-center gap-2">
           <span aria-hidden="true" class="block h-2 w-2 rounded-full bg-sage"></span>
-          Logged, not written up
+          {atlas.legend.logged}
         </span>
         <span class="flex items-center gap-2">
           <span aria-hidden="true" class="block h-px w-4 bg-sage"></span>
-          Route walked
+          {atlas.legend.route}
         </span>
       </div>
     </div>

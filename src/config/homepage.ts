@@ -33,7 +33,22 @@ export interface HomepageGuideLogbookCard {
   imageAlt: string
 }
 
+export interface HomepageAtlasLegend {
+  published: string
+  logged: string
+  route: string
+}
+
+export interface HomepageAtlas {
+  label: string
+  intro: string
+  ctaLabel: string
+  href: string
+  legend: HomepageAtlasLegend
+}
+
 export interface HomepageNewsletter {
+  intro: string
   finePrint: string
 }
 
@@ -59,6 +74,7 @@ export interface HomepageConfig {
   interstitial: HomepageInterstitial
   featuredDispatch: HomepageFeaturedDispatch
   sectionHeadings: HomepageSectionHeadings
+  atlas: HomepageAtlas
   atlasStats: readonly AtlasStat[]
   guidesLogbooks: readonly HomepageGuideLogbookCard[]
   newsletter: HomepageNewsletter
@@ -105,6 +121,19 @@ export const homepage = {
     guides: 'Guides and logbooks',
     newsletter: 'One dispatch a month, sent when there is something to say',
   },
+  atlas: {
+    label: 'The Atlas',
+    intro:
+      'Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong to somebody.',
+    ctaLabel: 'Open the atlas',
+    // The atlas route lands in Phase 3; this link is a known 404 until then.
+    href: '/atlas',
+    legend: {
+      published: 'Site note published',
+      logged: 'Logged, not written up',
+      route: 'Route walked',
+    },
+  },
   atlasStats: [
     { label: 'Entries', value: 214 },
     { label: 'Visited', value: 96 },
@@ -131,6 +160,8 @@ export const homepage = {
     },
   ],
   newsletter: {
+    intro:
+      'No schedule, no growth strategy, no sponsored anything. If a month is quiet you will not hear from me.',
     finePrint:
       'One email a month at most. Unsubscribe link in every one. Sent via [ESP placeholder].',
   },

@@ -42,7 +42,7 @@ const [mobileAvif, mobileWebp, desktopAvif, desktopWebp, desktopFallback] =
        -translate-x-1/2: 100vw includes the scrollbar gutter on some
        browsers/OSes, which can itself introduce the horizontal scrollbar
        this component must avoid. A structural breakout formula, not a
-       design value — no token fits. */
+       design value; no token fits. */
     'relative mx-[calc(50%-50vw)] w-auto overflow-hidden',
     className,
   ]}
@@ -73,7 +73,10 @@ const [mobileAvif, mobileWebp, desktopAvif, desktopWebp, desktopFallback] =
   }
   {
     caption && (
-      <figcaption class="absolute bottom-4 left-6 max-w-[80%] bg-ink/70 px-2 py-1 font-mono text-caption text-paper wrap-break-word">
+      <figcaption
+        data-theme="dark"
+        class="bg-surface/70 text-caption text-text-strong absolute bottom-4 left-6 max-w-[80%] px-2 py-1 font-mono wrap-break-word"
+      >
         {caption}
       </figcaption>
     )

@@ -14,8 +14,11 @@ const placeholderVariants = ['a', 'b', 'c', 'd'] as const
 const placeholderVariant = placeholderVariants[Number(pillar.number) % placeholderVariants.length]
 ---
 
+<!-- data-theme="dark": a photograph keeps its tonality in both themes, so the
+     scrim and the type over it stay on the dark roles. See app.css. -->
 <section
   data-hero
+  data-theme="dark"
   class:list={[
     /* calc(50% - 50vw) breaks this element out of any centered ancestor to true
        viewport edges, matching FullBleed.astro's documented breakout formula.
@@ -47,7 +50,7 @@ const placeholderVariant = placeholderVariants[Number(pillar.number) % placehold
   }
 
   <!-- Scrim so text-text-strong/text-text-body stay legible over any hero
-       image in either theme, matching Hero.astro's after:bg-surface/70 scrim. -->
+       image, matching Hero.astro's after:bg-surface/70 scrim. -->
   <div class="absolute inset-0 bg-surface/70" aria-hidden="true"></div>
 
   <div

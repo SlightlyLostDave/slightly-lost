@@ -64,10 +64,17 @@ const formattedDate = new Intl.DateTimeFormat('en-GB', {
 })
   .format(post.publishedAt)
   .replaceAll('/', '.')
+
+// Derived from the href, so it is unique per post on a page.
+const titleId = `post-card-${post.href.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')}`
 ---
 
+<!-- aria-labelledby: the whole card is the target, but its accessible name is
+     the visible title alone rather than pillar, title, dek, and date run
+     together. -->
 <a
   href={post.href}
+  aria-labelledby={titleId}
   class="group border-hairline bg-surface-raised hover:border-rule-strong focus-visible:outline-accent flex flex-col gap-5 border focus-visible:outline-2 focus-visible:outline-offset-4 motion-safe:transition-colors"
 >
   {
@@ -104,6 +111,7 @@ const formattedDate = new Intl.DateTimeFormat('en-GB', {
     <span class="text-label text-sage font-mono uppercase">{pillar.name}</span>
 
     <h3
+      id={titleId}
       class="font-display text-display-m text-text-strong group-hover:decoration-accent group-focus-visible:decoration-accent underline decoration-transparent decoration-1 underline-offset-4"
       style="font-weight: var(--weight-display)"
     >
@@ -114,7 +122,7 @@ const formattedDate = new Intl.DateTimeFormat('en-GB', {
 
     <Hairline />
 
-    <div class="text-data text-text-muted flex items-center justify-between font-mono tabular-nums">
+    <div class="text-data text-text-subtle flex items-center justify-between font-mono tabular-nums">
       <span>{formattedDate}</span>
       <span>{post.readingTime} min</span>
     </div>

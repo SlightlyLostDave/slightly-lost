@@ -20,12 +20,23 @@ const { interstitial } = homepage
   it wins and visually covers the screen box, while data-hero-foreground's
   z-10 still outranks both and stays visible in front throughout. No
   @theme token fits a one-off viewport-relative offset used exactly once.
+  motion-reduce:mt-0: under reduced motion Hero.astro collapses to a plain
+  one-screen section with no runway, so the pull-up would land this section
+  squarely on top of the hero and hide it.
+
+  No reveal animation: this section already makes the strongest entrance on
+  the page by sliding up over the pinned hero, in the same viewport as the
+  parallax and the header flip. A reveal on top was a third moving thing.
+
+  The texture is a mask, not a background image, so it takes its tone from
+  a theme role and reads as a quiet wash on both ink and paper. The SVG
+  carries only alpha (two densities of black). mask-[url()] is a file path,
+  which no @theme token can hold.
 -->
-<section class=`bg-surface bg-[url(/assets/home/interstitial-bg.svg)] bg-cover bg-center relative z-0 mt-[-100svh]`>
-  <div
-    data-anim="reveal"
-    class="flex flex-col items-center gap-8 px-6 py-16 text-center md:pt-42 md:pb-38"
-  >
+<section
+  class="bg-surface relative z-0 mt-[-100svh] motion-reduce:mt-0 before:bg-surface-raised/50 before:absolute before:inset-0 before:mask-[url(/assets/home/interstitial-bg.svg)] before:mask-cover before:mask-center before:mask-no-repeat"
+>
+  <div class="relative flex flex-col items-center gap-8 px-6 py-16 text-center md:pt-42 md:pb-38">
     <Label>{interstitial.label}</Label>
     <p class="mx-auto max-w-md font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
       {interstitial.statement}

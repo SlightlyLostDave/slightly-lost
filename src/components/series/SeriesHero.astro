@@ -12,8 +12,10 @@ const { series, episodeCount } = Astro.props
 const { name, description, hero } = series.data
 ---
 
+<!-- data-theme="dark": same fixed-dark photograph treatment as PillarHero. -->
 <section
   data-hero
+  data-theme="dark"
   class:list={[
     /* Same breakout formula as PillarHero.astro. No @theme token fits a
        one-off hero height, so h-[70svh]/h-[720px] are arbitrary values. */

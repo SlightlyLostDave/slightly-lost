@@ -21,11 +21,15 @@ const rangeLabel = `${allPillars[0].number} to ${allPillars[allPillars.length - 
       {allPillars.map((pillar) => (
         <a
           href={`/field-notes/${pillar.slug}`}
-          aria-label={pillar.name}
+          aria-labelledby={`pillar-grid-${pillar.slug}`}
           class="flex flex-col gap-4 border-r border-b border-hairline p-10 motion-safe:transition-colors hover:bg-surface-raised focus-visible:bg-surface-raised"
         >
           <span class="font-mono text-data tabular-nums text-text-muted">{pillar.number}</span>
-          <h3 class="font-display text-display-m text-text-strong" style="font-weight: var(--weight-display)">
+          <h3
+            id={`pillar-grid-${pillar.slug}`}
+            class="font-display text-display-m text-text-strong"
+            style="font-weight: var(--weight-display)"
+          >
             {pillar.name}
           </h3>
           <p class="line-clamp-2 text-body text-text-muted">{pillar.description}</p>

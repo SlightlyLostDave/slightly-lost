@@ -23,7 +23,9 @@ toggle?.addEventListener('click', () => {
   if (goingLight) root.dataset.theme = 'light'
   else delete root.dataset.theme
 
-  if (meta) meta.content = goingLight ? '#f7f3ea' : '#1e1813'
+  // Base.astro renders both values onto the meta from app.css at build time.
+  const nextColor = goingLight ? meta?.dataset.light : meta?.dataset.dark
+  if (meta && nextColor) meta.content = nextColor
   syncState(goingLight)
 
   try {

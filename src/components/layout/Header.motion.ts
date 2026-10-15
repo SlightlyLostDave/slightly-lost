@@ -26,27 +26,43 @@ export const init: AnimationInit = (elements, { gsap, ScrollTrigger, reducedMoti
     function applyState(solid: boolean, animate: boolean) {
       if (!fillEl || !barEl) return
       const tween = animate ? gsap.to : gsap.set
+      // Only an animated tween has a will-change to clear. Passing clearProps:
+      // undefined to gsap.set throws, which broke the reduced-motion flip.
+      const cleanup = animate ? { clearProps: 'willChange' } : {}
       if (animate) gsap.set([fillEl, barEl], { willChange: 'transform' })
       tween(fillEl, {
         opacity: solid ? 1 : 0,
         scaleY: solid ? SOLID_HEIGHT / TALL_HEIGHT : 1,
         duration: animate ? 0.25 : 0,
         ease: 'power1.out',
-        clearProps: animate ? 'willChange' : undefined,
+        ...cleanup,
       })
       tween(barEl, {
         y: solid ? -BAR_SHIFT : 0,
         duration: animate ? 0.25 : 0,
         ease: 'power1.out',
-        clearProps: animate ? 'willChange' : undefined,
+        ...cleanup,
       })
       headerEl.dataset.headerState = solid ? 'solid' : 'transparent'
+      // Transparent sits over the always-dark hero photograph; solid takes
+      // the page's own theme again. See Header.astro.
+      if (solid) delete headerEl.dataset.theme
+      else headerEl.dataset.theme = 'dark'
     }
 
+    // The header goes solid when the first section after the hero reaches
+    // its bottom edge. On the homepage that section (Interstitial) slides up
+    // over the pinned hero screen, so the hero's own bottom edge would arrive
+    // a full screen too late and leave a transparent header over content.
     const heroEl = document.querySelector<HTMLElement>('[data-hero]')
+    const afterHeroEl = heroEl?.nextElementSibling
     ScrollTrigger.create({
-      trigger: heroEl ?? document.body,
-      start: heroEl ? 'bottom top' : `top top-=${TALL_HEIGHT}`,
+      trigger: afterHeroEl ?? heroEl ?? document.body,
+      start: afterHeroEl
+        ? `top top+=${TALL_HEIGHT}`
+        : heroEl
+          ? 'bottom top'
+          : `top top-=${TALL_HEIGHT}`,
       onEnter: () => applyState(true, !reducedMotion),
       onLeaveBack: () => applyState(false, !reducedMotion),
     })

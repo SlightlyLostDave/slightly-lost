@@ -52,5 +52,12 @@ export async function register(): Promise<void> {
     },
   )
 
-  window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
+  // The single ScrollTrigger.refresh() owner for the whole site. This module
+  // is imported asynchronously, so the load event may already have fired by
+  // the time it runs; a listener added then would never be called.
+  if (document.readyState === 'complete') {
+    ScrollTrigger.refresh()
+  } else {
+    window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
+  }
 }
