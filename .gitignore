@@ -25,6 +25,8 @@ pnpm-debug.log*
 .idea/
 
 docs/*
+# Regeneration notes for the basemap binaries in public/basemap.
+!docs/basemap.md
 
 # playwright
 test-results/

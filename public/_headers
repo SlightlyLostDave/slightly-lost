@@ -26,6 +26,12 @@
   ! Cache-Control
   Cache-Control: public, max-age=86400
 
+# The atlas basemap and its glyphs. Read with range requests, never in full;
+# a day, like /assets, since a regenerated file keeps its name.
+/basemap/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400
+
 /favicon.ico
   ! Cache-Control
   Cache-Control: public, max-age=86400

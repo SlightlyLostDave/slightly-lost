@@ -1,0 +1,30 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Atlas basemap detail regions",
+    "description": "Areas extracted at full basemap detail: North and Mid Wales, and the Sudbury Basin to the Kawarthas. See docs/basemap.md before changing."
+  },
+  "geometry": {
+    "type": "MultiPolygon",
+    "coordinates": [
+      [
+        [
+          [-5.0, 51.9],
+          [-2.9, 51.9],
+          [-2.9, 53.5],
+          [-5.0, 53.5],
+          [-5.0, 51.9]
+        ]
+      ],
+      [
+        [
+          [-81.9, 44.1],
+          [-78.1, 44.1],
+          [-78.1, 47.2],
+          [-81.9, 47.2],
+          [-81.9, 44.1]
+        ]
+      ]
+    ]
+  }
+}

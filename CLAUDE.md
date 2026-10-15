@@ -26,6 +26,7 @@ Node 24 LTS. TypeScript strict. Zod 4.
 
 - Docs and design mockups can be found under `docs/`
 - Every colour, size, and spacing value comes from the `@theme` block in `src/styles/app.css`. That file is the only place a hex value may appear.
+- The one documented exception is `src/lib/map-style.ts`. A MapLibre style is JSON and cannot read CSS custom properties, so that file mirrors the ramp values and theme roles the map uses, and `src/lib/map-style.test.ts` fails if they drift from `app.css`. It is not a leak and not a precedent: there is no second exception.
 - Utilities go in the markup. Do not use `@apply` to build component classes. The one permitted exception is the prose base in `src/styles/prose.css`, which styles CMS-authored HTML we do not control.
 - Arbitrary values in square brackets require a comment explaining why no token fits. If it happens twice, the token is missing; add it to `@theme` instead.
 - Repetition is extracted into an Astro component, never into a CSS class.
@@ -77,6 +78,7 @@ Node 24 LTS. TypeScript strict. Zod 4.
 - `getPublishedAtlasEntries()` in `src/lib/atlas.ts` is the choke point for every listing, feed, and map, exactly as `getPublishedPosts()` is for posts.
 - The atlas list is the canonical representation and the map is an enhancement. Every entry must be reachable and readable with JavaScript disabled.
 - MapLibre stays on the 5.x line and loads only on the atlas route, as a `client:visible` island. If it appears in any other route's bundle, that is a bug.
+- The basemap is two PMTiles files and their glyphs in `public/basemap/`, read through `PUBLIC_BASEMAP_URL` via `src/config/basemap.ts`. Moving it is a variable change, never a code change. How it was cut and how to regenerate it is in `docs/basemap.md`; update that file whenever the extract changes.
 - Run `npm test` before finishing any task that touches the atlas.
 
 ## Code style
