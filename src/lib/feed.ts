@@ -67,3 +67,18 @@ export function toFeedItem(post: PublishedPost, atlasEntries: AtlasEntryLookup) 
     customData: `<dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">${escapeHtml(authorName)}</dc:creator>`,
   }
 }
+
+// An atlas entry is announced once. pubDate is when it was first published
+// and the guid is its permalink, so revising the entry later does not put it
+// back in front of subscribers as something new. Only the name, the kind,
+// and the summary go out: no body and no coordinates, so the feed carries
+// nothing the location policy would have to vouch for.
+export function toAtlasFeedItem(entry: PublishedAtlasEntry) {
+  return {
+    title: entry.data.name,
+    description: entry.data.summary,
+    pubDate: entry.data.publishedAt,
+    link: entry.data.href,
+    categories: [atlasKindBySlug[entry.data.kind].name],
+  }
+}

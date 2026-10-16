@@ -5,9 +5,24 @@ import Hairline from '@/components/primitives/Hairline.astro'
 import Button from '@/components/primitives/Button.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
 import { homepage } from '@/config'
-import type { FeaturedDispatchStat } from '@/config/homepage'
+import { getPublishedPosts } from '@/lib/posts'
 
 const { featuredDispatch } = homepage
+const { statLabels } = featuredDispatch
+
+// The numbers come from the post itself, as the loader computed them for its
+// article page, so the two cannot disagree. An unpublished or missing post
+// leaves the row out rather than showing zeroes.
+const featuredPost = (await getPublishedPosts()).find(
+  (post) => post.data.href === featuredDispatch.href
+)
+
+// The design writes this date day first, 14.08.2026. UTC, like
+// formatAtlasDate, so the build machine's timezone cannot shift the day.
+function formatDispatchDate(date: Date): string {
+  const [year, month, day] = date.toISOString().slice(0, 10).split('-')
+  return `${day}.${month}.${year}`
+}
 ---
 
 <section class="relative z-0 grid grid-cols-1 items-stretch md:grid-cols-2">
@@ -34,13 +49,29 @@ const { featuredDispatch } = homepage
     <p class="max-w-measure font-display text-body-l text-text-muted">
       {featuredDispatch.standfirst}
     </p>
-    <Hairline />
-    <!-- Wraps instead of squashing: a fixed three-up row collided at 320 and 1024. -->
-    <div class="flex flex-wrap gap-x-10 gap-y-6">
-      {featuredDispatch.stats.map((stat: FeaturedDispatchStat) => (
-        <DataValue label={stat.label} value={stat.value} unit={stat.unit} />
-      ))}
-    </div>
+    {
+      featuredPost && (
+        <>
+          <Hairline />
+          {/* Wraps instead of squashing: a fixed three-up row collided at 320 and 1024. */}
+          <div class="flex flex-wrap gap-x-10 gap-y-6">
+            <DataValue
+              label={statLabels.published}
+              value={formatDispatchDate(featuredPost.data.publishedAt)}
+            />
+            <DataValue
+              label={statLabels.reading}
+              value={String(featuredPost.data.readingTime)}
+              unit={statLabels.readingUnit}
+            />
+            <DataValue
+              label={statLabels.photographs}
+              value={String(featuredPost.data.photoCount)}
+            />
+          </div>
+        </>
+      )
+    }
     <Button href={featuredDispatch.href} variant="secondary">{featuredDispatch.ctaLabel}</Button>
   </div>
 </section>

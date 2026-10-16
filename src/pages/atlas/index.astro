@@ -17,7 +17,7 @@ const publishedEntries = [...(await getPublishedAtlasEntries())].sort((a, b) =>
 const locatedEntries = getLocatedAtlasEntries(publishedEntries)
 ---
 
-<Base type="website" title={atlas.label} description={atlas.description} surface="ink">
+<Base type="website" title={atlas.label} description={atlas.description} surface="ink" atlasFeed>
   <!-- data-atlas-filter is the filter state: AtlasFilters.script.ts writes it
        and the map island reads it when it mounts. -->
   <div

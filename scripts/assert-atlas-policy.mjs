@@ -13,6 +13,11 @@
 // post linked to an atlas entry the coordinate row comes from the entry (see
 // getPostFieldData in src/lib/atlas.ts), and FieldDataStrip.astro marks each
 // row with where it came from so this script can tell the two apart.
+//
+// And it reads every generated map plate (the homepage teaser's, marked
+// data-atlas-plate), whose markers are projected from post-policy locations:
+// each marker must be a published, plotted entry with a feature in the
+// GeoJSON, drawn at whole SVG units, with no coordinate anywhere in the plate.
 
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -212,6 +217,8 @@ const isWithinFuzzedCell = (found, position) =>
 const warnings = []
 let fieldDataStripCount = 0
 let fieldDataRowCount = 0
+let plateCount = 0
+let plateMarkerCount = 0
 
 // Three checks on every field data strip in the build:
 //
@@ -315,6 +322,58 @@ function checkFieldDataStrips(file, content) {
   }
 }
 
+const ATLAS_PLATE = /<[a-zA-Z][\w-]*\b[^>]*\bdata-atlas-plate(?![\w-])[^>]*>/g
+const PLATE_MARKER = /<[a-zA-Z][\w-]*\b[^>]*\bdata-atlas-plate-marker="([^"]*)"[^>]*>/g
+const WHOLE_NUMBER = /^-?\d+$/
+
+const attributeValue = (tag, name) => new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1]
+
+// A plate draws every plotted entry and nothing else, at positions that
+// carry no more precision than a whole SVG unit. The GeoJSON was checked
+// against the policy above, so a marker is allowed exactly when its entry
+// has a feature there.
+function checkAtlasPlates(file, content) {
+  for (const plateMatch of content.matchAll(ATLAS_PLATE)) {
+    plateCount += 1
+    const plate = extractElement(content, plateMatch.index)
+    const plateSlugs = new Set()
+
+    for (const precise of plate.matchAll(PRECISE_COORDINATE)) {
+      offenders.push(`${file}: a map plate contains the coordinate-like number ${precise[0]}`)
+    }
+
+    for (const markerMatch of plate.matchAll(PLATE_MARKER)) {
+      plateMarkerCount += 1
+      const slug = markerMatch[1]
+      const entry = manifestBySlug.get(slug)
+      const label = entry ? describe(entry) : `"${slug}"`
+
+      if (!entry || !entry.published) {
+        offenders.push(`${file}: a map plate marks ${label}, which is not a published atlas entry`)
+      } else if (entry.locationPolicy === 'withheld') {
+        offenders.push(`${file}: a map plate marks ${label}, which is withheld`)
+      } else if (!seenSlugs.has(slug)) {
+        offenders.push(`${file}: a map plate marks ${label}, which has no feature in ${GEOJSON_PATH}`)
+      }
+      if (plateSlugs.has(slug)) offenders.push(`${file}: a map plate marks ${label} more than once`)
+      plateSlugs.add(slug)
+
+      for (const axis of ['cx', 'cy']) {
+        const value = attributeValue(markerMatch[0], axis)
+        if (value === undefined || !WHOLE_NUMBER.test(value)) {
+          offenders.push(`${file}: the plate marker for ${label} has ${axis}="${value}", not a whole number`)
+        }
+      }
+    }
+
+    if (plateSlugs.size !== features.length) {
+      offenders.push(
+        `${file}: a map plate marks ${plateSlugs.size} places, but ${GEOJSON_PATH} plots ${features.length}`
+      )
+    }
+  }
+}
+
 const withheldEntries = publishedEntries.filter((entry) => entry.locationPolicy === 'withheld')
 const unlocatedEntries = publishedEntries.filter(
   (entry) => entry.locationPolicy !== 'withheld' && !entry.hasLocation
@@ -348,7 +407,10 @@ for (const file of distFiles) {
   scannedFileCount += 1
   const content = buffer.toString('utf-8')
 
-  if (file.endsWith('.html')) checkFieldDataStrips(file, content)
+  if (file.endsWith('.html')) {
+    checkFieldDataStrips(file, content)
+    checkAtlasPlates(file, content)
+  }
 
   const preciseCoordinates = [...content.matchAll(PRECISE_COORDINATE)].filter(
     (match) => !isPublicExactValue(Number(match[0]))
@@ -381,7 +443,8 @@ console.log(
   `assert-atlas-policy: wrote ${features.length} features to ${GEOJSON_PATH} ` +
     `(${Buffer.byteLength(geojsonText)} bytes); ${withheldEntries.length} entries withheld, ` +
     `${unlocatedEntries.length} not plotted because no location is recorded; ` +
-    `scanned ${scannedFileCount} files and ${fieldDataRowCount} field data rows in ${fieldDataStripCount} strips.`
+    `scanned ${scannedFileCount} files, ${fieldDataRowCount} field data rows in ${fieldDataStripCount} strips, ` +
+    `and ${plateMarkerCount} markers on ${plateCount} map plates.`
 )
 
 for (const warning of warnings) console.warn(`assert-atlas-policy: warning: ${warning}`)

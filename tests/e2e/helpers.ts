@@ -1,5 +1,5 @@
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
-import type { Page } from '@playwright/test'
+import { expect, type APIRequestContext, type Page } from '@playwright/test'
 
 export interface JsFileBytes {
   url: string
@@ -62,4 +62,21 @@ export async function measureJsBytes(
     files.reduce((total, file) => total + file[key], 0)
 
   return { brotli: sum('brotli'), gzip: sum('gzip'), raw: sum('raw'), files }
+}
+
+// The homepage atlas teaser shows whatever the build counted, so this checks
+// that the numbers are final rather than what they are: every statistic that
+// renders already reads its count-up target (a script that never ran, or one
+// that respected reduced motion, must not leave a zero), and the plate marks
+// exactly the places the published GeoJSON plots. Below the threshold in
+// src/config/homepage.ts there are no statistics, and the loop checks none.
+export async function expectAtlasTeaserIsFinal(page: Page, request: APIRequestContext) {
+  for (const stat of await page.locator('[data-count-to]').all()) {
+    const finalValue = await stat.getAttribute('data-count-to')
+    expect(finalValue).toMatch(/^\d+$/)
+    await expect(stat).toHaveText(finalValue ?? '')
+  }
+
+  const geojson = (await (await request.get('/atlas.geojson')).json()) as { features: unknown[] }
+  await expect(page.locator('[data-atlas-plate-marker]')).toHaveCount(geojson.features.length)
 }

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { expectAtlasTeaserIsFinal } from './helpers'
 
 // Runs only under the chromium-no-js project (see playwright.config.ts).
 // The fixtures.ts console/pageerror listeners aren't used here on purpose:
@@ -6,13 +7,14 @@ import { test, expect } from '@playwright/test'
 // this spec is purely to confirm content renders without any JS at all.
 test('hero, primary nav, and homepage teasers render with JavaScript disabled', async ({
   page,
+  request,
 }) => {
   await page.goto('/')
 
   await expect(page.locator('[data-hero-layer="type"] h1')).toBeVisible()
   await expect(page.locator('header#site-header a[href="/"]')).toBeVisible()
   await expect(page.locator('nav[aria-label="Primary"] a').first()).toBeVisible()
-  await expect(page.locator('[data-count-to]')).toHaveText(['214', '96', '31'])
+  await expectAtlasTeaserIsFinal(page, request)
 })
 
 test('the transparent header scrolls away instead of floating without JavaScript', async ({

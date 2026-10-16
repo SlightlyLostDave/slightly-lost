@@ -253,6 +253,13 @@ export interface AtlasConfig {
   catalogue: AtlasCatalogueCopy
   // Served by src/pages/atlas.geojson.ts.
   geojsonPath: string
+  // The atlas has its own feed, src/pages/rss/atlas.xml.ts, and is kept out
+  // of the main one: an entry is a record that is revised as a place is
+  // revisited, not an article published once.
+  feed: {
+    path: string
+    description: string
+  }
   // Above this many plotted entries the map clusters its markers. The layers
   // are written for both cases, so crossing it changes no layer.
   mapClusterThreshold: number
@@ -293,6 +300,11 @@ export const atlas = {
     emptyAtlas: 'Nothing has been published to the atlas yet.',
   },
   geojsonPath: '/atlas.geojson',
+  feed: {
+    path: '/rss/atlas.xml',
+    description:
+      'New places in the atlas, each announced once when it is first published. Revisions to an entry are not re-announced.',
+  },
   mapClusterThreshold: 200,
   map: {
     label: 'Map of the atlas',

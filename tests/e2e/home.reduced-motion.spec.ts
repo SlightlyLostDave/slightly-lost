@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures'
+import { expectAtlasTeaserIsFinal } from './helpers'
 
 // Runs only under the chromium-reduced-motion project (see playwright.config.ts).
 // The project's `reducedMotion: 'reduce' context option doesn't reliably
@@ -32,13 +33,16 @@ test('the hero stays static and fully visible under prefers-reduced-motion', asy
   await expect(typeLayer.locator('h1')).toBeVisible()
 })
 
-test('animated sections rest in their final state under reduced motion', async ({ page }) => {
+test('animated sections rest in their final state under reduced motion', async ({
+  page,
+  request,
+}) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
   await page.waitForTimeout(500)
 
-  await expect(page.locator('[data-count-to]')).toHaveText(['214', '96', '31'])
+  await expectAtlasTeaserIsFinal(page, request)
   const hidden = await page.locator('[data-anim], [data-anim] > *').evaluateAll((elements) =>
     elements.filter((el) => Number(getComputedStyle(el).opacity) < 1).length
   )

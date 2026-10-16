@@ -2,7 +2,7 @@
 import { Font } from 'astro:assets'
 
 import { buildSeo, type SeoInput } from '@lib/seo'
-import { site } from '@/config'
+import { atlas, site } from '@/config'
 import { pillarBySlug, type PillarSlug } from '@/config/pillars'
 import Header from '@components/layout/Header.astro'
 import Footer from '@components/layout/Footer.astro'
@@ -14,10 +14,20 @@ type Props = SeoInput & {
   surface: 'paper' | 'ink'
   headerState?: 'transparent' | 'solid'
   pillar?: PillarSlug
+  // Advertises the atlas feed, on the atlas routes, as `pillar` does a
+  // pillar's feed.
+  atlasFeed?: boolean
   isDraft?: boolean
 }
 
-const { surface, headerState = 'solid', pillar, isDraft = false, ...seoInput } = Astro.props
+const {
+  surface,
+  headerState = 'solid',
+  pillar,
+  atlasFeed = false,
+  isDraft = false,
+  ...seoInput
+} = Astro.props
 const seo = buildSeo(seoInput, Astro.url)
 const initialThemeColor = surface === 'paper' ? themeColor.light : themeColor.dark
 const currentPath = Astro.url.pathname
@@ -91,6 +101,16 @@ const draftBannerHeight = '40px'
           type="application/rss+xml"
           title={`${site.name}: ${pillarBySlug[pillar].name}`}
           href={`/rss/${pillar}.xml`}
+        />
+      )
+    }
+    {
+      atlasFeed && (
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={`${site.name}: ${atlas.label}`}
+          href={atlas.feed.path}
         />
       )
     }

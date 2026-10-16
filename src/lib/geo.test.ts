@@ -3,6 +3,7 @@ import { describe, test } from 'node:test'
 import type { Coordinates } from './location-policy.ts'
 import {
   distanceInKilometres,
+  fitToPlate,
   fuzzedUncertaintyKm,
   getNearestEntries,
   projectToPlate,
@@ -67,6 +68,67 @@ describe('projectToPlate', () => {
   test('never writes negative zero', () => {
     const point = projectToPlate(origin, { lat: origin.lat, lng: origin.lng - 0.0001 }, 10, 400)
     assert.ok(!Object.is(point.y, -0))
+  })
+})
+
+describe('fitToPlate', () => {
+  const PLATE_WIDTH = 620
+  const PLATE_HEIGHT = 440
+  const MARGIN = 24
+  // Fuzzed-style positions in North Wales and the Sudbury Basin, the two
+  // regions the atlas actually covers.
+  const locations: Coordinates[] = [
+    { lat: 53.14, lng: -4.01 },
+    { lat: 53.35, lng: -4.24 },
+    { lat: 46.49, lng: -80.99 },
+    { lat: 46.6, lng: -81.2 },
+  ]
+
+  test('draws nothing for no locations', () => {
+    assert.deepEqual(fitToPlate([], PLATE_WIDTH, PLATE_HEIGHT, MARGIN), [])
+  })
+
+  test('puts a single location at the centre', () => {
+    assert.deepEqual(fitToPlate([origin], PLATE_WIDTH, PLATE_HEIGHT, MARGIN), [{ x: 310, y: 220 }])
+  })
+
+  test('puts repeated identical locations at the centre', () => {
+    const points = fitToPlate([origin, origin], PLATE_WIDTH, PLATE_HEIGHT, MARGIN)
+    assert.deepEqual(points, [
+      { x: 310, y: 220 },
+      { x: 310, y: 220 },
+    ])
+  })
+
+  test('keeps every point in whole units inside the margin', () => {
+    for (const point of fitToPlate(locations, PLATE_WIDTH, PLATE_HEIGHT, MARGIN)) {
+      assert.ok(Number.isInteger(point.x) && Number.isInteger(point.y), JSON.stringify(point))
+      assert.ok(!Object.is(point.x, -0) && !Object.is(point.y, -0))
+      assert.ok(point.x >= MARGIN && point.x <= PLATE_WIDTH - MARGIN, `x ${point.x}`)
+      assert.ok(point.y >= MARGIN && point.y <= PLATE_HEIGHT - MARGIN, `y ${point.y}`)
+    }
+  })
+
+  test('fills the longer side and puts east right and north up', () => {
+    const [wales, anglesey, sudbury, westOfSudbury] = fitToPlate(
+      locations,
+      PLATE_WIDTH,
+      PLATE_HEIGHT,
+      MARGIN
+    )
+    assert.equal(Math.max(anglesey.x, wales.x), PLATE_WIDTH - MARGIN)
+    assert.equal(westOfSudbury.x, MARGIN)
+    assert.ok(wales.x > sudbury.x)
+    assert.ok(anglesey.y < wales.y)
+  })
+
+  test('scales both axes alike, so a square stays square', () => {
+    const square: Coordinates[] = [
+      { lat: 0, lng: 0 },
+      { lat: 1, lng: 1 },
+    ]
+    const [southWest, northEast] = fitToPlate(square, PLATE_WIDTH, PLATE_HEIGHT, MARGIN)
+    assert.equal(northEast.x - southWest.x, southWest.y - northEast.y)
   })
 })
 

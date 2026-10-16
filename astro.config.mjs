@@ -26,44 +26,48 @@ if (!STRAPI_URL) {
 
 const strapiHostname = new URL(STRAPI_URL).hostname
 
-// A draft's article page must still be statically generated so its preview
-// URL works, which means it's in Astro's final route list that the sitemap
-// integration's `filter` below walks. That filter only ever sees a URL, not
-// collection data, so getPublishedPosts() (which the loader and every page
-// already use) can't keep a draft out of the sitemap: this is the one place
-// that needs its own lookup, because it's the one place operating on the
-// emitted URL list rather than on parsed content collection data. Only runs
-// in preview builds; a production build never queries drafts, so this is a
-// no-op with no network call.
-async function fetchDraftHrefs() {
-  if (STRAPI_PREVIEW !== 'true') return new Set()
+// A draft's page (a post or an atlas entry) must still be statically
+// generated so its preview URL works, which means it's in Astro's final route
+// list that the sitemap integration's `filter` below walks. That filter only
+// ever sees a URL, not collection data, so getPublishedPosts() and
+// getPublishedAtlasEntries() (which every page already uses) can't keep a
+// draft out of the sitemap: this is the one place that needs its own lookup,
+// because it's the one place operating on the emitted URL list rather than on
+// parsed content collection data. Only runs in preview builds; a production
+// build never queries drafts, so this is a no-op with no network call.
+/**
+ * @template {{ slug: string; publishedAt: string | null }} Draft
+ * @param {string} contentType
+ * @param {string[]} fields
+ * @param {(draft: Draft) => string} toHref
+ */
+async function fetchDraftHrefs(contentType, fields, toHref) {
+  if (STRAPI_PREVIEW !== 'true') return []
 
-  const hrefs = new Set()
+  const hrefs = []
   let page = 1
   let pageCount
 
   do {
     const query = new URLSearchParams({
       status: 'draft',
-      'fields[0]': 'slug',
-      'fields[1]': 'pillar',
+      ...Object.fromEntries(fields.map((field, index) => [`fields[${index}]`, field])),
       'pagination[page]': String(page),
       'pagination[pageSize]': '100',
     })
-    const response = await fetch(`${STRAPI_URL}/api/posts?${query}`, {
+    const response = await fetch(`${STRAPI_URL}/api/${contentType}?${query}`, {
       headers: STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {},
     })
     if (!response.ok) {
       throw new Error(
-        `astro.config.mjs: could not fetch draft posts to exclude from the sitemap (${response.status})`
+        `astro.config.mjs: could not fetch draft ${contentType} to exclude from the sitemap (${response.status})`
       )
     }
 
-    /** @type {{ data: { slug: string; pillar: string; publishedAt: string | null }[]; meta: { pagination: { pageCount: number } } }} */
+    /** @type {{ data: Draft[]; meta: { pagination: { pageCount: number } } }} */
     const body = await response.json()
-    for (const post of body.data) {
-      if (!post.publishedAt)
-        hrefs.add(`/field-notes/${pillarByEnum[post.pillar].slug}/${post.slug}`)
+    for (const draft of body.data) {
+      if (!draft.publishedAt) hrefs.push(toHref(draft))
     }
     pageCount = body.meta.pagination.pageCount
     page += 1
@@ -72,7 +76,20 @@ async function fetchDraftHrefs() {
   return hrefs
 }
 
-const draftHrefs = await fetchDraftHrefs()
+const draftHrefs = new Set([
+  ...(await fetchDraftHrefs(
+    'posts',
+    ['slug', 'pillar'],
+    /** @param {{ slug: string; pillar: string; publishedAt: string | null }} post */
+    (post) => `/field-notes/${pillarByEnum[post.pillar].slug}/${post.slug}`
+  )),
+  ...(await fetchDraftHrefs(
+    'atlas-entries',
+    ['slug'],
+    /** @param {{ slug: string; publishedAt: string | null }} entry */
+    (entry) => `/atlas/${entry.slug}`
+  )),
+])
 
 /** @param {string} page */
 function isExcludedFromSitemap(page) {
@@ -98,7 +115,7 @@ function classifySitemapEntry(item) {
     return { ...item, changefreq: 'monthly', priority: 0.3 }
   }
 
-  if (segments.length === 1 && ['field-notes', 'series', 'tags'].includes(segments[0])) {
+  if (segments.length === 1 && ['field-notes', 'series', 'tags', 'atlas'].includes(segments[0])) {
     return { ...item, changefreq: 'weekly', priority: 0.8 }
   }
 
@@ -115,6 +132,12 @@ function classifySitemapEntry(item) {
   }
 
   if (segments.length === 2 && segments[0] === 'series') {
+    return { ...item, changefreq: 'monthly', priority: 0.6 }
+  }
+
+  // An atlas entry is revised as places are revisited, but no more often
+  // than a post is, so it ranks with posts rather than above them.
+  if (segments.length === 2 && segments[0] === 'atlas') {
     return { ...item, changefreq: 'monthly', priority: 0.6 }
   }
 

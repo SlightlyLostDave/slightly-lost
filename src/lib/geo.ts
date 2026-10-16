@@ -64,6 +64,51 @@ export function projectToPlate(
   }
 }
 
+// Fits every location onto one plate, for the homepage teaser. The same local
+// equirectangular projection as projectToPlate, with longitude scaled at the
+// mean latitude, then scaled uniformly so the bounding box fills the plate
+// inside the margin on its longer side and is centred on the shorter one.
+// Whole SVG units for the same reason as projectToPlate. Does not handle a
+// set of places that straddles the antimeridian; the atlas has none.
+export function fitToPlate(
+  locations: readonly Coordinates[],
+  plateWidth: number,
+  plateHeight: number,
+  margin: number
+): PlatePoint[] {
+  if (locations.length === 0) return []
+
+  const meanLatitude = locations.reduce((sum, location) => sum + location.lat, 0) / locations.length
+  const longitudeScale = Math.cos(toRadians(meanLatitude))
+  const projected = locations.map((location) => ({
+    east: location.lng * longitudeScale,
+    north: location.lat,
+  }))
+
+  const easts = projected.map((point) => point.east)
+  const norths = projected.map((point) => point.north)
+  const minEast = Math.min(...easts)
+  const maxEast = Math.max(...easts)
+  const minNorth = Math.min(...norths)
+  const maxNorth = Math.max(...norths)
+
+  const spanEast = maxEast - minEast
+  const spanNorth = maxNorth - minNorth
+  const unitsPerDegree = Math.min(
+    spanEast > 0 ? (plateWidth - 2 * margin) / spanEast : Infinity,
+    spanNorth > 0 ? (plateHeight - 2 * margin) / spanNorth : Infinity
+  )
+  // Every location is the same point: draw it in the middle.
+  const scale = Number.isFinite(unitsPerDegree) ? unitsPerDegree : 0
+  const centreEast = (minEast + maxEast) / 2
+  const centreNorth = (minNorth + maxNorth) / 2
+
+  return projected.map((point) => ({
+    x: Math.round(plateWidth / 2 + (point.east - centreEast) * scale) + 0,
+    y: Math.round(plateHeight / 2 - (point.north - centreNorth) * scale) + 0,
+  }))
+}
+
 // How far a fuzzed coordinate can sit from the place it stands for: half a
 // hundredth of a degree on each axis, measured at the entry's own latitude.
 export function fuzzedUncertaintyKm(location: Coordinates): number {

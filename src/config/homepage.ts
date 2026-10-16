@@ -21,9 +21,16 @@ export interface HomepageSectionHeadings {
   newsletter: string
 }
 
-export interface AtlasStat {
-  label: string
-  value: number
+// Labels only. The values are counted from the published atlas entries at
+// build time, in src/lib/atlas-stats.ts.
+export interface HomepageAtlasStats {
+  // Below this many published entries the teaser shows no statistics at all.
+  minimumEntries: number
+  labels: {
+    entries: string
+    visited: string
+    withheld: string
+  }
 }
 
 export interface HomepageGuideLogbookCard {
@@ -40,6 +47,8 @@ export interface HomepageAtlas {
   intro: string
   ctaLabel: string
   href: string
+  // {count} is replaced with the number of places plotted on the plate.
+  plateDescription: string
 }
 
 export interface HomepageNewsletter {
@@ -47,17 +56,20 @@ export interface HomepageNewsletter {
   finePrint: string
 }
 
-export interface FeaturedDispatchStat {
-  label: string
-  value: string
-  unit?: string
+// Labels only. The values are read from the post at href, so they are always
+// the ones the loader computed for the article itself.
+export interface FeaturedDispatchStatLabels {
+  published: string
+  reading: string
+  readingUnit: string
+  photographs: string
 }
 
 export interface HomepageFeaturedDispatch {
   label: string
   title: string
   standfirst: string
-  stats: readonly FeaturedDispatchStat[]
+  statLabels: FeaturedDispatchStatLabels
   ctaLabel: string
   href: string
   imageAlt: string
@@ -70,7 +82,7 @@ export interface HomepageConfig {
   featuredDispatch: HomepageFeaturedDispatch
   sectionHeadings: HomepageSectionHeadings
   atlas: HomepageAtlas
-  atlasStats: readonly AtlasStat[]
+  atlasStats: HomepageAtlasStats
   guidesLogbooks: readonly HomepageGuideLogbookCard[]
   newsletter: HomepageNewsletter
 }
@@ -94,17 +106,15 @@ export const homepage = {
     title: 'The headframe at Centre Hill is falling down slowly enough to measure',
     standfirst:
       'Two capture sessions eleven months apart, 1,840 photographs, and a point cloud that says the north leg has moved.',
-    // Mirrors src/content/sample/centre-hill-headframe.ts by hand, not by
-    // import: this is Phase-1 homepage copy, that file stands in for a
-    // Phase-2 Strapi collection, and the two are not meant to cross. If
-    // publishedAt / readingTime / photoCount change on the article, update
-    // these three values to match.
-    stats: [
-      { label: 'Published', value: '14.08.2026' },
-      { label: 'Reading', value: '18', unit: 'min' },
-      { label: 'Photographs', value: '32' },
-    ],
+    statLabels: {
+      published: 'Published',
+      reading: 'Reading',
+      readingUnit: 'min',
+      photographs: 'Photographs',
+    },
     ctaLabel: 'Read the dispatch',
+    // Also the lookup key for the stats: FeaturedDispatch.astro finds the
+    // published post with this href and reads its values from there.
     href: '/field-notes/mines/centre-hill-headframe',
     imageAlt: 'Centre Hill headframe across the clearing, placeholder pending photography',
     imageCaption: 'Fig. 1 / North leg, second capture session',
@@ -122,12 +132,17 @@ export const homepage = {
       'Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong to somebody.',
     ctaLabel: 'Open the atlas',
     href: '/atlas',
+    plateDescription:
+      'A map plate of the {count} atlas places with a published location. Withheld places are not on it.',
   },
-  atlasStats: [
-    { label: 'Entries', value: 214 },
-    { label: atlasStatusBySlug.visited.name, value: 96 },
-    { label: atlasLocationPolicyBySlug.withheld.name, value: 31 },
-  ],
+  atlasStats: {
+    minimumEntries: 20,
+    labels: {
+      entries: 'Entries',
+      visited: atlasStatusBySlug.visited.name,
+      withheld: atlasLocationPolicyBySlug.withheld.name,
+    },
+  },
   guidesLogbooks: [
     {
       label: 'Guides',
