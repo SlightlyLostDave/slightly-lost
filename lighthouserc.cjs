@@ -20,6 +20,9 @@ if (!baseUrl) {
 
 // The same seeded article the Playwright suite uses (tests/e2e/article.spec.ts).
 const ARTICLE_PATH = '/field-notes/underwater/sonar-return-bridge'
+// The atlas index, which carries the map island, and a seeded fuzzed entry,
+// which carries the safety notices and the location plate.
+const ATLAS_PATHS = ['/atlas', '/atlas/centre-hill-headframe']
 
 const KB = 1024
 
@@ -37,6 +40,7 @@ module.exports = {
         // Lighthouse refuses to audit (ERRORED_DOCUMENT_REQUEST); /404 serves
         // the same page with a 200.
         `${baseUrl}/404`,
+        ...ATLAS_PATHS.map((path) => `${baseUrl}${path}`),
       ],
       numberOfRuns: 3,
       // Lighthouse's default: mobile emulation with simulated throttling,
@@ -54,6 +58,9 @@ module.exports = {
             // work long enough to block input is what makes INP slow.
             'total-blocking-time': budget(150),
             'resource-summary:font:size': budget(360 * KB),
+            // Not a budget number: every audited page holds a perfect
+            // accessibility score, which the Phase 3 audit reached.
+            'categories:accessibility': ['error', { minScore: 1, aggregationMethod: 'median' }],
           },
         },
         {

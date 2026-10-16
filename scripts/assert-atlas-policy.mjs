@@ -18,6 +18,11 @@
 // data-atlas-plate), whose markers are projected from post-policy locations:
 // each marker must be a published, plotted entry with a feature in the
 // GeoJSON, drawn at whole SVG units, with no coordinate anywhere in the plate.
+//
+// Finally it reads Astro's content stores on disk, the build's and the dev
+// server's. They are gitignored, but a store is still a file that can be
+// copied, attached, or committed by accident, and one left behind by a build
+// that failed this check still holds whatever that build leaked.
 
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -28,6 +33,9 @@ const GEOJSON_PATH = join(DIST_DIR, 'atlas.geojson')
 // Astro's default cacheDir, which astro.config.mjs does not override. The
 // filename matches ATLAS_POLICY_MANIFEST_FILENAME in src/loaders/strapi.ts.
 const MANIFEST_PATH = join('node_modules', '.astro', 'atlas-policy-manifest.json')
+// The build's store sits beside the manifest; `astro dev` writes its own to
+// .astro/. Either may be absent.
+const CONTENT_STORE_DIRS = [join('node_modules', '.astro'), '.astro']
 
 const ALLOWED_PROPERTIES = new Set(['slug', 'name', 'kind', 'status', 'href'])
 const FUZZED_MAX_DECIMALS = 2
@@ -37,6 +45,10 @@ const ADJACENCY_WINDOW = 500
 // Four or more decimal places is about eleven metres or better. The
 // lookbehind stops a match starting partway through a longer number.
 const PRECISE_COORDINATE = /(?<![\d.])\d{1,3}\.\d{4,}/g
+// Stricter for the stores, which hold the loader's output as data: anything
+// past two decimals there is more than a fuzzed entry may carry. The colon
+// in the lookbehind skips the seconds of an ISO timestamp.
+const STORED_COORDINATE = /(?<![\d.:])\d{1,3}\.\d{3,}/g
 
 function fail(message) {
   console.error(`assert-atlas-policy: ${message}`)
@@ -57,8 +69,14 @@ async function readJson(path, description) {
   }
 }
 
-async function collectFiles(dir) {
-  const entries = await readdir(dir, { withFileTypes: true })
+async function collectFiles(dir, { optional = false } = {}) {
+  let entries
+  try {
+    entries = await readdir(dir, { withFileTypes: true })
+  } catch (error) {
+    if (optional && error.code === 'ENOENT') return []
+    throw error
+  }
   const files = await Promise.all(
     entries.map((entry) => {
       const path = join(dir, entry.name)
@@ -177,7 +195,9 @@ for (const feature of features) {
     (key) => !ALLOWED_PROPERTIES.has(key)
   )
   if (extraProperties.length > 0) {
-    offenders.push(`${label} carries properties the map does not need: ${extraProperties.join(', ')}`)
+    offenders.push(
+      `${label} carries properties the map does not need: ${extraProperties.join(', ')}`
+    )
   }
 
   const coordinates = feature.geometry?.coordinates
@@ -240,7 +260,9 @@ function checkFieldDataStrips(file, content) {
     const linkedSlug = LINKED_ENTRY_ATTRIBUTE.exec(stripMatch[0])?.[1]
     const linkedEntry = linkedSlug === undefined ? undefined : manifestBySlug.get(linkedSlug)
     if (linkedSlug !== undefined && !linkedEntry) {
-      offenders.push(`${file}: field data links atlas entry "${linkedSlug}", which the build did not load`)
+      offenders.push(
+        `${file}: field data links atlas entry "${linkedSlug}", which the build did not load`
+      )
       continue
     }
 
@@ -252,7 +274,9 @@ function checkFieldDataStrips(file, content) {
 
       if (source === 'atlas') {
         if (!linkedEntry) {
-          offenders.push(`${file}: a field data row claims to come from an atlas entry, but none is linked`)
+          offenders.push(
+            `${file}: a field data row claims to come from an atlas entry, but none is linked`
+          )
           continue
         }
         if (linkedEntry.locationPolicy === 'exact') continue
@@ -264,7 +288,9 @@ function checkFieldDataStrips(file, content) {
           }
           continue
         }
-        const published = fuzzedPositions.find((position) => position.entry.slug === linkedEntry.slug)
+        const published = fuzzedPositions.find(
+          (position) => position.entry.slug === linkedEntry.slug
+        )
         const [found, ...extra] = foundCoordinates
         // A draft entry, linked in a preview build, has no feature to compare
         // with, so only its precision can be checked.
@@ -353,7 +379,9 @@ function checkAtlasPlates(file, content) {
       } else if (entry.locationPolicy === 'withheld') {
         offenders.push(`${file}: a map plate marks ${label}, which is withheld`)
       } else if (!seenSlugs.has(slug)) {
-        offenders.push(`${file}: a map plate marks ${label}, which has no feature in ${GEOJSON_PATH}`)
+        offenders.push(
+          `${file}: a map plate marks ${label}, which has no feature in ${GEOJSON_PATH}`
+        )
       }
       if (plateSlugs.has(slug)) offenders.push(`${file}: a map plate marks ${label} more than once`)
       plateSlugs.add(slug)
@@ -361,7 +389,9 @@ function checkAtlasPlates(file, content) {
       for (const axis of ['cx', 'cy']) {
         const value = attributeValue(markerMatch[0], axis)
         if (value === undefined || !WHOLE_NUMBER.test(value)) {
-          offenders.push(`${file}: the plate marker for ${label} has ${axis}="${value}", not a whole number`)
+          offenders.push(
+            `${file}: the plate marker for ${label} has ${axis}="${value}", not a whole number`
+          )
         }
       }
     }
@@ -397,25 +427,11 @@ const sensitiveEntries = manifest.filter((entry) => entry.locationPolicy !== 'ex
 const isPublicExactValue = (value) =>
   exactCoordinateValues.some((exactValue) => Math.abs(exactValue - value) < 1e-9)
 
-const distFiles = await collectFiles(DIST_DIR)
-let scannedFileCount = 0
-
-for (const file of distFiles) {
-  const buffer = await readFile(file)
-  // Images and fonts; no coordinate in them is a decimal string.
-  if (buffer.includes(0)) continue
-  scannedFileCount += 1
-  const content = buffer.toString('utf-8')
-
-  if (file.endsWith('.html')) {
-    checkFieldDataStrips(file, content)
-    checkAtlasPlates(file, content)
-  }
-
-  const preciseCoordinates = [...content.matchAll(PRECISE_COORDINATE)].filter(
+function checkAdjacentCoordinates(file, content, coordinatePattern) {
+  const preciseCoordinates = [...content.matchAll(coordinatePattern)].filter(
     (match) => !isPublicExactValue(Number(match[0]))
   )
-  if (preciseCoordinates.length === 0) continue
+  if (preciseCoordinates.length === 0) return
 
   for (const entry of sensitiveEntries) {
     const reported = new Set()
@@ -439,12 +455,50 @@ for (const file of distFiles) {
   }
 }
 
+// Images, fonts, and glyphs; no coordinate in them is a decimal string.
+async function readTextFile(file) {
+  const buffer = await readFile(file)
+  return buffer.includes(0) ? undefined : buffer.toString('utf-8')
+}
+
+let scannedFileCount = 0
+
+for (const file of await collectFiles(DIST_DIR)) {
+  const content = await readTextFile(file)
+  if (content === undefined) continue
+  scannedFileCount += 1
+
+  if (file.endsWith('.html')) {
+    checkFieldDataStrips(file, content)
+    checkAtlasPlates(file, content)
+  }
+  checkAdjacentCoordinates(file, content, PRECISE_COORDINATE)
+}
+
+let scannedStoreFileCount = 0
+const offenderCountBeforeStores = offenders.length
+
+for (const dir of CONTENT_STORE_DIRS) {
+  for (const file of await collectFiles(dir, { optional: true })) {
+    const content = await readTextFile(file)
+    if (content === undefined) continue
+    scannedStoreFileCount += 1
+    checkAdjacentCoordinates(file, content, STORED_COORDINATE)
+  }
+}
+
+if (offenders.length > offenderCountBeforeStores) {
+  offenders.push(
+    'a content store is a cache: delete the file named above and rebuild with STRAPI_FORCE_FULL_SYNC=true'
+  )
+}
+
 console.log(
   `assert-atlas-policy: wrote ${features.length} features to ${GEOJSON_PATH} ` +
     `(${Buffer.byteLength(geojsonText)} bytes); ${withheldEntries.length} entries withheld, ` +
     `${unlocatedEntries.length} not plotted because no location is recorded; ` +
     `scanned ${scannedFileCount} files, ${fieldDataRowCount} field data rows in ${fieldDataStripCount} strips, ` +
-    `and ${plateMarkerCount} markers on ${plateCount} map plates.`
+    `${plateMarkerCount} markers on ${plateCount} map plates, and ${scannedStoreFileCount} content store files.`
 )
 
 for (const warning of warnings) console.warn(`assert-atlas-policy: warning: ${warning}`)

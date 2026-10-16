@@ -1,3 +1,5 @@
+import { statSync } from 'node:fs'
+import { basename, join } from 'node:path'
 import { test, expect } from './fixtures'
 import { measureJsBytes } from './helpers'
 import {
@@ -24,7 +26,13 @@ test('the atlas route stays within its JS budget with the map loaded', async ({ 
   expect(bytes.gzip).toBeLessThan(ATLAS_JS_BUDGET_BYTES)
 })
 
-for (const path of ['/', '/field-notes/mines', '/field-notes/mines/centre-hill-headframe']) {
+for (const path of [
+  '/',
+  '/field-notes/mines',
+  '/field-notes/mines/centre-hill-headframe',
+  '/atlas/centre-hill-headframe',
+  '/404',
+]) {
   test(`${path} ships no MapLibre`, async ({ page }) => {
     const scripts: Promise<string>[] = []
     page.on('response', (response) => {
@@ -40,6 +48,50 @@ for (const path of ['/', '/field-notes/mines', '/field-notes/mines/centre-hill-h
     expect(await page.locator('[data-atlas-map]').count()).toBe(0)
   })
 }
+
+// The point of PMTiles: the map reads the byte ranges it draws, never a whole
+// file. A 200 here means the host ignored Range. This proves the client side
+// against astro preview; whether the production host honours Range is a
+// separate check, see docs/basemap.md.
+test('the basemap is read in byte ranges, across load, pan, and a theme change', async ({
+  page,
+}) => {
+  const reads: { file: string; range?: string; status: number; bytes: number }[] = []
+  page.on('response', (response) => {
+    const { pathname } = new URL(response.url())
+    if (!pathname.endsWith('.pmtiles')) return
+    reads.push({
+      file: basename(pathname),
+      range: response.request().headers().range,
+      status: response.status(),
+      bytes: Number(response.headers()['content-length']),
+    })
+  })
+
+  // One plotted entry, so the opening view is at FIT_MAX_ZOOM and draws from
+  // the detail file as well as the overview.
+  const [place] = await closestPair(page)
+  await serveOnlyEntries(page, [place.properties.slug])
+  await page.goto(ATLAS_PATH)
+  await waitForMap(page)
+  await page.waitForLoadState('networkidle')
+  await mapCanvas(page).focus()
+  for (let step = 0; step < 6; step++) await page.keyboard.press('ArrowRight')
+  await page.waitForLoadState('networkidle')
+  await page.locator('#theme-toggle').click()
+  await page.waitForLoadState('networkidle')
+
+  for (const file of ['overview.pmtiles', 'detail.pmtiles']) {
+    const fileReads = reads.filter((read) => read.file === file)
+    expect(fileReads.length, `${file} was never read`).toBeGreaterThan(0)
+    for (const read of fileReads) {
+      expect(read.range, `${file} was requested without a Range header`).toMatch(/^bytes=/)
+      expect(read.status, `${file} was answered whole`).toBe(206)
+    }
+    const fetched = fileReads.reduce((total, read) => total + read.bytes, 0)
+    expect(fetched).toBeLessThan(statSync(join('public', 'basemap', file)).size / 4)
+  }
+})
 
 test('the map restyles when the theme toggles, without reloading', async ({ page }) => {
   await page.goto(ATLAS_PATH)

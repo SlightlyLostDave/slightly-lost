@@ -8,6 +8,8 @@
 import { compileStrapi, createStrapi, type Modules } from '@strapi/strapi'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
+// The fuzzed and withheld coordinates are invented; see that file for why.
+import { SYNTHETIC_LOCATIONS } from './synthetic-locations'
 
 type Strapi = Awaited<ReturnType<typeof createStrapi>>
 
@@ -25,22 +27,6 @@ const PLACEHOLDER_SOURCES = [
   path.join(REPO_ROOT, 'src/assets/home/hero-midground.webp'),
   path.join(REPO_ROOT, 'src/assets/home/hero-foreground.webp'),
 ]
-
-// Every fuzzed and withheld coordinate in this seed is invented. None of them
-// is a real place, hazardous or otherwise, so nothing in a seeded development
-// database points anyone at an open shaft. Each uses a repeated-digit pattern
-// so a person reading the CMS can tell at a glance that it is not a survey
-// reading, and so a leak check can grep for it: no two share a digit run or a
-// rounded form, which means 888888, 46.89, or -81.44 turning up in the build
-// can only have come from the withheld stope. Only the two exact entries below
-// carry real coordinates, and both are public places where precision is
-// harmless.
-const SYNTHETIC_LOCATIONS = {
-  centreHillHeadframe: { lat: 46.666666, lng: -81.111111 },
-  powderMagazine: { lat: 46.555555, lng: -81.222222 },
-  kawarthaTug: { lat: 44.444444, lng: -78.777777 },
-  collapsedStope: { lat: 46.888888, lng: -81.444444 },
-}
 
 let placeholderIndex = 0
 

@@ -126,8 +126,15 @@ A label with a character outside these ranges renders without that character and
 
 1. `npm test`. `src/lib/map-style.test.ts` checks the style's colours still match `app.css`, and that every file and font stack the style names exists in `public/basemap/`.
 2. Look at it in both themes. The atlas page does this once the island exists. Until then, use a scratch page outside the repository: load `maplibre-gl` 5.x and the `pmtiles` script, call `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, and pass it `createMapStyle({ basemapUrl: 'http://localhost:<port>/basemap', theme })`. Serve it with any static server that answers range requests. Check the opening view fitted to both regions, Wales around zoom 9, Sudbury around zoom 8, and a view just outside a detail box at zoom 7.
-3. Watch the network panel while panning: every request to a `.pmtiles` file should be a `206 Partial Content`. A `200` for the whole file means the host is ignoring `Range`, and PMTiles is pointless there.
+3. Watch the network panel while panning: every request to a `.pmtiles` file should be a `206 Partial Content`. A `200` for the whole file means the host is ignoring `Range`, and PMTiles is pointless there. `tests/e2e/atlas.spec.ts` checks this automatically against `astro preview`, but that only proves the client asks for ranges. The host has to be checked by hand: `curl -s -D - -o /dev/null -r 0-99 <host>/basemap/overview.pmtiles` must answer `206` with a `Content-Range`.
 4. Update the tables and provenance in this file, and put the new sizes and planet date in the commit body.
+
+### Open: is the production host serving ranges?
+
+The Phase 3 audit (2026-10-16) found that `wrangler dev`, which runs the Workers static assets runtime locally, answers a Range request on both files with `200` and the whole file. Cloudflare does not document whether deployed static assets honour `Range`. If production behaves the same, every atlas visitor downloads about 22.7 MB. The plan:
+
+1. Run the `curl` above against a deployed preview.
+2. If it answers `200`, move the folder to R2 as described in "Moving it off the site host" below. That is a change to `PUBLIC_BASEMAP_URL` and nothing else.
 
 ### Widening a region
 

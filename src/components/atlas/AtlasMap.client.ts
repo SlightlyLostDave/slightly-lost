@@ -18,7 +18,7 @@ import {
   ATLAS_SOURCE_ID,
   createAtlasMapStyle,
 } from '@/lib/map-style'
-import { REDUCED_MOTION_QUERY } from '@/lib/motion/media'
+import type { REDUCED_MOTION_QUERY } from '@/lib/motion/media'
 import type { SiteTheme, THEME_CHANGE_EVENT } from '@/lib/theme'
 
 // The atlas map island, imported by AtlasMap.script.ts once the map is
@@ -60,6 +60,9 @@ let pmtilesRegistered = false
 const themeChangeEvent: typeof THEME_CHANGE_EVENT = 'themechange'
 // The same, for the kind filter; see src/lib/atlas-filter.ts.
 const filterChangeEvent: typeof ATLAS_FILTER_CHANGE_EVENT = 'atlasfilterchange'
+// And for the GSAP runtime's reduced-motion query. A value import here made
+// media.ts a chunk of its own, which every animated route then fetched.
+const reducedMotionQuery: typeof REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
 function currentTheme(): SiteTheme {
   return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
@@ -118,7 +121,7 @@ export async function mount(root: HTMLElement): Promise<void> {
 
   // The same query the GSAP runtime reads, checked at every camera move so a
   // change to the preference applies without a reload.
-  const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY)
+  const reducedMotion = window.matchMedia(reducedMotionQuery)
   const basemapUrl = new URL(basemap.url, window.location.href).href
   let theme: SiteTheme = currentTheme()
   let filter: AtlasFilter = currentFilter(root)

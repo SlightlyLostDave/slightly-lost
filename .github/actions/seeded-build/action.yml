@@ -77,3 +77,9 @@ runs:
     - name: Build the site
       shell: bash
       run: npm run build
+
+    # Only this build knows where the seeded fuzzed and withheld places
+    # really are, so only this build can look for them by value.
+    - name: Check the build for seeded coordinates
+      shell: bash
+      run: node scripts/assert-seed-canaries.mjs

@@ -36,15 +36,11 @@ const copy = atlas.map
          shows only while MapLibre's canvas has keyboard focus. -->
     <div class="group/map relative min-h-0">
       <!-- Sized, not positioned: maplibre-gl.css sets position: relative on
-           this element once the map mounts, which would undo inset-0. -->
-      <div
-        data-atlas-map-canvas
-        role="region"
-        aria-label={copy.label}
-        aria-describedby="atlas-map-description"
-        class="h-full w-full"
-      >
-      </div>
+           this element once the map mounts, which would undo inset-0. It
+           carries no role or name: MapLibre makes its canvas a region, and
+           the island names and describes that canvas, the element that takes
+           focus. Naming this one too announced the map twice. -->
+      <div data-atlas-map-canvas class="h-full w-full"></div>
 
       <svg
         aria-hidden="true"
