@@ -1,0 +1,25 @@
+---
+import { atlas, atlasKindBySlug, type AtlasKindSlug } from '@/config'
+
+interface Props {
+  kind: AtlasKindSlug
+  name: string
+}
+
+const { kind, name } = Astro.props
+// The atlas index is the only atlas route with an href of its own; a kind
+// has no page, so it is a crumb and not a link.
+const atlasHref = '/atlas'
+---
+
+<nav aria-label={atlas.entry.breadcrumbLabel}>
+  <ol class="text-label text-text-muted flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono uppercase">
+    <li>
+      <a href={atlasHref} class="hover:text-accent motion-safe:transition-colors">{atlas.label}</a>
+    </li>
+    <li aria-hidden="true">/</li>
+    <li>{atlasKindBySlug[kind].pluralName}</li>
+    <li aria-hidden="true">/</li>
+    <li aria-current="page" class="text-text-body">{name}</li>
+  </ol>
+</nav>

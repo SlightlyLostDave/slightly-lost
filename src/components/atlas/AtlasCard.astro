@@ -5,7 +5,7 @@ import DataValue from '@/components/primitives/DataValue.astro'
 import Button from '@/components/primitives/Button.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
 import { atlas, atlasKindBySlug, atlasLocationPolicyBySlug, atlasStatusBySlug } from '@/config'
-import type { PublishedAtlasEntry } from '@/lib/atlas'
+import { formatAtlasDate, type PublishedAtlasEntry } from '@/lib/atlas'
 import { formatCoordinates } from '@/lib/location-policy'
 
 // One card, the one styling truth for an atlas entry. The map panel renders
@@ -24,9 +24,6 @@ const status = atlasStatusBySlug[data.status]
 const precision = atlasLocationPolicyBySlug[data.locationPolicy]
 const coordinates = formatCoordinates(data.location, data.locationPolicy)
 const columns = atlas.catalogue.columns
-
-// The atlas design writes dates year first, 2019.04.11.
-const formatVisitDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll('-', '.')
 
 // Distinct per variant: the panel clones its card from a template into the
 // same page as the catalogue, and a shared id would then appear twice.
@@ -123,7 +120,7 @@ const panelImageSizes = '(min-width: 1024px) 384px, 100vw'
           <DataValue label={columns.coordinates} value={coordinates} />
           <DataValue label="Precision" value={precision.name} />
           {data.firstVisited && (
-            <DataValue label="First visited" value={formatVisitDate(data.firstVisited)} />
+            <DataValue label="First visited" value={formatAtlasDate(data.firstVisited)} />
           )}
         </div>
 

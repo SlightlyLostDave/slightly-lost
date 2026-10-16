@@ -1,0 +1,44 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import { atlas, pillarBySlug } from '@/config'
+import { formatAtlasDate } from '@/lib/atlas'
+import type { PublishedPost } from '@/lib/posts'
+
+interface Props {
+  // Oldest first, from getAtlasEntryDispatches.
+  posts: PublishedPost[]
+}
+
+const { posts } = Astro.props
+const total = String(posts.length).padStart(2, '0')
+---
+
+<section class="flex flex-col gap-6">
+  <Label as="h2" accentRule>{atlas.entry.dispatches.heading}</Label>
+  <ol class="divide-hairline border-hairline divide-y border-t">
+    {
+      posts.map((post, index) => (
+        <li class="grid grid-cols-1 items-baseline gap-x-6 gap-y-1 py-5 md:grid-cols-12">
+          <p class="text-label text-sage font-mono uppercase md:col-span-3">
+            {pillarBySlug[post.data.pillar].name}
+          </p>
+          <h3
+            class="font-display text-title text-text-strong md:col-span-6"
+            style="font-weight: var(--weight-display)"
+          >
+            <a href={post.data.href} class="hover:text-accent motion-safe:transition-colors">
+              {post.data.title}
+            </a>
+          </h3>
+          <p class="text-data text-text-muted font-mono tabular-nums md:col-span-3 md:text-right">
+            <time datetime={post.data.publishedAt.toISOString()}>
+              {formatAtlasDate(post.data.publishedAt)}
+            </time>
+            <span aria-hidden="true"> / </span>
+            {String(index + 1).padStart(2, '0')} of {total}
+          </p>
+        </li>
+      ))
+    }
+  </ol>
+</section>

@@ -192,6 +192,47 @@ export interface AtlasCatalogueCopy {
   emptyAtlas: string
 }
 
+// Copy for an individual entry page, src/pages/atlas/[slug].astro.
+export interface AtlasEntryCopy {
+  breadcrumbLabel: string
+  specification: {
+    heading: string
+    kind: string
+    status: string
+    coordinates: string
+    locationPolicy: string
+    firstVisited: string
+    lastVisited: string
+    dispatches: string
+  }
+  heroPlaceholderAlt: string
+  // Rendered once per safety note. Deliberately the same words every time.
+  safetyLabel: string
+  location: {
+    heading: string
+    // {name} is replaced with the entry name, {count} with nearby places shown.
+    plateDescription: string
+    plateCaption: string
+    // The plate is this many kilometres across, one grid square per kilometre.
+    plateWidthKm: number
+    // Shown for a withheld entry with no locationNote of its own.
+    withheldFallback: string
+  }
+  dispatches: {
+    heading: string
+  }
+  nearby: {
+    heading: string
+    // {distance} is replaced with the furthest distance shown, in km.
+    summary: string
+    count: number
+    // Nothing further than this is "nearby"; the section is omitted when
+    // no other entry falls inside it.
+    maxDistanceKm: number
+    distanceUnit: string
+  }
+}
+
 export interface AtlasConfig {
   label: string
   title: string
@@ -206,6 +247,7 @@ export interface AtlasConfig {
   // are written for both cases, so crossing it changes no layer.
   mapClusterThreshold: number
   map: AtlasMapCopy
+  entry: AtlasEntryCopy
 }
 
 export const atlas = {
@@ -256,5 +298,39 @@ export const atlas = {
     nearestCluster: '{count} places near the centre. Press Enter to zoom in.',
     noNearbyPlace: 'No place near the centre of the map.',
     unavailable: 'The map could not load here. Every place is in the list below.',
+  },
+  entry: {
+    breadcrumbLabel: 'Breadcrumb',
+    specification: {
+      heading: 'Specification',
+      kind: 'Kind',
+      status: 'Status',
+      coordinates: 'Coordinates',
+      locationPolicy: 'Location policy',
+      firstVisited: 'First visited',
+      lastVisited: 'Last visited',
+      dispatches: 'Dispatches',
+    },
+    heroPlaceholderAlt: 'No photograph of this place has been published yet.',
+    safetyLabel: 'Before you go',
+    location: {
+      heading: 'Location',
+      plateDescription:
+        'A map plate centred on {name}, ten kilometres across, with {count} other atlas places marked.',
+      plateCaption: 'Map plate / 1 grid square = 1 km',
+      plateWidthKm: 10,
+      withheldFallback:
+        'No location is published for this place. It is withheld on purpose, and it will stay that way.',
+    },
+    dispatches: {
+      heading: 'Related dispatches',
+    },
+    nearby: {
+      heading: 'Nearby entries',
+      summary: 'Within {distance} km',
+      count: 4,
+      maxDistanceKm: 25,
+      distanceUnit: 'km',
+    },
   },
 } as const satisfies AtlasConfig

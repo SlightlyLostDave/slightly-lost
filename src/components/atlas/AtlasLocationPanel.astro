@@ -1,0 +1,131 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import { atlas, atlasLocationPolicyBySlug } from '@/config'
+import type { AtlasEntry } from '@/content.config'
+import { fillTemplate } from '@/lib/atlas-filter'
+import { fuzzedUncertaintyKm, projectToPlate } from '@/lib/geo'
+import { formatCoordinates, type Coordinates } from '@/lib/location-policy'
+
+interface Props {
+  entry: AtlasEntry
+  // Post-policy positions of other published, located entries. Never
+  // contains a withheld entry, because those have no location to pass.
+  neighbourLocations: Coordinates[]
+}
+
+const { entry, neighbourLocations } = Astro.props
+const copy = atlas.entry.location
+
+// One static plate rather than a second MapLibre instance: the atlas index
+// owns the only map island. Every position below is projected from a
+// coordinate that has already been through the location policy, and
+// projectToPlate returns whole SVG units.
+const PLATE_SIZE = 400
+const MARGIN = 12
+const unitsPerKm = PLATE_SIZE / copy.plateWidthKm
+const gridLines = Array.from({ length: copy.plateWidthKm - 1 }, (_, index) => (index + 1) * unitsPerKm)
+
+const location = entry.location
+const plotted = location
+  ? neighbourLocations
+      .map((neighbour) => projectToPlate(location, neighbour, copy.plateWidthKm, PLATE_SIZE))
+      .filter(
+        (point) =>
+          point.x >= MARGIN &&
+          point.x <= PLATE_SIZE - MARGIN &&
+          point.y >= MARGIN &&
+          point.y <= PLATE_SIZE - MARGIN
+      )
+  : []
+const uncertaintyRadius =
+  location && entry.locationPolicy === 'fuzzed'
+    ? Math.round(fuzzedUncertaintyKm(location) * unitsPerKm)
+    : undefined
+const centre = PLATE_SIZE / 2
+const plateDescription = fillTemplate(copy.plateDescription, {
+  name: entry.name,
+  count: String(plotted.length),
+})
+
+// A withheld entry never had a location to plot, so the panel is the note
+// alone, which is more honest than an empty map.
+const note =
+  entry.locationNote ?? (entry.locationPolicy === 'withheld' ? copy.withheldFallback : undefined)
+---
+
+{
+  location ? (
+    <section class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-16">
+      <div class="flex flex-col gap-4 lg:col-span-7">
+        <Label as="h2" accentRule>
+          {copy.heading}
+        </Label>
+        {/* A map is an object on the page rather than part of it, so the plate
+            keeps its own dark ground in both themes, like AtlasTeaser. */}
+        <figure data-theme="dark" class="border-hairline bg-surface border p-6">
+          <svg
+            viewBox={`0 0 ${PLATE_SIZE} ${PLATE_SIZE}`}
+            class="block h-auto w-full"
+            role="img"
+            aria-label={plateDescription}
+          >
+            <g stroke="currentColor" stroke-width="1" class="text-hairline">
+              {gridLines.map((offset) => (
+                <>
+                  <line x1={offset} y1="0" x2={offset} y2={PLATE_SIZE} />
+                  <line x1="0" y1={offset} x2={PLATE_SIZE} y2={offset} />
+                </>
+              ))}
+            </g>
+            {plotted.map((point) => (
+              <circle cx={point.x} cy={point.y} r="4" fill="currentColor" class="text-sage" />
+            ))}
+            {uncertaintyRadius !== undefined && (
+              <circle
+                cx={centre}
+                cy={centre}
+                r={uncertaintyRadius}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-dasharray="4 4"
+                class="text-sage"
+              />
+            )}
+            <circle cx={centre} cy={centre} r="7" fill="currentColor" class="text-accent" />
+            <text
+              x={PLATE_SIZE - MARGIN}
+              y={MARGIN * 2}
+              text-anchor="end"
+              fill="currentColor"
+              class="text-text-muted font-mono text-label"
+            >
+              N
+            </text>
+          </svg>
+          <figcaption class="text-label text-text-muted mt-4 font-mono uppercase">
+            {copy.plateCaption}
+          </figcaption>
+        </figure>
+      </div>
+      <div class="flex flex-col gap-4 lg:col-span-5 lg:pt-10">
+        <p class="font-mono text-data tabular-nums text-text-strong">
+          {formatCoordinates(location, entry.locationPolicy)}
+        </p>
+        <p class="font-mono text-caption text-text-muted">
+          {atlasLocationPolicyBySlug[entry.locationPolicy].description}
+        </p>
+        {note && <p class="max-w-measure font-display text-body text-text-body">{note}</p>}
+      </div>
+    </section>
+  ) : (
+    note && (
+      <section class="flex flex-col gap-4">
+        <Label as="h2" accentRule>
+          {copy.heading}
+        </Label>
+        <p class="max-w-measure font-display text-body-l text-text-body">{note}</p>
+      </section>
+    )
+  )
+}

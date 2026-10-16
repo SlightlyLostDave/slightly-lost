@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content'
 import { allAtlasKinds, type AtlasKind } from '@/config/atlas'
 import type { Coordinates } from '@/lib/location-policy'
+import type { PublishedPost } from '@/lib/posts'
 
 export type PublishedAtlasEntry = CollectionEntry<'atlasEntries'> & {
   data: { publishedAt: Date }
@@ -54,4 +55,20 @@ export function getLocatedAtlasEntries<Entry extends CollectionEntry<'atlasEntri
   return atlasEntries.filter(
     (entry): entry is LocatedAtlasEntry<Entry> => entry.data.location !== undefined
   )
+}
+
+// The published posts written about an entry, oldest first, so the sequence
+// of visits reads in order on the entry page.
+export function getAtlasEntryDispatches(
+  entry: CollectionEntry<'atlasEntries'>,
+  publishedPosts: readonly PublishedPost[]
+): PublishedPost[] {
+  return publishedPosts
+    .filter((post) => post.data.atlasEntry?.id === entry.id)
+    .sort((a, b) => a.data.publishedAt.getTime() - b.data.publishedAt.getTime())
+}
+
+// The atlas design writes dates year first, 2019.04.11.
+export function formatAtlasDate(date: Date): string {
+  return date.toISOString().slice(0, 10).replaceAll('-', '.')
 }

@@ -1,0 +1,44 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import { atlas, atlasKindBySlug } from '@/config'
+import { fillTemplate } from '@/lib/atlas-filter'
+import type { PublishedAtlasEntry } from '@/lib/atlas'
+import type { NearbyEntry } from '@/lib/geo'
+
+interface Props {
+  // Nearest first. Distances were computed at build time from post-policy
+  // coordinates; a withheld entry never gets this list at all.
+  nearby: NearbyEntry<PublishedAtlasEntry>[]
+}
+
+const { nearby } = Astro.props
+const copy = atlas.entry.nearby
+const formatDistance = (distanceKm: number) => distanceKm.toFixed(1)
+const furthest = Math.ceil(nearby.at(-1)?.distanceKm ?? 0)
+---
+
+<section class="flex flex-col gap-6">
+  <div class="flex flex-wrap items-baseline justify-between gap-4">
+    <Label as="h2" accentRule>{copy.heading}</Label>
+    <p class="text-label text-text-muted font-mono uppercase">
+      {fillTemplate(copy.summary, { distance: String(furthest) })}
+    </p>
+  </div>
+  <ul class="grid grid-cols-1 gap-px border-hairline bg-hairline border sm:grid-cols-2 lg:grid-cols-4">
+    {
+      nearby.map(({ entry, distanceKm }) => (
+        <li class="bg-surface flex flex-col gap-3 p-6">
+          <p class="text-label text-sage font-mono uppercase">{atlasKindBySlug[entry.data.kind].name}</p>
+          <h3 class="font-display text-title text-text-strong" style="font-weight: var(--weight-display)">
+            <a href={entry.data.href} class="hover:text-accent motion-safe:transition-colors">
+              {entry.data.name}
+            </a>
+          </h3>
+          <p class="text-data text-text-muted mt-auto font-mono tabular-nums">
+            {formatDistance(distanceKm)} {copy.distanceUnit}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

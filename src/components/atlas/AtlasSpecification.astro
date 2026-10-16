@@ -1,0 +1,49 @@
+---
+import Label from '@/components/primitives/Label.astro'
+import DataValue from '@/components/primitives/DataValue.astro'
+import { atlas, atlasKindBySlug, atlasLocationPolicyBySlug, atlasStatusBySlug } from '@/config'
+import { formatAtlasDate } from '@/lib/atlas'
+import { formatCoordinates } from '@/lib/location-policy'
+import type { AtlasEntry } from '@/content.config'
+
+interface Props {
+  entry: AtlasEntry
+  dispatchCount: number
+  class?: string
+}
+
+const { entry, dispatchCount, class: className } = Astro.props
+const copy = atlas.entry.specification
+
+// formatCoordinates prints the policy name for a withheld entry, so this row
+// can never carry a number it should not.
+const rows = [
+  { label: copy.kind, value: atlasKindBySlug[entry.kind].name },
+  { label: copy.status, value: atlasStatusBySlug[entry.status].name },
+  { label: copy.coordinates, value: formatCoordinates(entry.location, entry.locationPolicy) },
+  { label: copy.locationPolicy, value: atlasLocationPolicyBySlug[entry.locationPolicy].name },
+  entry.firstVisited && { label: copy.firstVisited, value: formatAtlasDate(entry.firstVisited) },
+  entry.lastVisited && { label: copy.lastVisited, value: formatAtlasDate(entry.lastVisited) },
+  { label: copy.dispatches, value: String(dispatchCount) },
+].filter((row): row is { label: string; value: string } => row !== undefined)
+---
+
+<section
+  class:list={['border-hairline bg-surface-raised border', className]}
+>
+  <div class="border-hairline border-b px-6 py-4">
+    <Label as="h2" accentRule>{copy.heading}</Label>
+  </div>
+  <div class="divide-hairline divide-y px-6">
+    {
+      rows.map((row) => (
+        <DataValue
+          label={row.label}
+          value={row.value}
+          orientation="inline"
+          class="justify-between py-3 text-right"
+        />
+      ))
+    }
+  </div>
+</section>

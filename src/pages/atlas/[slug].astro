@@ -1,0 +1,156 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content'
+import Base from '@/layouts/Base.astro'
+import Tag from '@/components/primitives/Tag.astro'
+import Prose from '@/components/primitives/Prose.astro'
+import FullBleed from '@/components/media/FullBleed.astro'
+import Placeholder from '@/components/media/Placeholder.astro'
+import ArticleBody from '@/components/content/ArticleBody.astro'
+import SourceList from '@/components/sections/SourceList.astro'
+import AtlasBreadcrumb from '@/components/atlas/AtlasBreadcrumb.astro'
+import AtlasSpecification from '@/components/atlas/AtlasSpecification.astro'
+import SafetyNotice from '@/components/atlas/SafetyNotice.astro'
+import AtlasLocationPanel from '@/components/atlas/AtlasLocationPanel.astro'
+import AtlasDispatchList from '@/components/atlas/AtlasDispatchList.astro'
+import AtlasNearbyList from '@/components/atlas/AtlasNearbyList.astro'
+import { atlas, atlasKindBySlug, atlasStatusBySlug } from '@/config'
+import {
+  getAtlasEntryDispatches,
+  getLocatedAtlasEntries,
+  getPublishedAtlasEntries,
+  type PublishedAtlasEntry,
+} from '@/lib/atlas'
+import { getNearestEntries, type NearbyEntry } from '@/lib/geo'
+import { getPublishedPosts, type PublishedPost } from '@/lib/posts'
+
+export async function getStaticPaths() {
+  // Unfiltered on purpose: a draft still needs a generated page at its own
+  // URL. Every sibling lookup below uses the published-only sets, so a draft
+  // is never linked to from anywhere but its own page.
+  const atlasEntries = await getCollection('atlasEntries')
+  const locatedPublishedEntries = getLocatedAtlasEntries(await getPublishedAtlasEntries())
+  const publishedPosts = await getPublishedPosts()
+
+  return atlasEntries.map((entry) => {
+    const location = entry.data.location
+    // Only a located entry gets neighbours. A withheld entry has no location
+    // by the time it reaches here, so no distance is ever computed for it,
+    // and withheld neighbours are never candidates either.
+    const nearbyEntries: NearbyEntry<PublishedAtlasEntry>[] = location
+      ? getNearestEntries({ ...entry, data: { ...entry.data, location } }, locatedPublishedEntries)
+      : []
+
+    return {
+      params: { slug: entry.id },
+      props: {
+        entry,
+        dispatches: getAtlasEntryDispatches(entry, publishedPosts),
+        nearbyEntries,
+      },
+    }
+  })
+}
+
+interface Props {
+  entry: CollectionEntry<'atlasEntries'>
+  dispatches: PublishedPost[]
+  // Every located published entry, nearest first.
+  nearbyEntries: NearbyEntry<PublishedAtlasEntry>[]
+}
+
+const { entry, dispatches, nearbyEntries } = Astro.props
+const { data } = entry
+const isDraft = data.publishedAt === null
+const nearbyShown = nearbyEntries
+  .filter((nearby) => nearby.distanceKm <= atlas.entry.nearby.maxDistanceKm)
+  .slice(0, atlas.entry.nearby.count)
+const neighbourLocations = nearbyEntries.map((nearby) => nearby.entry.data.location)
+---
+
+<Base
+  type="website"
+  title={data.seo?.metaTitle ?? data.name}
+  description={data.seo?.metaDescription ?? data.summary}
+  noindex={isDraft || data.seo?.noindex}
+  surface="ink"
+  isDraft={isDraft}
+>
+  <article>
+    <div class="max-w-content mx-auto flex flex-col gap-10 px-6 pt-16">
+      <AtlasBreadcrumb kind={data.kind} name={data.name} />
+
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-x-16">
+        <div class="flex flex-col gap-8 lg:col-span-7">
+          <div class="flex flex-wrap gap-2">
+            <Tag label={atlasKindBySlug[data.kind].name} tone="sage" />
+            <Tag label={atlasStatusBySlug[data.status].name} tone="sage" />
+          </div>
+          <h1
+            class="font-display text-display-l text-text-strong"
+            style="font-weight: var(--weight-display)"
+          >
+            {data.name}
+          </h1>
+          <p class="max-w-measure font-display text-body-l text-text-body">{data.summary}</p>
+        </div>
+        <AtlasSpecification
+          entry={data}
+          dispatchCount={dispatches.length}
+          class="self-start lg:col-span-5"
+        />
+      </div>
+    </div>
+
+    <div class="mt-(--spacing-section)">
+      {
+        data.hero ? (
+          <FullBleed
+            src={data.hero.src}
+            width={data.hero.width}
+            height={data.hero.height}
+            alt={data.hero.alt}
+          />
+        ) : (
+          <FullBleed alt={atlas.entry.heroPlaceholderAlt}>
+            <Placeholder slot="media" variant="b" />
+          </FullBleed>
+        )
+      }
+    </div>
+
+    {
+      data.body.length > 0 && (
+        <div class="max-w-content mx-auto mt-(--spacing-section) px-6">
+          <Prose>
+            <ArticleBody body={data.body} />
+          </Prose>
+        </div>
+      )
+    }
+
+    <div class="max-w-content mx-auto my-(--spacing-section) flex flex-col gap-(--spacing-section) px-6">
+      {
+        data.safetyNotes.length > 0 && (
+          <div class="max-w-measure flex flex-col gap-4">
+            {data.safetyNotes.map((note) => (
+              <SafetyNotice heading={note.heading} body={note.body} />
+            ))}
+          </div>
+        )
+      }
+
+      <AtlasLocationPanel entry={data} neighbourLocations={neighbourLocations} />
+    </div>
+
+    {data.sources.length > 0 && <SourceList sources={data.sources} />}
+
+    {
+      (dispatches.length > 0 || nearbyShown.length > 0) && (
+        <div class="max-w-content mx-auto my-(--spacing-section) flex flex-col gap-(--spacing-section) px-6">
+          {dispatches.length > 0 && <AtlasDispatchList posts={dispatches} />}
+          {nearbyShown.length > 0 && <AtlasNearbyList nearby={nearbyShown} />}
+        </div>
+      )
+    }
+  </article>
+</Base>

@@ -1,0 +1,29 @@
+---
+import { atlas } from '@/config'
+
+interface Props {
+  heading?: string
+  body: string
+}
+
+const { heading, body } = Astro.props
+---
+
+<!-- Sober on purpose: no icon, no fill, no rounding. The rust rule and the
+     label are the only accent, so the block reads as information from someone
+     who has been there rather than as an alert to dismiss. The page renders
+     one per note and none at all when there are no notes. -->
+<aside
+  class="border-hairline border-l-accent border border-l-2 px-6 py-5"
+  aria-label={atlas.entry.safetyLabel}
+>
+  <p class="text-label text-accent font-mono uppercase">{atlas.entry.safetyLabel}</p>
+  {
+    heading && (
+      <p class="font-display text-title text-text-strong mt-3" style="font-weight: var(--weight-display)">
+        {heading}
+      </p>
+    )
+  }
+  <p class="max-w-measure font-display text-body text-text-body mt-3">{body}</p>
+</aside>
