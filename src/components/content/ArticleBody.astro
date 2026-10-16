@@ -1,10 +1,12 @@
 ---
 import type { PostBody } from '@/content.config'
 import { serializeBlocks } from '@/lib/blocks'
+import { getPublishedAtlasEntries, type PublishedAtlasEntry } from '@/lib/atlas'
 import Prose from '@/components/primitives/Prose.astro'
 import Figure from '@/components/media/Figure.astro'
 import FigureGrid from '@/components/media/FigureGrid.astro'
 import PullQuote from '@/components/sections/PullQuote.astro'
+import AtlasReference from '@/components/atlas/AtlasReference.astro'
 
 interface Props {
   body: PostBody[]
@@ -31,6 +33,14 @@ function assertNever(value: never): never {
 
 const mergedBody = mergeRichTextRuns(body)
 const firstRichTextIndex = mergedBody.findIndex((block) => block.component === 'body.rich-text')
+
+// Through the published-entries choke point, so a reference to a draft entry
+// renders nothing rather than linking to it. Only fetched when the body has
+// a reference to resolve.
+const hasAtlasReference = mergedBody.some((block) => block.component === 'body.atlas-reference')
+const publishedAtlasEntryById = new Map<string, PublishedAtlasEntry>(
+  hasAtlasReference ? (await getPublishedAtlasEntries()).map((entry) => [entry.id, entry]) : []
+)
 ---
 
 {
@@ -75,6 +85,20 @@ const firstRichTextIndex = mergedBody.findIndex((block) => block.component === '
         )
       case 'body.pull-quote':
         return <PullQuote>{block.quote}</PullQuote>
+      case 'body.atlas-reference': {
+        const atlasEntry = publishedAtlasEntryById.get(block.atlasEntry.id)
+        if (!atlasEntry) return null
+        // textAfter follows the chip directly, so it can open with punctuation.
+        return (
+          <Prose>
+            <p data-first={index === 0 || undefined}>
+              {block.textBefore && <>{block.textBefore} </>}
+              <AtlasReference entry={atlasEntry} />
+              {block.textAfter}
+            </p>
+          </Prose>
+        )
+      }
       default:
         return assertNever(block)
     }

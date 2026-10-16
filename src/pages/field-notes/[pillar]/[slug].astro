@@ -7,9 +7,17 @@ import ArticleBody from '@/components/content/ArticleBody.astro'
 import SourceList from '@/components/sections/SourceList.astro'
 import SeriesStrip from '@/components/series/SeriesStrip.astro'
 import TagList from '@/components/content/TagList.astro'
+import PostAtlasEntry from '@/components/atlas/PostAtlasEntry.astro'
 import { pillarBySlug } from '@/config/pillars'
 import { getSeriesPosition, type SeriesPosition } from '@/lib/series'
 import { getPublishedPosts } from '@/lib/posts'
+import {
+  getPostAtlasEntry,
+  getPostFieldData,
+  isPublishedAtlasEntry,
+  type FieldDataRow,
+  type PublishedAtlasEntry,
+} from '@/lib/atlas'
 
 export async function getStaticPaths() {
   // Unfiltered on purpose: a draft still needs a generated page at its own
@@ -19,6 +27,10 @@ export async function getStaticPaths() {
   const publishedPosts = await getPublishedPosts()
   const allSeries = await getCollection('series')
   const allTags = await getCollection('tags')
+  // Every entry the build loaded, which outside preview is published entries
+  // only. The coordinate row may come from any of them, since its location
+  // is already post-policy; the link to the entry only from a published one.
+  const atlasEntries = await getCollection('atlasEntries')
 
   return posts.map((post) => {
     const pillar = pillarBySlug[post.data.pillar]
@@ -30,10 +42,19 @@ export async function getStaticPaths() {
     const postTags = post.data.tags
       .map((ref) => allTags.find((tag) => tag.id === ref.id))
       .filter((tag): tag is CollectionEntry<'tags'> => tag !== undefined)
+    const atlasEntry = getPostAtlasEntry(post, atlasEntries)
 
     return {
       params: { pillar: pillar.slug, slug: post.id },
-      props: { post, seriesPosition, postTags },
+      props: {
+        post,
+        seriesPosition,
+        postTags,
+        fieldData: getPostFieldData(post.data.fieldData, atlasEntry),
+        atlasEntrySlug: atlasEntry?.id,
+        publishedAtlasEntry:
+          atlasEntry && isPublishedAtlasEntry(atlasEntry) ? atlasEntry : undefined,
+      },
     }
   })
 }
@@ -42,9 +63,13 @@ interface Props {
   post: CollectionEntry<'posts'>
   seriesPosition?: SeriesPosition
   postTags: CollectionEntry<'tags'>[]
+  fieldData: FieldDataRow[]
+  atlasEntrySlug?: string
+  publishedAtlasEntry?: PublishedAtlasEntry
 }
 
-const { post, seriesPosition, postTags } = Astro.props
+const { post, seriesPosition, postTags, fieldData, atlasEntrySlug, publishedAtlasEntry } =
+  Astro.props
 const isDraft = post.data.status === 'draft'
 ---
 
@@ -70,10 +95,18 @@ const isDraft = post.data.status === 'draft'
   </Fragment>
 
   <Fragment slot="field-data">
-    <FieldDataStrip items={post.data.fieldData} />
+    <FieldDataStrip items={fieldData} atlasEntrySlug={atlasEntrySlug} />
   </Fragment>
 
   <ArticleBody body={post.data.body} />
+
+  {
+    publishedAtlasEntry && (
+      <Fragment slot="atlas">
+        <PostAtlasEntry entry={publishedAtlasEntry} />
+      </Fragment>
+    )
+  }
 
   {
     seriesPosition && (

@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_body_atlas_references",
+  "info": {
+    "displayName": "Atlas Reference",
+    "icon": "pinMap",
+    "description": "Maps to AtlasReference.astro, through ArticleBody.astro. One sentence with an inline chip linking an atlas entry by kind and name: textBefore, then the chip, then textAfter. textAfter follows the chip with no space, so it can start with punctuation. A reference to an entry that is not published is dropped from the build until the entry is published."
+  },
+  "options": {},
+  "attributes": {
+    "atlasEntry": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::atlas-entry.atlas-entry"
+    },
+    "textBefore": {
+      "type": "text"
+    },
+    "textAfter": {
+      "type": "string"
+    }
+  }
+}

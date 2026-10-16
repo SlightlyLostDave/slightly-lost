@@ -3,6 +3,7 @@ import type { APIContext } from 'astro'
 import { site } from '@/config'
 import { allPillars, type Pillar } from '@/config/pillars'
 import { toFeedItem } from '@/lib/feed'
+import { getPublishedAtlasEntries } from '@/lib/atlas'
 import { getPublishedPosts, type PublishedPost } from '@/lib/posts'
 
 export async function getStaticPaths() {
@@ -27,11 +28,15 @@ export async function GET(context: APIContext) {
 
   const { pillar, posts } = context.props as Props
 
+  const atlasEntries = new Map(
+    (await getPublishedAtlasEntries()).map((entry) => [entry.id, entry] as const)
+  )
+
   return rss({
     title: `${site.name}: ${pillar.name}`,
     description: pillar.description,
     site: context.site,
     trailingSlash: false,
-    items: posts.map(toFeedItem),
+    items: posts.map((post) => toFeedItem(post, atlasEntries)),
   })
 }

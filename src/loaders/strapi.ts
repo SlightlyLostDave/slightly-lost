@@ -17,7 +17,9 @@ import { applyLocationPolicy, type Coordinates } from '@/lib/location-policy'
 // Bumped to 2 when posts gained the atlasEntry reference and the atlas-entries
 // collection arrived: every cached entry predates both and needs a full resync.
 // Bumped to 3 when atlas entries gained the required region.
-const SCHEMA_VERSION = '3'
+// Bumped to 4 when bodies gained body.atlas-reference and the digest moved
+// from timestamps to the normalized data.
+const SCHEMA_VERSION = '4'
 const META_LAST_SYNC_KEY = 'lastSyncedAt'
 const META_SCHEMA_VERSION_KEY = 'schemaVersion'
 
@@ -65,6 +67,9 @@ interface StrapiBodyItemRaw {
   columns?: string | null
   quote?: string | null
   attribution?: string | null
+  atlasEntry?: StrapiRelationRef | null
+  textBefore?: string | null
+  textAfter?: string | null
 }
 
 interface StrapiRelationRef {
@@ -223,7 +228,46 @@ function buildHref(pillar: PillarEnum, slug: string): string {
   return `/field-notes/${pillarByEnum[pillar].slug}/${slug}`
 }
 
-function normalizeBodyItem(item: StrapiBodyItemRaw): Record<string, unknown> {
+// Returns no item for a block that has nothing to render, so a body can
+// drop it rather than fail the build.
+function normalizeBodyItem(
+  item: StrapiBodyItemRaw,
+  owner: string,
+  logger: LoaderContext['logger']
+): Record<string, unknown>[] {
+  switch (item.__component) {
+    case 'body.atlas-reference':
+      // Strapi leaves the relation out of a published response while its
+      // target is still a draft, so a post published ahead of its entry
+      // simply loses the chip until the entry is published too.
+      if (!item.atlasEntry) {
+        logger.warn(
+          `strapi (${owner}): an atlas reference points at no published atlas entry and was dropped`
+        )
+        return []
+      }
+      return [
+        {
+          component: item.__component,
+          atlasEntry: item.atlasEntry.slug,
+          textBefore: item.textBefore ?? undefined,
+          textAfter: item.textAfter ?? undefined,
+        },
+      ]
+    default:
+      return [normalizeContentBodyItem(item)]
+  }
+}
+
+function normalizeBody(
+  items: StrapiBodyItemRaw[],
+  owner: string,
+  logger: LoaderContext['logger']
+): Record<string, unknown>[] {
+  return items.flatMap((item) => normalizeBodyItem(item, owner, logger))
+}
+
+function normalizeContentBodyItem(item: StrapiBodyItemRaw): Record<string, unknown> {
   switch (item.__component) {
     case 'body.rich-text':
       return { component: item.__component, content: item.content ?? [] }
@@ -275,7 +319,7 @@ function normalizePost(
     pillar: pillarByEnum[raw.pillar].slug,
     region: raw.region,
     dek: raw.dek,
-    body: raw.body.map(normalizeBodyItem),
+    body: normalizeBody(raw.body, `posts "${raw.slug}"`, logger),
     hero,
     gallery: normalizeImages(raw.gallery),
     featured: raw.featured ?? false,
@@ -313,7 +357,10 @@ function normalizePost(
   }
 }
 
-function normalizeAtlasEntry(raw: StrapiAtlasEntryRaw): Record<string, unknown> {
+function normalizeAtlasEntry(
+  raw: StrapiAtlasEntryRaw,
+  logger: LoaderContext['logger']
+): Record<string, unknown> {
   // The only read of the recorded coordinates anywhere in the site. Only the
   // policy's result is kept. When the policy publishes nothing, the location
   // key is left off entirely, not set to undefined or null, so a withheld
@@ -331,7 +378,7 @@ function normalizeAtlasEntry(raw: StrapiAtlasEntryRaw): Record<string, unknown> 
     locationPolicy: raw.locationPolicy,
     locationNote: raw.locationNote ?? undefined,
     summary: raw.summary,
-    body: body.map(normalizeBodyItem),
+    body: normalizeBody(body, `atlas-entries "${raw.slug}"`, logger),
     hero: normalizeImage(raw.hero),
     gallery: normalizeImages(raw.gallery),
     firstVisited: raw.firstVisited ?? undefined,
@@ -405,7 +452,7 @@ function normalizeEntry(
     case 'series-entries':
       return normalizeSeries(raw as unknown as StrapiSeriesRaw)
     case 'atlas-entries':
-      return normalizeAtlasEntry(raw as unknown as StrapiAtlasEntryRaw)
+      return normalizeAtlasEntry(raw as unknown as StrapiAtlasEntryRaw, logger)
     default:
       throw new Error(`strapi loader: no normalizer registered for content type "${contentType}"`)
   }
@@ -720,20 +767,36 @@ export function strapiLoader(opts: {
         warnAboutMissingHeroOrAlt(rawItems, logger)
       }
 
+      const fetchedSlugs = new Set<string>()
       for (const raw of rawItems) {
         const slug = raw.slug as string
+        fetchedSlugs.add(slug)
         const normalized = normalizeEntry(opts.contentType, raw, logger)
         const parsedData = await parseData({ id: slug, data: normalized })
         store.set({
           id: slug,
           data: parsedData,
           // store.set() skips writing when the digest matches the cached
-          // entry's, and Strapi's publish/unpublish actions change
-          // publishedAt without bumping updatedAt (see the includeDrafts
-          // comment above) - so updatedAt alone as the digest source would
-          // silently keep serving a post's stale publish state forever.
-          digest: generateDigest(`${raw.updatedAt}:${raw.publishedAt}`),
+          // entry's, so the digest has to change whenever anything the site
+          // reads changes. Timestamps alone do not: Strapi's publish and
+          // unpublish actions leave updatedAt alone (see the includeDrafts
+          // comment above), and a relation edited from its other side, or a
+          // related entry renamed, changes this entry's populated slug
+          // without touching its own updatedAt. Either would leave a post's
+          // atlas link, and the entry's dispatch list with it, stale.
+          digest: generateDigest(normalized),
         })
+      }
+
+      // Posts and atlas entries always fetch in full, so anything cached but
+      // missing from this fetch was unpublished or deleted in Strapi.
+      // Without this it would stay in the store until the next full sync,
+      // still listed under an entry's related dispatches or still linked
+      // from a post.
+      if (opts.contentType === 'posts' || opts.contentType === 'atlas-entries') {
+        for (const cachedSlug of store.keys()) {
+          if (!fetchedSlugs.has(cachedSlug)) store.delete(cachedSlug)
+        }
       }
 
       meta.set(META_LAST_SYNC_KEY, new Date().toISOString())

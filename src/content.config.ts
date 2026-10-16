@@ -118,11 +118,23 @@ const bodyPullQuoteSchema = z.object({
   attribution: z.string().optional(),
 })
 
+// A sentence carrying an inline chip that links one atlas entry. The loader
+// drops a reference whose entry is not published, so one that arrives here
+// always names an entry; ArticleBody still renders nothing if the entry is
+// missing from the published set.
+const bodyAtlasReferenceSchema = z.object({
+  component: z.literal('body.atlas-reference'),
+  atlasEntry: reference('atlasEntries'),
+  textBefore: z.string().optional(),
+  textAfter: z.string().optional(),
+})
+
 const bodyItemSchema = z.discriminatedUnion('component', [
   bodyRichTextSchema,
   bodyFigureSchema,
   bodyFigureGridSchema,
   bodyPullQuoteSchema,
+  bodyAtlasReferenceSchema,
 ])
 
 const postSchema = z.object({
@@ -214,6 +226,11 @@ const postPopulate = {
   author: true,
   tags: true,
   series: { fields: ['slug'] },
+  // The one copy of the post-to-entry relation the site reads. The article's
+  // atlas block (getPostAtlasEntry) and the entry's related dispatches
+  // (getAtlasEntryDispatches) both resolve it, so the two directions cannot
+  // disagree. atlasEntryPopulate deliberately never populates the inverse
+  // `posts` field; a second copy would be one that could drift.
   atlasEntry: { fields: ['slug'] },
   fieldData: true,
   sources: true,
@@ -224,6 +241,7 @@ const postPopulate = {
       'body.figure': { populate: ['image'] },
       'body.figure-grid': { populate: ['images', 'captions'] },
       'body.pull-quote': true,
+      'body.atlas-reference': { populate: { atlasEntry: { fields: ['slug'] } } },
     },
   },
 }

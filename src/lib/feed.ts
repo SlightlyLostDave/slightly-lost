@@ -2,6 +2,12 @@ import type { PostBody } from '@/content.config'
 import { escapeHtml, serializeBlocks } from '@/lib/blocks'
 import { site } from '@/config'
 import type { PublishedPost } from '@/lib/posts'
+import { atlasKindBySlug } from '@/config/atlas'
+import type { PublishedAtlasEntry } from '@/lib/atlas'
+
+// Published atlas entries by id, so an inline atlas reference can link the
+// same way ArticleBody does. A reference to anything else is left out.
+export type AtlasEntryLookup = ReadonlyMap<string, PublishedAtlasEntry>
 
 function absolutizeHref(url: string): string {
   return new URL(url, site.url).toString()
@@ -19,7 +25,7 @@ function assertNever(value: never): never {
   throw new Error(`feed serialiser: unhandled body component "${JSON.stringify(value)}"`)
 }
 
-export function serializePostBodyToHtml(body: PostBody[]): string {
+export function serializePostBodyToHtml(body: PostBody[], atlasEntries: AtlasEntryLookup): string {
   return body
     .map((block) => {
       switch (block.component) {
@@ -35,6 +41,14 @@ export function serializePostBodyToHtml(body: PostBody[]): string {
             : ''
           return `<blockquote><p>${escapeHtml(block.quote)}</p>${footer}</blockquote>`
         }
+        case 'body.atlas-reference': {
+          const atlasEntry = atlasEntries.get(block.atlasEntry.id)
+          if (!atlasEntry) return ''
+          const kind = atlasKindBySlug[atlasEntry.data.kind]
+          const before = block.textBefore ? `${escapeHtml(block.textBefore)} ` : ''
+          const link = `<a href="${escapeHtml(absolutizeHref(atlasEntry.data.href))}">${escapeHtml(kind.name)} / ${escapeHtml(atlasEntry.data.name)}</a>`
+          return `<p>${before}${link}${escapeHtml(block.textAfter ?? '')}</p>`
+        }
         default:
           return assertNever(block)
       }
@@ -42,14 +56,14 @@ export function serializePostBodyToHtml(body: PostBody[]): string {
     .join('')
 }
 
-export function toFeedItem(post: PublishedPost) {
+export function toFeedItem(post: PublishedPost, atlasEntries: AtlasEntryLookup) {
   const authorName = post.data.authorName ?? site.author.name
   return {
     title: post.data.title,
     description: post.data.dek,
     pubDate: post.data.publishedAt,
     link: post.data.href,
-    content: serializePostBodyToHtml(post.data.body),
+    content: serializePostBodyToHtml(post.data.body, atlasEntries),
     customData: `<dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">${escapeHtml(authorName)}</dc:creator>`,
   }
 }

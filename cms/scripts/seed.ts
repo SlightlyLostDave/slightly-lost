@@ -328,8 +328,9 @@ async function run() {
       ],
     })
 
-    // Fuzzed structure. Synthetic coordinates.
-    await createPublishedAtlasEntry(strapi, {
+    // Fuzzed structure. Synthetic coordinates. Referenced inline from the
+    // Centre Hill post's body, so the seed exercises body.atlas-reference.
+    const powderMagazineEntryId = await createPublishedAtlasEntry(strapi, {
       name: 'The powder magazine on the haul road',
       slug: 'haul-road-powder-magazine',
       kind: 'structure',
@@ -449,10 +450,10 @@ async function run() {
         tags: [structuralSurveyDraft.documentId, underwaterArchaeologyDraft.documentId],
         atlasEntry: centreHillEntryId,
         hero: heroCentreHill,
+        // No coordinate row: the post links an atlas entry, so the field data
+        // strip takes its coordinates from the entry after the location
+        // policy, and the build fails on one typed here.
         fieldData: [
-          // Hand-typed, so it must match the linked entry's published location:
-          // SYNTHETIC_LOCATIONS.centreHillHeadframe after fuzzing.
-          { label: 'Coordinates', value: '46.67 N, 81.11 W' },
           { label: 'Elevation', value: '318', unit: 'm' },
           { label: 'Walked in', value: '2.4', unit: 'km' },
           { label: 'First visited', value: '2025.09.28' },
@@ -485,6 +486,13 @@ async function run() {
               'The approach is 2.4 kilometres from a pull-off on a haul road the county stopped maintaining sometime after the mine closed, through second-growth birch and a stretch of low ground that only holds a boot in a hard frost. There is no sign at the road and nothing at the collar to say that a shaft goes down several hundred metres directly under the leaf litter. I first walked in on 2025.09.28, with no plan beyond looking at the thing standing there. It leans, visibly, if you already know to look for it, and it photographs badly from any single position, because the lean only reads against something else to compare it to. That absence of a fixed reference is the entire reason this site earned a second visit instead of staying a single afternoon in a folder.',
             ),
           ),
+          {
+            __component: 'body.atlas-reference',
+            atlasEntry: powderMagazineEntryId,
+            textBefore:
+              'The headframe is not the only thing on that haul road built to outlast the mine. The stone magazine it kept its explosives in, set well back from the shaft as the regulations required, is catalogued in the atlas as',
+            textAfter: ', and its roof is failing faster than this frame is leaning.',
+          },
           richText(
             paragraph(
               'The second session followed eleven months later, deliberately in comparable light and with the same lens, and this time with a plan: 1,840 frames across two loops, one at ground level circling the footings and one from the till shelf above, shot with enough overlap to build a photogrammetric model that could be measured against the first. A single model of a ruin is a portrait, useful for exactly what a portrait is useful for. Two models of the same ruin, captured months apart and aligned on a fixed point, are a measurement, which is a different kind of object entirely, and the only kind that answers the question this place actually raises: not whether it looks derelict, but whether it is still doing the same thing it was doing a year ago.',
@@ -646,7 +654,9 @@ async function run() {
     console.log('  2 tags (Structural Survey, Underwater Archaeology)')
     console.log('  1 series (Sudbury Basin)')
     console.log('  4 posts (centre-hill-headframe, sonar-return-bridge, sychnant-pass-chip-van, old-pryce-place)')
-    console.log('  8 atlas entries (2 exact, 4 fuzzed, 2 withheld), centre-hill-headframe linked from its post')
+    console.log(
+      '  8 atlas entries (2 exact, 4 fuzzed, 2 withheld), centre-hill-headframe linked from its post, haul-road-powder-magazine referenced inline from its body',
+    )
     console.log('  11 placeholder images uploaded')
   } finally {
     await strapi.destroy()

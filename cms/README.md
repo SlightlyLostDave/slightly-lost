@@ -83,4 +83,6 @@ A new post body component always touches three places, and the rule is all three
 2. The variant in the `bodyItemSchema` discriminated union in `src/content.config.ts`, at the repository root.
 3. A new case in the switch in `src/components/content/ArticleBody.astro`.
 
+Two loader-side details follow from the first two: the component needs an entry in the `body` populate in `src/content.config.ts` if it has media or relations, and a case in the body normalizers in `src/loaders/strapi.ts`, which throw on any component they don't know.
+
 If the Astro-side switch is missed, the build catches it: `ArticleBody.astro` ends its switch with an `assertNever` default case, so an unhandled component variant fails the TypeScript build rather than silently rendering nothing. The loader in `src/loaders/strapi.ts` also throws at build time on any `__component` value it doesn't recognize, as a second check on the Strapi side.

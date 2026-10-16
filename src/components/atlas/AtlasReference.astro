@@ -1,0 +1,27 @@
+---
+import { atlas, atlasKindBySlug } from '@/config'
+import type { PublishedAtlasEntry } from '@/lib/atlas'
+
+// The inline cross-reference from the states sheet: a small sage chip inside
+// body copy that links one atlas entry by kind and name. Authored as the
+// body.atlas-reference component and rendered by ArticleBody. The
+// data-atlas-reference attribute exempts it from the prose link style in
+// src/styles/prose.css.
+interface Props {
+  entry: PublishedAtlasEntry
+}
+
+const { entry } = Astro.props
+const kind = atlasKindBySlug[entry.data.kind]
+---
+
+<a
+  href={entry.data.href}
+  data-atlas-reference
+  class="text-label border-sage text-sage hover:border-accent hover:text-accent inline-flex max-w-full flex-wrap items-baseline gap-x-2 rounded-full border px-2.5 py-0.5 align-baseline font-mono uppercase motion-safe:transition-colors"
+>
+  <span class="sr-only">{atlas.post.referenceLabel}</span>
+  <span>{kind.name}</span>
+  <span aria-hidden="true">/</span>
+  <span>{entry.data.name}</span>
+</a>

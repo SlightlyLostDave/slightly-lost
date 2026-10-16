@@ -49,7 +49,8 @@
         "body.rich-text",
         "body.figure",
         "body.figure-grid",
-        "body.pull-quote"
+        "body.pull-quote",
+        "body.atlas-reference"
       ]
     },
     "hero": {

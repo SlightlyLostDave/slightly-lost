@@ -1,0 +1,27 @@
+---
+import AtlasCard from './AtlasCard.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import Label from '@/components/primitives/Label.astro'
+import { atlas } from '@/config'
+import type { PublishedAtlasEntry } from '@/lib/atlas'
+
+// The atlas entry a post is about, beneath the article body. One row of the
+// atlas catalogue rather than a third card design: the compact AtlasCard
+// already carries the kind, the linked name, the coordinate as
+// formatCoordinates writes it, and the status.
+interface Props {
+  entry: PublishedAtlasEntry
+}
+
+const { entry } = Astro.props
+---
+
+<section data-post-atlas-entry class="max-w-content mx-auto mt-(--spacing-section) flex flex-col gap-6 px-6">
+  <Label as="h2" accentRule>{atlas.post.heading}</Label>
+  <div>
+    <Hairline variant="strong" />
+    <div class="border-hairline border-b">
+      <AtlasCard entry={entry} variant="compact" />
+    </div>
+  </div>
+</section>

@@ -233,6 +233,16 @@ export interface AtlasEntryCopy {
   }
 }
 
+// Copy for the atlas as it appears inside the writing: the entry block under
+// an article body, the inline reference chip, and the coordinate row the
+// field data strip takes from the linked entry.
+export interface AtlasPostCopy {
+  heading: string
+  coordinatesLabel: string
+  // Read before the chip's kind and name by assistive technology.
+  referenceLabel: string
+}
+
 export interface AtlasConfig {
   label: string
   title: string
@@ -248,6 +258,7 @@ export interface AtlasConfig {
   mapClusterThreshold: number
   map: AtlasMapCopy
   entry: AtlasEntryCopy
+  post: AtlasPostCopy
 }
 
 export const atlas = {
@@ -332,5 +343,10 @@ export const atlas = {
       maxDistanceKm: 25,
       distanceUnit: 'km',
     },
+  },
+  post: {
+    heading: 'In the atlas',
+    coordinatesLabel: 'Coordinates',
+    referenceLabel: 'Atlas entry:',
   },
 } as const satisfies AtlasConfig

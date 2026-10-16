@@ -46,7 +46,11 @@
   @apply mt-0;
 }
 
-.prose a {
+/* The inline atlas chip (AtlasReference.astro) is a link the site authors,
+   not CMS markup, and carries its own sage pill styling. This file is not in
+   a cascade layer, so without the exemption it would override the chip's
+   utilities with the rust underline. */
+.prose a:not([data-atlas-reference]) {
   @apply text-accent underline decoration-1 decoration-rule-strong underline-offset-4 hover:decoration-accent;
 }
 

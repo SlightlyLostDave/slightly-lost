@@ -3,7 +3,7 @@
   "info": {
     "displayName": "Field Data",
     "icon": "list",
-    "description": "One entry in a post's mono metadata strip: coordinates, elevation, distance walked, water temperature, and similar."
+    "description": "One entry in a post's mono metadata strip: elevation, distance walked, water temperature, and similar. On a post linked to an atlas entry, do not type coordinates here: the strip takes them from the entry, after its location policy, and the build fails on a typed coordinate for a fuzzed or withheld entry."
   },
   "options": {},
   "attributes": {
