@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 // Runs only under the chromium-no-js project (see playwright.config.ts). The
-// list is the atlas; the map is an enhancement that does not exist here.
-test('every plotted entry is listed and the map unit is not displayed without JavaScript', async ({
+// catalogue is the atlas; the map and the filters are enhancements that do
+// not exist here.
+test('every entry is listed and the map and filters are not displayed without JavaScript', async ({
   page,
 }) => {
   const response = await page.request.get('/atlas.geojson')
@@ -14,11 +15,23 @@ test('every plotted entry is listed and the map unit is not displayed without Ja
 
   await expect(page.locator('h1')).toBeVisible()
   await expect(page.locator('[data-atlas-map]')).toBeHidden()
+  await expect(page.locator('[data-atlas-filters]')).toBeHidden()
+  await expect(page.locator('[data-atlas-empty]')).toBeHidden()
 
-  const listedNames = page.locator('#atlas-list + ul li a')
+  const rows = page.locator('[data-atlas-catalogue] li')
+  const listedNames = page.locator('[data-atlas-catalogue] h3 a')
   for (const feature of features) {
     await expect(listedNames.filter({ hasText: feature.properties.name })).toHaveCount(1)
   }
-  // Withheld entries have no feature but are still listed.
-  expect(await listedNames.count()).toBeGreaterThan(features.length)
+  // Withheld entries have no feature but are still listed, and say why
+  // their coordinate is missing where the coordinate would be.
+  const rowCount = await rows.count()
+  expect(rowCount).toBeGreaterThan(features.length)
+  for (let index = 0; index < rowCount; index++) await expect(rows.nth(index)).toBeVisible()
+  await expect(rows.filter({ hasText: 'Withheld' })).toHaveCount(rowCount - features.length)
+
+  // A filter link degrades to the whole catalogue.
+  await page.goto('/atlas?kind=wreck')
+  await expect(rows).toHaveCount(rowCount)
+  for (let index = 0; index < rowCount; index++) await expect(rows.nth(index)).toBeVisible()
 })

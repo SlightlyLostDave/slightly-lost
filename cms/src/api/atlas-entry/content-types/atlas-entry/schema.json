@@ -5,7 +5,7 @@
     "singularName": "atlas-entry",
     "pluralName": "atlas-entries",
     "displayName": "Atlas Entry",
-    "description": "One place in the Atlas. kind, atlasStatus, and locationPolicy values must match src/config/atlas.ts exactly. The status field is named atlasStatus because Strapi reserves status for draft and publish."
+    "description": "One place in the Atlas. kind, atlasStatus, and locationPolicy values must match src/config/atlas.ts exactly. The status field is named atlasStatus because Strapi reserves status for draft and publish. region is shown beside every entry in the atlas listing, withheld ones included, so keep it coarse (a valley, a basin, a county) and never name anything that would find a withheld place."
   },
   "options": {
     "draftAndPublish": true
@@ -19,6 +19,10 @@
     "slug": {
       "type": "uid",
       "targetField": "name",
+      "required": true
+    },
+    "region": {
+      "type": "string",
       "required": true
     },
     "kind": {

@@ -151,6 +151,10 @@
   --atlas-map-height: 40rem;
   --atlas-map-height-mobile: 75svh;
   --atlas-panel-width: 24rem;
+  /* The atlas catalogue's columns from lg up: kind, entry, place,
+     coordinates, status. Shared by AtlasCatalogue.astro's header row and the
+     compact AtlasCard, so the two cannot drift apart. */
+  --atlas-catalogue-columns: 8rem minmax(0, 1fr) 16rem 12.5rem 8rem;
   --control-height: 3.375rem; /* 54px, Button default height (compact reuses --tap-target) */
   --outline-offset-control: 3px; /* primary/secondary/ghost button focus ring */
   --outline-offset-link: 4px; /* link-style focus ring: Button's link variant and Prose links */

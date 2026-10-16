@@ -162,6 +162,7 @@ const safetyNoteSchema = z.object({
 const atlasEntrySchema = z
   .object({
     name: z.string(),
+    region: z.string().min(1, 'region is required'),
     kind: atlasKindSchema,
     status: atlasStatusSchema,
     location: z.object({ lat: z.number(), lng: z.number() }).optional(),

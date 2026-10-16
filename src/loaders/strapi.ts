@@ -16,7 +16,8 @@ import { applyLocationPolicy, type Coordinates } from '@/lib/location-policy'
 
 // Bumped to 2 when posts gained the atlasEntry reference and the atlas-entries
 // collection arrived: every cached entry predates both and needs a full resync.
-const SCHEMA_VERSION = '2'
+// Bumped to 3 when atlas entries gained the required region.
+const SCHEMA_VERSION = '3'
 const META_LAST_SYNC_KEY = 'lastSyncedAt'
 const META_SCHEMA_VERSION_KEY = 'schemaVersion'
 
@@ -127,6 +128,7 @@ interface StrapiSafetyNoteRaw {
 interface StrapiAtlasEntryRaw {
   slug: string
   name: string
+  region: string
   kind: AtlasKindSlug
   atlasStatus: AtlasStatusSlug
   location?: Coordinates | null
@@ -322,6 +324,7 @@ function normalizeAtlasEntry(raw: StrapiAtlasEntryRaw): Record<string, unknown> 
 
   return {
     name: raw.name,
+    region: raw.region,
     kind: raw.kind,
     status: raw.atlasStatus,
     ...(publishedLocation ? { location: publishedLocation } : {}),

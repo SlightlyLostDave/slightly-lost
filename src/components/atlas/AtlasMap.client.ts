@@ -8,8 +8,9 @@ import type {
 } from 'maplibre-gl'
 import { LngLatBounds, Map, addProtocol, loadMapLibreStyles } from './maplibre'
 import { createAtlasPanel } from './AtlasPanel.client'
-import { atlas } from '@/config/atlas'
+import { allAtlasKinds, atlas, type AtlasKindSlug } from '@/config/atlas'
 import { basemap } from '@/config/basemap'
+import type { ATLAS_FILTER_CHANGE_EVENT, AtlasFilter } from '@/lib/atlas-filter'
 import { markerImageFor } from '@/lib/map-marker-images'
 import {
   ATLAS_CLUSTER_LAYER_ID,
@@ -27,6 +28,7 @@ import type { SiteTheme, THEME_CHANGE_EVENT } from '@/lib/theme'
 interface AtlasFeatureProperties {
   slug: string
   name: string
+  kind: AtlasKindSlug
 }
 
 interface AtlasFeatureCollection {
@@ -56,9 +58,30 @@ let pmtilesRegistered = false
 
 // Type-checked against the constant without importing it; see src/lib/theme.ts.
 const themeChangeEvent: typeof THEME_CHANGE_EVENT = 'themechange'
+// The same, for the kind filter; see src/lib/atlas-filter.ts.
+const filterChangeEvent: typeof ATLAS_FILTER_CHANGE_EVENT = 'atlasfilterchange'
 
 function currentTheme(): SiteTheme {
   return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+}
+
+// The filter the page was in when the island mounted. AtlasFilters.script.ts
+// may have applied one, from a ?kind= link or a click, before the map was
+// scrolled near enough to load.
+function currentFilter(root: HTMLElement): AtlasFilter {
+  const filter = root.closest<HTMLElement>('[data-atlas-index]')?.dataset.atlasFilter
+  return allAtlasKinds.find((kind) => kind.slug === filter)?.slug ?? 'all'
+}
+
+function filterCollection(
+  collection: AtlasFeatureCollection,
+  filter: AtlasFilter
+): AtlasFeatureCollection {
+  if (filter === 'all') return collection
+  return {
+    ...collection,
+    features: collection.features.filter((feature) => feature.properties.kind === filter),
+  }
 }
 
 function boundsOf(collection: AtlasFeatureCollection): LngLatBoundsLike | undefined {
@@ -98,26 +121,32 @@ export async function mount(root: HTMLElement): Promise<void> {
   const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY)
   const basemapUrl = new URL(basemap.url, window.location.href).href
   let theme: SiteTheme = currentTheme()
+  let filter: AtlasFilter = currentFilter(root)
   let selectedSlug: string | undefined
 
   let map: MapLibreMap
+  let allFeatures: AtlasFeatureCollection
+  let atlasSource: GeoJSONSourceSpecification
   // A diffed setStyle keeps the source, the camera, and the images, and
   // changes only the paint and filter values that differ.
   let restyle: () => void
   try {
     const [response] = await Promise.all([fetch(atlas.geojsonPath), loadMapLibreStyles()])
     if (!response.ok) throw new Error(`${atlas.geojsonPath} returned ${response.status}`)
-    const collection = (await response.json()) as AtlasFeatureCollection
+    allFeatures = (await response.json()) as AtlasFeatureCollection
+    const collection = filterCollection(allFeatures, filter)
 
     if (!pmtilesRegistered) {
       addProtocol('pmtiles', new Protocol().tile)
       pmtilesRegistered = true
     }
 
-    const atlasSource: GeoJSONSourceSpecification = {
+    atlasSource = {
       type: 'geojson',
       data: collection,
-      cluster: collection.features.length > atlas.mapClusterThreshold,
+      // Decided on every entry, not the filtered set, so changing the filter
+      // never turns clustering on or off underneath the reader.
+      cluster: allFeatures.features.length > atlas.mapClusterThreshold,
       clusterRadius: CLUSTER_RADIUS_PX,
       clusterMaxZoom: basemap.detailMaxZoom - 1,
       promoteId: 'slug',
@@ -146,7 +175,14 @@ export async function mount(root: HTMLElement): Promise<void> {
     // places on both sides of the Atlantic in one view, so panning is held
     // to the extract and the opening view together. Beyond the extract the
     // style's background already reads as open sea.
-    map.setMaxBounds(LngLatBounds.convert(overviewBounds).extend(map.getBounds()))
+    // Built from every entry, so a filter applied before mount cannot hold
+    // the reader out of places a later filter brings back.
+    const allBounds = boundsOf(allFeatures)
+    map.setMaxBounds(
+      LngLatBounds.convert(overviewBounds)
+        .extend(map.getBounds())
+        .extend(allBounds ?? overviewBounds)
+    )
 
     restyle = () => map.setStyle(composeStyle(), { diff: true })
   } catch (error) {
@@ -156,6 +192,7 @@ export async function mount(root: HTMLElement): Promise<void> {
   }
 
   root.dataset.mapTheme = theme
+  root.dataset.mapFilter = filter
 
   // MapLibre's canvas is the element that takes focus, so it carries the
   // same name and description as the region around it. The negative offset
@@ -322,5 +359,34 @@ export async function mount(root: HTMLElement): Promise<void> {
     theme = event.detail.theme
     restyle()
     root.dataset.mapTheme = theme
+  })
+
+  // The list and the map filter together. Only the source data changes; the
+  // layers, the camera limits, and the clustering decision stay as they were.
+  document.addEventListener(filterChangeEvent, (event) => {
+    filter = event.detail.filter
+    const collection = filterCollection(allFeatures, filter)
+    // Kept on the source spec as well, so a later theme restyle, which
+    // diffs against it, does not bring the hidden markers back.
+    atlasSource.data = collection
+    map.getSource<GeoJSONSource>(ATLAS_SOURCE_ID)?.setData(collection)
+
+    if (
+      selectedSlug !== undefined &&
+      !collection.features.some((feature) => feature.properties.slug === selectedSlug)
+    ) {
+      deselect()
+    }
+
+    const bounds = boundsOf(collection)
+    if (bounds) {
+      map.fitBounds(bounds, {
+        padding: FIT_PADDING_PX,
+        maxZoom: FIT_MAX_ZOOM,
+        animate: !reducedMotion.matches,
+        duration: CAMERA_DURATION_MS,
+      })
+    }
+    root.dataset.mapFilter = filter
   })
 }

@@ -18,7 +18,7 @@ const copy = atlas.map
 <!-- Without JavaScript there is no map to operate, so the whole unit is not
      displayed and the list carries the page. The js variant is set by the
      head script before first paint, so nothing is hidden and then revealed. -->
-<div data-atlas-map class="js:flex hidden flex-col gap-3">
+<div data-atlas-map class="js:flex hidden flex-col gap-3 print:hidden">
   <a
     href="#atlas-list"
     class="focus:text-text-strong sr-only focus:not-sr-only focus:self-start focus:px-4 focus:py-2"
@@ -30,7 +30,7 @@ const copy = atlas.map
        the fixed-width panel column leaves. A column template, not a value
        any spacing token could express. -->
   <div
-    class="border-hairline bg-surface-raised relative grid h-(--atlas-map-height-mobile) grid-cols-1 overflow-hidden border lg:h-(--atlas-map-height) lg:grid-cols-[1fr_var(--atlas-panel-width)]"
+    class="border-hairline bg-surface-raised rounded-card relative grid h-(--atlas-map-height-mobile) grid-cols-1 overflow-hidden border lg:h-(--atlas-map-height) lg:grid-cols-[1fr_var(--atlas-panel-width)]"
   >
     <!-- group-has-[canvas:focus-visible]: a selector, not a value. The reticle
          shows only while MapLibre's canvas has keyboard focus. -->

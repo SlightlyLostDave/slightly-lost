@@ -1,0 +1,102 @@
+---
+import AtlasCard from './AtlasCard.astro'
+import Button from '@/components/primitives/Button.astro'
+import Hairline from '@/components/primitives/Hairline.astro'
+import { atlas } from '@/config'
+import type { PublishedAtlasEntry } from '@/lib/atlas'
+import { fillTemplate } from '@/lib/atlas-filter'
+
+// The atlas itself: every published entry, rendered on the server. The map
+// above it is an enhancement; this is the version that is read without
+// JavaScript, indexed, and printed, so it is laid out as a catalogue rather
+// than as a fallback list.
+interface Props {
+  entries: PublishedAtlasEntry[]
+}
+
+const { entries } = Astro.props
+const copy = atlas.catalogue
+
+const withoutCoordinatesCount = entries.filter((entry) => entry.data.location === undefined).length
+const total = String(entries.length)
+---
+
+<section
+  aria-labelledby="atlas-list"
+  data-atlas-catalogue
+  class="border-hairline bg-surface-raised rounded-card flex flex-col border px-6 pt-8 pb-2 md:px-10 md:pt-10 print:border-0 print:bg-transparent print:px-0"
+>
+  <div class="mb-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+    <!-- The map's skip link and its Escape key both land here. -->
+    <h2
+      id="atlas-list"
+      tabindex="-1"
+      class="font-display text-display-m text-text-strong"
+      style="font-weight: var(--weight-display)"
+    >
+      {copy.heading}
+    </h2>
+    {
+      withoutCoordinatesCount > 0 && (
+        <p class="text-label text-text-muted font-mono uppercase">
+          {fillTemplate(copy.withoutCoordinatesNote, { count: String(withoutCoordinatesCount) })}
+        </p>
+      )
+    }
+  </div>
+
+  {
+    entries.length === 0 ? (
+      <p class="text-body text-text-muted pb-8">{copy.emptyAtlas}</p>
+    ) : (
+      <>
+        {/* Sighted readers get the column names once; each row carries its
+            own visually hidden labels, so this row is not announced. */}
+        <div
+          aria-hidden="true"
+          class="text-label text-text-muted hidden gap-x-6 pb-3.5 font-mono uppercase lg:grid lg:grid-cols-(--atlas-catalogue-columns)"
+        >
+          <span>{copy.columns.kind}</span>
+          <span>{copy.columns.entry}</span>
+          <span>{copy.columns.place}</span>
+          <span>{copy.columns.coordinates}</span>
+          <span>{copy.columns.status}</span>
+        </div>
+        <Hairline variant="strong" />
+
+        <ul>
+          {entries.map((entry) => (
+            <li
+              data-atlas-kind={entry.data.kind}
+              class="border-hairline border-b data-filtered-out:hidden"
+            >
+              <AtlasCard entry={entry} variant="compact" />
+            </li>
+          ))}
+        </ul>
+
+        {/* Filter state, not content, so it starts hidden and only the
+            filter script ever shows it: with JavaScript off no filter can
+            be applied and every entry above is listed. */}
+        <div data-atlas-empty hidden class="flex flex-col items-start gap-4 py-10">
+          <p
+            data-atlas-empty-message
+            data-atlas-empty-template={copy.emptyFilter}
+            class="font-display text-body-l text-text-muted"
+          >
+          </p>
+          <Button variant="link">{copy.showAllLabel}</Button>
+        </div>
+
+        <p
+          data-atlas-count
+          data-atlas-count-template={copy.showing}
+          aria-live="polite"
+          class="text-label text-text-muted py-7 font-mono uppercase print:hidden"
+        >
+          {fillTemplate(copy.showing, { shown: total, total })}
+        </p>
+      </>
+    )
+  }
+</section>

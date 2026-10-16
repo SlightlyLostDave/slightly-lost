@@ -4,91 +4,133 @@ import Hairline from '@/components/primitives/Hairline.astro'
 import DataValue from '@/components/primitives/DataValue.astro'
 import Button from '@/components/primitives/Button.astro'
 import Placeholder from '@/components/media/Placeholder.astro'
-import { atlasKindBySlug, atlasLocationPolicyBySlug, atlasStatusBySlug } from '@/config'
+import { atlas, atlasKindBySlug, atlasLocationPolicyBySlug, atlasStatusBySlug } from '@/config'
 import type { PublishedAtlasEntry } from '@/lib/atlas'
 import { formatCoordinates } from '@/lib/location-policy'
 
 // One card, the one styling truth for an atlas entry. The map panel renders
-// the 'panel' variant; the atlas index listing will add a compact variant
-// here rather than a second component.
+// the 'panel' variant; the atlas index catalogue renders 'compact', one row
+// of the listing. Everything both show is derived once, here.
 interface Props {
   entry: PublishedAtlasEntry
-  variant: 'panel'
+  variant: 'panel' | 'compact'
 }
 
-const { entry } = Astro.props
+const { entry, variant } = Astro.props
 const { data } = entry
 
 const kind = atlasKindBySlug[data.kind]
 const status = atlasStatusBySlug[data.status]
 const precision = atlasLocationPolicyBySlug[data.locationPolicy]
 const coordinates = formatCoordinates(data.location, data.locationPolicy)
+const columns = atlas.catalogue.columns
 
 // The atlas design writes dates year first, 2019.04.11.
 const formatVisitDate = (date: Date) => date.toISOString().slice(0, 10).replaceAll('-', '.')
 
-const headingId = `atlas-card-${entry.id}`
+// Distinct per variant: the panel clones its card from a template into the
+// same page as the catalogue, and a shared id would then appear twice.
+const headingId = variant === 'panel' ? `atlas-card-${entry.id}` : `atlas-entry-${entry.id}`
 
 // Matches AtlasMap.astro: the panel is full width below lg and
 // --atlas-panel-width (24rem) beside the map from lg up.
 const panelImageSizes = '(min-width: 1024px) 384px, 100vw'
 ---
 
-<article aria-labelledby={headingId} class="flex flex-col">
-  <!-- The header comes first so the mobile sheet's peek state, which shows
-       only the top of the card, is the name, kind, and status. -->
-  <header data-atlas-card-peek class="flex flex-col gap-2 px-6 pt-5 pb-5">
-    <div class="text-label flex items-center gap-3 font-mono uppercase">
-      <span class="text-sage">{kind.name}</span>
-      <span aria-hidden="true" class="text-text-subtle">/</span>
-      <span class="text-text-muted">{status.name}</span>
-    </div>
-    <h2
-      id={headingId}
-      tabindex="-1"
-      class="font-display text-title text-text-strong"
-      style="font-weight: var(--weight-display)"
+{
+  variant === 'compact' ? (
+    <article
+      aria-labelledby={headingId}
+      class="grid grid-cols-2 items-baseline gap-x-6 gap-y-1.5 py-5 lg:grid-cols-(--atlas-catalogue-columns) lg:gap-y-0"
     >
-      {data.name}
-    </h2>
-  </header>
+      <p class="text-label text-sage col-span-2 font-mono uppercase lg:col-span-1">
+        <span class="sr-only">{columns.kind}: </span>
+        {kind.name}
+      </p>
+      <h3
+        id={headingId}
+        class="font-display text-title text-text-strong col-span-2 lg:col-span-1"
+        style="font-weight: var(--weight-display)"
+      >
+        <a href={data.href} class="hover:text-accent motion-safe:transition-colors">
+          {data.name}
+        </a>
+      </h3>
+      <p class="text-caption text-text-muted col-span-2 lg:col-span-1">
+        <span class="sr-only">{columns.place}: </span>
+        {data.region}
+      </p>
+      <p
+        class:list={[
+          'text-data font-mono whitespace-nowrap tabular-nums',
+          data.location ? 'text-text-body' : 'text-text-muted',
+        ]}
+      >
+        <span class="sr-only">{columns.coordinates}: </span>
+        {coordinates}
+      </p>
+      <p class="text-label text-text-muted font-mono uppercase">
+        <span class="sr-only">{columns.status}: </span>
+        {status.name}
+      </p>
+    </article>
+  ) : (
+    <article aria-labelledby={headingId} class="flex flex-col">
+      {/* The header comes first so the mobile sheet's peek state, which shows
+          only the top of the card, is the name, kind, and status. */}
+      <header data-atlas-card-peek class="flex flex-col gap-2 px-6 pt-5 pb-5">
+        <div class="text-label flex items-center gap-3 font-mono uppercase">
+          <span class="text-sage">{kind.name}</span>
+          <span aria-hidden="true" class="text-text-subtle">/</span>
+          <span class="text-text-muted">{status.name}</span>
+        </div>
+        <h2
+          id={headingId}
+          tabindex="-1"
+          class="font-display text-title text-text-strong"
+          style="font-weight: var(--weight-display)"
+        >
+          {data.name}
+        </h2>
+        <p class="text-caption text-text-muted">{data.region}</p>
+      </header>
 
-  <div class="aspect-card-wide bg-surface relative overflow-hidden">
-    {
-      data.hero ? (
-        <Picture
-          src={data.hero.src}
-          alt={data.hero.alt}
-          width={800}
-          height={533}
-          formats={['avif', 'webp']}
-          fallbackFormat="jpeg"
-          sizes={panelImageSizes}
-          loading="lazy"
-          decoding="async"
-          class="h-full w-full object-cover"
-        />
-      ) : (
-        <Placeholder variant="c" />
-      )
-    }
-  </div>
+      <div class="aspect-card-wide bg-surface relative overflow-hidden">
+        {data.hero ? (
+          <Picture
+            src={data.hero.src}
+            alt={data.hero.alt}
+            width={800}
+            height={533}
+            formats={['avif', 'webp']}
+            fallbackFormat="jpeg"
+            sizes={panelImageSizes}
+            loading="lazy"
+            decoding="async"
+            class="h-full w-full object-cover"
+          />
+        ) : (
+          <Placeholder variant="c" />
+        )}
+      </div>
 
-  <div class="flex flex-col gap-6 p-6">
-    <p class="text-body text-text-muted">{data.summary}</p>
+      <div class="flex flex-col gap-6 p-6">
+        <p class="text-body text-text-muted">{data.summary}</p>
 
-    <Hairline />
+        <Hairline />
 
-    <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-      <DataValue label="Coordinates" value={coordinates} />
-      <DataValue label="Precision" value={precision.name} />
-      {
-        data.firstVisited && (
-          <DataValue label="First visited" value={formatVisitDate(data.firstVisited)} />
-        )
-      }
-    </div>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+          <DataValue label={columns.coordinates} value={coordinates} />
+          <DataValue label="Precision" value={precision.name} />
+          {data.firstVisited && (
+            <DataValue label="First visited" value={formatVisitDate(data.firstVisited)} />
+          )}
+        </div>
 
-    <Button href={data.href} variant="link" showArrow class="self-start">Open entry</Button>
-  </div>
-</article>
+        <Button href={data.href} variant="link" showArrow class="self-start">
+          Open entry
+        </Button>
+      </div>
+    </article>
+  )
+}

@@ -1,0 +1,29 @@
+---
+import type { AtlasFilter } from '@/lib/atlas-filter'
+
+// One toggle in the atlas kind filter row. AtlasFilters.script.ts moves
+// aria-pressed between pills, and every pressed style hangs off it.
+interface Props {
+  value: AtlasFilter
+  label: string
+  count: number
+  pressed?: boolean
+}
+
+const { value, label, count, pressed = false } = Astro.props
+---
+
+<button
+  type="button"
+  data-atlas-filter-option={value}
+  data-atlas-filter-label={label}
+  aria-pressed={pressed ? 'true' : 'false'}
+  class="group border-hairline text-caption text-text-muted hover:border-accent hover:text-accent aria-pressed:border-inverse-fill aria-pressed:bg-inverse-fill aria-pressed:text-inverse-text aria-pressed:hover:border-inverse-fill aria-pressed:hover:text-inverse-text inline-flex min-h-(--tap-target) items-center gap-2 rounded-full border px-4.5 motion-safe:transition-colors"
+>
+  {label}
+  <span
+    class="text-label text-text-subtle group-aria-pressed:text-inverse-text font-mono tabular-nums"
+  >
+    {count}
+  </span>
+</button>

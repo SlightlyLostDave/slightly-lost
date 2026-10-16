@@ -121,7 +121,6 @@ export const homepage = {
     intro:
       'Mines, wrecks, drowned settlements, and the stories attached to them. Some coordinates are deliberately fuzzed and some are withheld entirely, because a few of these places will hurt you and a few of them belong to somebody.',
     ctaLabel: 'Open the atlas',
-    // The atlas route lands in Phase 3; this link is a known 404 until then.
     href: '/atlas',
   },
   atlasStats: [

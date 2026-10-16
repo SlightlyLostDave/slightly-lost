@@ -1,0 +1,44 @@
+---
+import AtlasFilterPill from './AtlasFilterPill.astro'
+import { allAtlasKinds, atlas } from '@/config'
+import { groupAtlasEntriesByKind, type PublishedAtlasEntry } from '@/lib/atlas'
+
+// The kind filter row. Every kind is offered, an empty one included, so the
+// row is the same on every build and a kind with nothing in it says so
+// through the catalogue's empty state rather than by vanishing.
+interface Props {
+  entries: PublishedAtlasEntry[]
+}
+
+const { entries } = Astro.props
+const copy = atlas.filters
+
+const countsByKind = new Map(
+  groupAtlasEntriesByKind(entries).map((group) => [group.kind.slug, group.entries.length])
+)
+---
+
+<!-- Without JavaScript there is nothing to filter with, so the row is not
+     displayed rather than shown and inert, and the catalogue lists every
+     entry. The js variant is set by the head script before first paint. -->
+<div
+  role="group"
+  aria-label={copy.label}
+  data-atlas-filters
+  class="js:flex border-hairline hidden flex-wrap items-center gap-2.5 border-y py-5 print:hidden"
+>
+  <AtlasFilterPill value="all" label={copy.allLabel} count={entries.length} pressed />
+  {
+    allAtlasKinds.map((kind) => (
+      <AtlasFilterPill
+        value={kind.slug}
+        label={kind.pluralName}
+        count={countsByKind.get(kind.slug) ?? 0}
+      />
+    ))
+  }
+</div>
+
+<script>
+  import './AtlasFilters.script'
+</script>

@@ -1,67 +1,49 @@
 ---
 import Base from '@/layouts/Base.astro'
 import Label from '@/components/primitives/Label.astro'
-import Hairline from '@/components/primitives/Hairline.astro'
+import AtlasFilters from '@/components/atlas/AtlasFilters.astro'
 import AtlasMap from '@/components/atlas/AtlasMap.astro'
-import { atlas, atlasKindBySlug, atlasStatusBySlug } from '@/config'
+import AtlasCatalogue from '@/components/atlas/AtlasCatalogue.astro'
+import { atlas } from '@/config'
 import { getLocatedAtlasEntries, getPublishedAtlasEntries } from '@/lib/atlas'
 
-// A minimal atlas index, enough to host the map island and give it the list
-// it is an enhancement over. The full catalogue, the filters, and the
-// compact AtlasCard variant replace the plain list below in the atlas index
-// prompt.
+// The atlas index. The catalogue is the atlas: every published entry,
+// server-rendered and readable without JavaScript. The filters and the map
+// are enhancements over it, and both are absent rather than inert without
+// JavaScript.
 const publishedEntries = [...(await getPublishedAtlasEntries())].sort((a, b) =>
   a.data.name.localeCompare(b.data.name)
 )
 const locatedEntries = getLocatedAtlasEntries(publishedEntries)
 ---
 
-<Base type="website" title={atlas.label} description={atlas.title} surface="ink">
-  <div class="max-w-content mx-auto flex flex-col gap-16 px-6 py-16 md:py-(--spacing-section)">
-    <div class="flex flex-col gap-6">
-      <Label accentRule>{atlas.label}</Label>
-      <h1
-        class="font-display text-display-l text-text-strong"
-        style="font-weight: var(--weight-display)"
-      >
-        {atlas.title}
-      </h1>
-      <p class="max-w-measure font-display text-body-l text-text-muted">{atlas.intro}</p>
-      <Hairline class="mt-2" />
+<Base type="website" title={atlas.label} description={atlas.description} surface="ink">
+  <!-- data-atlas-filter is the filter state: AtlasFilters.script.ts writes it
+       and the map island reads it when it mounts. -->
+  <div
+    data-atlas-index
+    data-atlas-filter="all"
+    class="max-w-content mx-auto flex flex-col gap-10 px-6 py-16 md:py-(--spacing-section)"
+  >
+    <div class="mb-6 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-x-16">
+      <div class="flex flex-col gap-8 lg:col-span-7">
+        <Label accentRule>{atlas.label}</Label>
+        <h1
+          class="font-display text-display-l text-text-strong"
+          style="font-weight: var(--weight-display)"
+        >
+          {atlas.title}
+        </h1>
+      </div>
+      <p class="max-w-measure font-display text-body-l text-text-body lg:col-span-5">
+        {atlas.intro}
+      </p>
     </div>
+
+    <AtlasFilters entries={publishedEntries} />
 
     <AtlasMap entries={locatedEntries} />
 
-    <section aria-labelledby="atlas-list" class="flex flex-col gap-6">
-      <!-- The map's skip link and its Escape key both land here. -->
-      <h2
-        id="atlas-list"
-        tabindex="-1"
-        class="font-display text-display-m text-text-strong"
-        style="font-weight: var(--weight-display)"
-      >
-        {atlas.listHeading}
-      </h2>
-      <ul class="border-hairline flex flex-col border-b">
-        {
-          publishedEntries.map((entry) => (
-            <li class="border-hairline flex flex-wrap items-baseline gap-x-6 gap-y-1 border-t py-4">
-              <span class="text-label text-sage font-mono uppercase">
-                {atlasKindBySlug[entry.data.kind].name}
-              </span>
-              <a
-                href={entry.data.href}
-                class="font-display text-title text-text-strong hover:text-accent motion-safe:transition-colors"
-              >
-                {entry.data.name}
-              </a>
-              <span class="text-label text-text-muted font-mono uppercase">
-                {atlasStatusBySlug[entry.data.status].name}
-              </span>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+    <AtlasCatalogue entries={publishedEntries} />
   </div>
 </Base>

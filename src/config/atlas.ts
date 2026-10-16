@@ -164,12 +164,42 @@ export interface AtlasMapCopy {
   unavailable: string
 }
 
+// Copy for the kind filter row, AtlasFilters.astro.
+export interface AtlasFilterCopy {
+  label: string
+  allLabel: string
+}
+
+// Copy for the catalogue, AtlasCatalogue.astro and the compact AtlasCard.
+// Templates are filled in at build time and, for the ones the filter script
+// updates, carried to the client in data attributes rather than imported.
+export interface AtlasCatalogueCopy {
+  heading: string
+  columns: {
+    kind: string
+    entry: string
+    place: string
+    coordinates: string
+    status: string
+  }
+  // {count} is replaced with the number of listed entries with no coordinates.
+  withoutCoordinatesNote: string
+  // {shown} and {total} are replaced with entry counts.
+  showing: string
+  // {kind} is replaced with the plural name of the selected kind.
+  emptyFilter: string
+  showAllLabel: string
+  emptyAtlas: string
+}
+
 export interface AtlasConfig {
   label: string
   title: string
+  description: string
   intro: string
   legend: readonly AtlasLegendItem[]
-  listHeading: string
+  filters: AtlasFilterCopy
+  catalogue: AtlasCatalogueCopy
   // Served by src/pages/atlas.geojson.ts.
   geojsonPath: string
   // Above this many plotted entries the map clusters its markers. The layers
@@ -180,15 +210,35 @@ export interface AtlasConfig {
 
 export const atlas = {
   label: 'The Atlas',
-  title: 'Every place I have stood, and some I have only read about.',
+  title: 'Places, plotted honestly',
+  description:
+    'Every place I have stood, and some I have only read about: mines, wrecks, and drowned settlements, each published only as precisely as is safe.',
   intro:
-    'Mines, wrecks, drowned settlements, and the stories attached to them. Where a coordinate is exact, it is exact. Where it has been rounded, the entry says so. Some places have no coordinates published at all, because a few of them will hurt you and a few of them belong to somebody. Those are still listed here; they are just not on the map.',
+    'Mines, wrecks, drowned settlements, and the stories attached to them. Where a coordinate is exact, it is exact. Where it has been rounded to about a kilometre, the entry says so. Some places have no coordinates published at all, because a few of them will hurt you and a few of them belong to somebody. Those are still in the list below; they are just not on the map.',
   // The one legend for every map plate, homepage teaser and atlas page alike.
   legend: [
     { status: 'documented', marker: 'primary' },
     { status: 'visited', marker: 'secondary' },
   ],
-  listHeading: 'Every entry',
+  filters: {
+    label: 'Filter by kind',
+    allLabel: 'All',
+  },
+  catalogue: {
+    heading: 'Every entry',
+    columns: {
+      kind: 'Kind',
+      entry: 'Entry',
+      place: 'Place',
+      coordinates: 'Coordinates',
+      status: 'Status',
+    },
+    withoutCoordinatesNote: 'Including the {count} without coordinates',
+    showing: 'Showing {shown} of {total}',
+    emptyFilter: 'Nothing is filed under {kind} yet.',
+    showAllLabel: 'Show every entry',
+    emptyAtlas: 'Nothing has been published to the atlas yet.',
+  },
   geojsonPath: '/atlas.geojson',
   mapClusterThreshold: 200,
   map: {
